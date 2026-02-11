@@ -1,0 +1,87 @@
+@extends('layouts.app')
+
+@section('header')
+  @include('layouts.header')
+@endsection
+
+@section('content')
+<style>
+  .catalog-container{max-width:1400px;margin:0 auto;padding:2rem}
+  .catalog-header{margin-bottom:2rem;padding-bottom:1.25rem;border-bottom:3px solid #f0ad4e}
+  .back-link{display:inline-flex;align-items:center;gap:.5rem;color:#f0ad4e;text-decoration:none;font-weight:600;margin-bottom:1.25rem;transition:.25s}
+  .back-link:hover{color:#ff9800;transform:translateX(-4px)}
+  .search-filter{display:flex;flex-wrap:wrap;gap:1rem;background:#fff;border-radius:12px;padding:1rem 1.25rem;box-shadow:0 2px 8px rgba(0,0,0,.05);margin-bottom:1.5rem}
+  .search-input{flex:1;min-width:220px;padding:.8rem 1rem;border:2px solid #e5e7eb;border-radius:10px;transition:.2s}
+  .search-input:focus{outline:none;border-color:#f0ad4e;box-shadow:0 0 0 3px rgba(240,173,78,.12)}
+  .search-btn{background:linear-gradient(135deg,#f0ad4e 0%,#ff9800 100%);color:#fff;border:0;border-radius:10px;padding:.8rem 1.2rem;font-weight:700;cursor:pointer;transition:.2s}
+  .search-btn:hover{transform:translateY(-2px);box-shadow:0 6px 14px rgba(240,173,78,.28)}
+  .filter-select{min-width:200px;padding:.8rem 1rem;border:2px solid #e5e7eb;border-radius:10px;background:#fff;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M6 8 2.5 4.5h7z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right .9rem center;padding-right:2.2rem}
+  .filter-select:focus{outline:none;border-color:#f0ad4e;box-shadow:0 0 0 3px rgba(240,173,78,.12)}
+  .products-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1.5rem;margin-top:1.5rem}
+  .product-card{background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.08);display:flex;flex-direction:column;transition:.25s}
+  .product-card:hover{transform:translateY(-6px);box-shadow:0 12px 22px rgba(0,0,0,.16)}
+  .product-image{height:220px;background:#f5f6f7;display:flex;align-items:center;justify-content:center}
+  .product-image img{width:100%;height:100%;object-fit:cover;transition:.35s}
+  .product-card:hover .product-image img{transform:scale(1.06)}
+  .product-body{padding:1rem 1rem 1.1rem;display:flex;flex-direction:column;gap:.5rem}
+  .product-category{font-size:.76rem;color:#8b8b8b;text-transform:uppercase;font-weight:700;letter-spacing:.4px}
+  .product-name{font-size:1.05rem;font-weight:800;color:#1a1a2e;line-height:1.25}
+  .product-price{font-size:1.45rem;color:#f0ad4e;font-weight:800;margin-top:.25rem}
+  .product-btn{margin-top:.4rem;background:linear-gradient(135deg,#f0ad4e 0%,#ff9800 100%);color:#fff;text-decoration:none;text-align:center;border-radius:10px;padding:.7rem 1rem;font-weight:800;transition:.2s}
+  .product-btn:hover{transform:translateY(-2px);box-shadow:0 6px 14px rgba(240,173,78,.28);color:#fff}
+  .empty{grid-column:1/-1;text-align:center;padding:3rem 1rem;color:#666}
+</style>
+
+<div class="catalog-container">
+  <a href="{{ route('minibar.landing') }}" class="back-link">
+    <i class="fas fa-arrow-left"></i> Volver al inicio
+  </a>
+
+  <div class="catalog-header">
+    <h1 style="margin:0;font-size:2rem;font-weight:900;color:#1a1a2e">Catálogo de Bebidas</h1>
+  </div>
+
+  <form id="catalog-form" class="search-filter" method="GET" action="{{ route('minibar.catalogo') }}">
+    <input class="search-input" type="search" name="q" value="{{ request('q') }}" placeholder="Buscar bebidas por nombre...">
+    <select class="filter-select" name="tipo" id="tipo-filter">
+      <option value="">— Todos los tipos —</option>
+      @foreach($categories as $cat)
+        <option value="{{ $cat->id }}" @selected(request('tipo') == $cat->id)>{{ $cat->nombre }}</option>
+      @endforeach
+    </select>
+    <button class="search-btn" type="submit"><i class="fas fa-search"></i></button>
+  </form>
+
+  <div class="products-grid">
+    @forelse($products as $p)
+      <div class="product-card">
+        <div class="product-image">
+          <img src="{{ asset('storage/'.$p->imagen) }}" alt="{{ $p->nombre }}">
+        </div>
+        <div class="product-body">
+          <div class="product-category">{{ $p->type->nombre ?? 'Bebida' }}</div>
+          <div class="product-name">{{ $p->nombre }}</div>
+          <div class="product-price">${{ number_format($p->precio, 2) }}</div>
+          <a class="product-btn" href="{{ route('minibar.bebida.show', $p) }}"><i class="fas fa-eye"></i> Ver detalles</a>
+        </div>
+      </div>
+    @empty
+      <div class="empty">
+        <div style="font-size:3rem;opacity:.25;margin-bottom:.5rem"><i class="fas fa-search"></i></div>
+        <div>No se encontraron bebidas para estos filtros.</div>
+        <div style="margin-top:1rem"><a class="product-btn" style="display:inline-flex" href="{{ route('minibar.catalogo') }}"><i class="fas fa-redo"></i>&nbsp;Limpiar filtros</a></div>
+      </div>
+    @endforelse
+  </div>
+
+  @if($products->hasPages())
+    <div class="pagination">{{ $products->withQueryString()->links() }}</div>
+  @endif
+</div>
+
+<script src="{{ asset('js/minibar-catalogo.js') }}"></script>
+@endsection
+
+@section('footer')
+  @include('layouts.footer')
+@endsection

@@ -1,0 +1,18 @@
+{
+    "private": true,
+    "scripts": {
+        "dev": "vite",
+        "build": "vite build",
+        "screenshot": "node scripts/screenshot.mjs",
+        "screenshot:example": "node scripts/screenshot.mjs https://example.com evidencias/screenshots/example.png"
+    },
+    "devDependencies": {
+        "autoprefixer": "^10.4.21",
+        "axios": "^1.1.2",
+        "laravel-vite-plugin": "^0.7.2",
+        "postcss": "^8.5.3",
+        "puppeteer": "^23.7.0",
+        "tailwindcss": "^4.1.5",
+        "vite": "^4.0.0"
+    }
+}
