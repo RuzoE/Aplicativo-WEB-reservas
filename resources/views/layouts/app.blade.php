@@ -27,24 +27,61 @@
     <link href="/css/app.css" rel="stylesheet">
 
     <style>
-        /* Sidebar fixed layout for admin panel */
-        @media (min-width: 768px) {
-            .admin-sidebar-fixed {
-                position: fixed !important;
-                top: 0;
-                left: 0;
-                bottom: 0;
-                width: 20rem; /* increased sidebar width */
-                z-index: 1030;
-                overflow-y: auto;
-                padding-top: 1rem;
-            }
-
-            .admin-content {
-                margin-left: 20rem;
-            }
+        /* Sidebar fixed layout for all panels (admin, minibar, recepcion, habitaciones...) */
+        :root {
+            --sidebar-width: 18rem; /* default width */
         }
 
+        /* override width using variable and keep fixed positioning */
+        .admin-sidebar-fixed {
+            position: fixed !important;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            /* slightly narrower so visual gap is reduced but layout doesn't overlap */
+            width: calc(var(--sidebar-width) - 0.25rem) !important;
+            z-index: 1030;
+            overflow-y: auto;
+            padding-top: 1rem;
+        }
+
+        /* also force width when Bootstrap column classes are present */
+        .admin-sidebar-fixed.col-auto,
+        .admin-sidebar-fixed.col-md-3,
+        .admin-sidebar-fixed.col-xl-2 {
+            flex: 0 0 auto;
+            width: var(--sidebar-width) !important;
+        }
+
+        .admin-content {
+            /* subtract bootstrap column padding (1rem each side) to eliminate gap */
+            margin-left: calc(var(--sidebar-width) - 2rem);
+            padding-left: 0; /* remove default .col padding on left */
+        }
+
+        /* panel-specific variable overrides */
+        body.panel-habitaciones { --sidebar-width: 22rem; }
+        body.panel-minibar     { --sidebar-width: 20rem; }
+        body.panel-admin       { --sidebar-width: 18rem; }
+        body.panel-recepcion   { --sidebar-width: 18rem; }
+
+        /* container and row should not add extra padding when sidebar fixed */
+        .container-fluid { padding-left: 0; padding-right: 0; }
+        .row.flex-nowrap { margin-left: 0; margin-right: 0; }
+
+        /* Make inner .container sit left and use remaining width next to sidebar
+           so centered max-width containers don't create a visual gap. */
+        body.panel-habitaciones .admin-content .container,
+        body.panel-minibar .admin-content .container,
+        body.panel-admin .admin-content .container,
+        body.panel-recepcion .admin-content .container {
+            margin-left: 0 !important;
+            max-width: calc(100% - var(--sidebar-width));
+            padding-left: 1rem; /* small inner padding */
+            padding-right: 1rem;
+        }
+
+        /* Responsive reset on very small screens */
         @media (max-width: 767.98px) {
             .admin-sidebar-fixed {
                 position: relative !important;
@@ -57,7 +94,20 @@
 
     <title>Hotel Management System</title>
 </head>
-<body>
+@php
+    // determine panel-specific body class for sidebar width
+    $bodyClasses = [];
+    if(request()->routeIs('admin.habitaciones.*')) {
+        $bodyClasses[] = 'panel-habitaciones';
+    } elseif(request()->routeIs('admin.minibar.*')) {
+        $bodyClasses[] = 'panel-minibar';
+    } elseif(request()->routeIs('admin.*')) {
+        $bodyClasses[] = 'panel-admin';
+    } elseif(request()->routeIs('reception.*')) {
+        $bodyClasses[] = 'panel-recepcion';
+    }
+@endphp
+<body class="{{ implode(' ', $bodyClasses) }}">
         {{-- ✅ Notificación Global Única --}}
         @if (session('success'))
             <div id="global-notification" style="
