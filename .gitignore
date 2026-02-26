@@ -17,3 +17,7 @@ yarn-error.log
 /.fleet
 /.idea
 /.vscode
+
+# Ignore compiled Blade views and framework caches
+/storage/framework/views/
+/storage/framework/cache/
