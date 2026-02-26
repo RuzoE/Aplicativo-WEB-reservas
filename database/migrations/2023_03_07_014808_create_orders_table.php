@@ -13,8 +13,8 @@ return new class extends Migration {
     public function up(): void {
         Schema::create('orders', function (Blueprint $table) {
             $table->id();
-            $table->timestamp('check_in')->default(DB::raw('CURRENT_TIMESTAMP'));
-            $table->timestamp('check_out')->default(DB::raw('CURRENT_TIMESTAMP'));
+            $table->timestamp('check_in')->nullable();
+            $table->timestamp('check_out')->nullable();
             $table->bigInteger('room_id')->unsigned();
             $table->bigInteger('user_id')->unsigned();
             $table->foreign('room_id')->references('id')->on('rooms')->onDelete('cascade');
