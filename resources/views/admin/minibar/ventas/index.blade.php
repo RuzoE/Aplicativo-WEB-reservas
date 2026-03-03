@@ -109,7 +109,8 @@
   <div class="page-subtitle">Gestión completa de todas las compras realizadas en el minibar</div>
 
   <div class="ventas-table">
-    <table>
+    <div class="table-responsive">
+      <table style="min-width: 750px; margin-bottom: 0;">
       <thead>
         <tr>
           <th style="width: 60px;">#</th>
@@ -152,6 +153,7 @@
         @endforelse
       </tbody>
     </table>
+    </div>
   </div>
 
   @if($compras instanceof \Illuminate\Pagination\Paginator && $compras->hasPages())

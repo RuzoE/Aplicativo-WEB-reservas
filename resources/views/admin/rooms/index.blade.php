@@ -240,20 +240,21 @@
   <div class="rooms-table-wrapper">
     @forelse($rooms as $room)
       @if($loop->first)
-        <table class="table">
-          <thead>
-            <tr>
-              <th scope="col">#</th>
-              <th scope="col">Tipo</th>
-              <th scope="col">Total</th>
-              <th scope="col">Camas</th>
-              <th scope="col">Precio</th>
-              <th scope="col">Imagen</th>
-              <th scope="col">Estado</th>
-              <th scope="col">Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
+        <div class="table-responsive">
+          <table class="table mb-0">
+            <thead>
+              <tr>
+                <th scope="col">#</th>
+                <th scope="col">Tipo</th>
+                <th scope="col">Total</th>
+                <th scope="col">Camas</th>
+                <th scope="col">Precio</th>
+                <th scope="col">Imagen</th>
+                <th scope="col">Estado</th>
+                <th scope="col">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
       @endif
             <tr>
               <td>{{ $loop->iteration }}</td>
@@ -293,8 +294,9 @@
               </td>
             </tr>
       @if($loop->last)
-          </tbody>
-        </table>
+            </tbody>
+          </table>
+        </div>
       @endif
     @empty
       <div class="empty-state">

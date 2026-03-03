@@ -54,16 +54,17 @@
         }
 
         .admin-content {
-            /* subtract bootstrap column padding (1rem each side) to eliminate gap */
-            margin-left: calc(var(--sidebar-width) - 2rem);
-            padding-left: 0; /* remove default .col padding on left */
+            /* Use exact sidebar width for margin to prevent overlap */
+            margin-left: var(--sidebar-width);
+            padding-left: 1.5rem; /* add visual gap between sidebar and content */
+            padding-right: 1.5rem;
         }
 
         /* panel-specific variable overrides */
         body.panel-habitaciones { --sidebar-width: 22rem; }
-        body.panel-minibar     { --sidebar-width: 20rem; }
-        body.panel-admin       { --sidebar-width: 18rem; }
-        body.panel-recepcion   { --sidebar-width: 18rem; }
+        body.panel-minibar     { --sidebar-width: 22rem; }
+        body.panel-admin       { --sidebar-width: 22rem; }
+        body.panel-recepcion   { --sidebar-width: 22rem; }
 
         /* container and row should not add extra padding when sidebar fixed */
         .container-fluid { padding-left: 0; padding-right: 0; }
@@ -83,12 +84,45 @@
 
         /* Responsive reset on very small screens */
         @media (max-width: 767.98px) {
-            .admin-sidebar-fixed {
-                position: relative !important;
-                width: 100%;
+            .row.flex-nowrap {
+                flex-wrap: wrap !important;
             }
 
-            .admin-content { margin-left: 0; }
+            .admin-sidebar-fixed,
+            .admin-sidebar-fixed.col-auto,
+            .admin-sidebar-fixed.col-md-3,
+            .admin-sidebar-fixed.col-xl-2 {
+                position: static !important;
+                width: 100% !important;
+                max-width: 100%;
+                transform: none !important;
+                z-index: 1040;
+                box-shadow: inset 0px -4px 6px -4px rgba(0,0,0,0.5) !important;
+                
+                max-height: 0;
+                overflow: hidden !important;
+                transition: max-height 0.4s ease-in-out !important;
+                padding-top: 0 !important;
+                padding-bottom: 0 !important;
+            }
+
+            .admin-sidebar-fixed.show {
+                max-height: 800px; /* Suficiente para mostrar los enlaces */
+                overflow-y: auto !important;
+            }
+
+            /* Quitar el min-viewport height para que se acople al contenido o esconda en 0 */
+            .admin-sidebar-fixed .min-vh-100 {
+                min-height: 0 !important;
+                height: auto !important;
+            }
+
+            .admin-content { 
+                margin-left: 0 !important; 
+                padding-left: 1rem !important;
+                padding-right: 1rem !important;
+                width: 100%;
+            }
         }
     </style>
 
@@ -128,6 +162,16 @@
 
     <!-- Admin Panel -->
     @if(isset($adminView))
+        <!-- Mobile Topbar Navbar (Only visible on mobile) -->
+        <div class="d-md-none bg-dark d-flex justify-content-between align-items-center p-3 text-white shadow-sm sticky-top">
+            <h5 class="m-0 text-warning d-flex align-items-center">
+                <i class="bi bi-shield-lock me-2"></i> Admin Panel
+            </h5>
+            <button id="mobile-sidebar-toggle" class="btn btn-outline-warning btn-sm border-0">
+                <i class="bi bi-list fs-2"></i>
+            </button>
+        </div>
+
         <div class="container-fluid">
             <div class="row flex-nowrap">
                 @if(isset($sidebarView))
@@ -166,6 +210,22 @@
     <script src="{{ asset('lib/tempusdominus/js/moment.min.js') }}"></script>
     <script src="{{ asset('lib/tempusdominus/js/moment-timezone.min.js') }}"></script>
     <script src="{{ asset('lib/tempusdominus/js/tempusdominus-bootstrap-4.min.js') }}"></script>
+
+    <!-- Admin Mobile Sidebar Toggle JS -->
+    @if(isset($adminView))
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var toggleBtn = document.getElementById('mobile-sidebar-toggle');
+            var sidebar = document.querySelector('.admin-sidebar-fixed');
+            
+            if (toggleBtn && sidebar) {
+                toggleBtn.addEventListener('click', function() {
+                    sidebar.classList.toggle('show');
+                });
+            }
+        });
+    </script>
+    @endif
 
     <!-- Template Javascript -->
     <script src="{{ asset('js/main.js') }}"></script>

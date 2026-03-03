@@ -1,7 +1,7 @@
 <div class="col-auto col-md-3 col-xl-2 px-sm-2 px-0 bg-dark admin-sidebar-fixed">
-  <div class="d-flex flex-column align-items-center align-items-sm-start px-3 pt-2 text-white min-vh-100">
+  <div class="d-flex flex-column align-items-start w-100 px-3 pt-2 text-white min-vh-100">
     <a href="/" class="d-flex align-items-center pb-3 mb-md-0 me-md-auto text-white text-decoration-none">
-      <span class="fs-5 d-none d-sm-inline">Menu</span>
+      <span class="fs-5">Menu</span>
     </a>
 
     <div class="dropdown pb-4">
@@ -19,34 +19,34 @@
       </ul>
     </div>
 
-    <ul class="nav nav-pills flex-column mb-sm-auto mb-0 align-items-center align-items-sm-start" id="menu">
+    <ul class="nav nav-pills flex-column mb-sm-auto mb-0 align-items-start w-100" id="menu">
       <li class="nav-item">
-        <a href="{{ route('home') }}" class="nav-link align-middle px-0 text-warning">
-          <i class="fs-4 bi-house"></i> <span class="ms-1 d-none d-sm-inline">Inicio</span>
+        <a href="{{ route('home') }}" class="nav-link align-middle px-0 fs-5 pb-2">
+          <i class="fs-4 bi-house"></i> <span class="ms-1">Inicio</span>
         </a>
       </li>
 
       @if((auth()->user()->hasRole('administrador') || auth()->user()->hasRole('reservas')) && !request()->routeIs('reception.*'))
       <li>
-        <a href="{{ route('admin.habitaciones.dashboard') }}" class="nav-link px-0 align-middle text-warning">
-          <i class="fs-4 bi-speedometer"></i> <span class="ms-1 d-none d-sm-inline">Dashboard Reservas</span>
+        <a href="{{ route('admin.habitaciones.dashboard') }}" class="nav-link px-0 align-middle fs-5 pb-2">
+          <i class="fs-4 bi-speedometer"></i> <span class="ms-1">Dashboard Reservas</span>
         </a>
       </li>
       @endif
 
       @if((auth()->user()->hasRole('administrador') || auth()->user()->hasRole('minibar')) && !request()->routeIs('reception.*'))
       <li>
-        <a href="{{ route('admin.minibar.dashboard') }}" class="nav-link px-0 align-middle text-warning">
-          <i class="fs-4 bi-bar-chart"></i> <span class="ms-1 d-none d-sm-inline">Dashboard Minibar</span>
+        <a href="{{ route('admin.minibar.dashboard') }}" class="nav-link px-0 align-middle fs-5 pb-2">
+          <i class="fs-4 bi-bar-chart"></i> <span class="ms-1">Dashboard Minibar</span>
         </a>
       </li>
       @endif
 
       @if(auth()->user()->hasRole('administrador') || auth()->user()->hasRole('recepcion'))
       <li class="nav-item mt-3 mb-2">
-        <a href="{{ route('reception.dashboard') }}" class="nav-link px-0 align-middle text-warning">
+        <a href="{{ route('reception.dashboard') }}" class="nav-link px-0 align-middle fs-5 pb-2">
           <i class="fs-4 bi-grid-3x3-gap-fill"></i>
-          <span class="ms-1 d-none d-sm-inline">Dashboard Recepción</span>
+          <span class="ms-1">Dashboard Recepción</span>
         </a>
       </li>
       @endif
@@ -54,23 +54,23 @@
       {{-- Mostrar accesos específicos de Recepción solo cuando estamos en las rutas de recepción --}}
       @if(auth()->user()->hasAnyRole(['administrador','recepcion']) && request()->routeIs('reception.*'))
       <li class="nav-item mb-2">
-        <a href="{{ route('reception.dashboard') }}#checkin" class="nav-link px-0 align-middle text-warning">
+        <a href="{{ route('reception.dashboard') }}#checkin" class="nav-link px-0 align-middle fs-5 pb-2">
           <i class="fs-4 bi-door-open-fill"></i>
-          <span class="ms-1 d-none d-sm-inline">Check-in</span>
+          <span class="ms-1">Check-in</span>
         </a>
       </li>
 
       <li class="nav-item mb-2">
-        <a href="{{ route('reception.dashboard') }}#folio" class="nav-link px-0 align-middle text-warning">
+        <a href="{{ route('reception.dashboard') }}#folio" class="nav-link px-0 align-middle fs-5 pb-2">
           <i class="fs-4 bi-receipt"></i>
-          <span class="ms-1 d-none d-sm-inline">Folio</span>
+          <span class="ms-1">Folio</span>
         </a>
       </li>
 
       <li class="nav-item mb-2">
-        <a href="{{ route('reception.dashboard') }}#checkout" class="nav-link px-0 align-middle text-warning">
+        <a href="{{ route('reception.dashboard') }}#checkout" class="nav-link px-0 align-middle fs-5 pb-2">
           <i class="fs-4 bi-box-arrow-in-right"></i>
-          <span class="ms-1 d-none d-sm-inline">Check-out</span>
+          <span class="ms-1">Check-out</span>
         </a>
       </li>
       @endif
@@ -78,11 +78,17 @@
       {{-- Gestión de empleados - solo para administradores --}}
       @if(auth()->user()->hasRole('administrador') && !request()->routeIs('reception.*'))
       <li>
-        <a href="{{ route('admin.empleados.index') }}" class="nav-link px-0 align-middle">
-          <i class="fs-4 bi-people"></i> <span class="ms-1 d-none d-sm-inline">Empleados</span>
+        <a href="{{ route('admin.empleados.index') }}" class="nav-link px-0 align-middle fs-5 pb-2">
+          <i class="fs-4 bi-people"></i> <span class="ms-1">Empleados</span>
         </a>
       </li>
       @endif
+
+      <li class="nav-item mt-auto mb-2 pt-3 border-top w-100">
+        <a href="{{ route('admin.index') }}" class="nav-link align-middle px-0 fs-5 pb-2">
+          <i class="fs-4 bi-arrow-left-circle"></i> <span class="ms-1">Panel Principal</span>
+        </a>
+      </li>
     </ul>
   </div>
 </div>
