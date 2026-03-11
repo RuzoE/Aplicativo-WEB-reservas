@@ -8,7 +8,7 @@
                     <div class="row g-2">
                         <div class="col-md-3">
                             <div class="date" id="date1" data-target-input="nearest">
-                                <input name="check_in" type="text" placeholder="Check in" data-target="#date1"
+                                <input name="check_in" type="text" placeholder="Fecha de entrada" data-target="#date1"
                                        class="form-control datetimepicker-input @error('check_in') is-invalid @enderror"
                                        data-toggle="datetimepicker"
                                        value="{{ old('check_in', $fields['check_in'] ?? '') }}"/>
@@ -19,7 +19,7 @@
                         </div>
                         <div class="col-md-3">
                             <div class="date" id="date2" data-target-input="nearest">
-                                <input name="check_out" type="text" placeholder="Check out" data-target="#date2"
+                                <input name="check_out" type="text" placeholder="Fecha de salida" data-target="#date2"
                                        class="form-control datetimepicker-input @error('check_out') is-invalid @enderror"
                                        data-toggle="datetimepicker"
                                        value="{{ old('check_out', $fields['check_out'] ?? '') }}"/>

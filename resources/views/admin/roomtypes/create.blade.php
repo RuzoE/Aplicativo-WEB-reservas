@@ -157,18 +157,18 @@
 </style>
 
 <div class="form-container">
-  <a href="{{ route('admin.habitaciones.roomtypes.index') }}" class="back-link">
+  <a href="{{ route('admin.habitaciones.tipos-habitacion.index') }}" class="back-link">
     <i class="bi bi-arrow-left"></i>
-    Volver a Tipos de Habitación
+    {{ __('messages.back') }} a {{ __('messages.roomtypes') }}
   </a>
 
   <div class="form-card">
     <div class="form-title">
       <i class="bi bi-plus-square"></i>
-      Crear Tipo de Habitación
+      {{ __('messages.create') }} {{ __('messages.roomtypes') }}
     </div>
 
-    <form method="post" action="{{ route('admin.habitaciones.roomtypes.store') }}">
+    <form method="post" action="{{ route('admin.habitaciones.tipos-habitacion.store') }}">
       @csrf
 
       <div class="info-box">
@@ -178,7 +178,7 @@
 
       {{-- Nombre --}}
       <div class="form-group">
-        <label for="nombre" class="form-label">Nombre del Tipo</label>
+        <label for="nombre" class="form-label">{{ __('messages.name') }} del Tipo</label>
         <input id="nombre"
                type="text"
                name="name"
@@ -193,10 +193,10 @@
       {{-- Acciones --}}
       <div class="form-actions">
         <button type="submit" class="btn-submit">
-          <i class="bi bi-check-lg me-1"></i> Crear Tipo
+          <i class="bi bi-check-lg me-1"></i> {{ __('messages.create') }}
         </button>
-        <a href="{{ route('admin.habitaciones.roomtypes.index') }}" class="btn-cancel">
-          <i class="bi bi-x-lg me-1"></i> Cancelar
+        <a href="{{ route('admin.habitaciones.tipos-habitacion.index') }}" class="btn-cancel">
+          <i class="bi bi-x-lg me-1"></i> {{ __('messages.cancel') }}
         </a>
       </div>
     </form>

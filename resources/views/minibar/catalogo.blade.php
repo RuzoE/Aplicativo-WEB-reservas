@@ -18,6 +18,10 @@
   .filter-select{min-width:200px;padding:.8rem 1rem;border:2px solid #e5e7eb;border-radius:10px;background:#fff;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M6 8 2.5 4.5h7z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right .9rem center;padding-right:2.2rem}
   .filter-select:focus{outline:none;border-color:#f0ad4e;box-shadow:0 0 0 3px rgba(240,173,78,.12)}
   .products-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1.5rem;margin-top:1.5rem}
+  .products-section{margin-top:1.75rem}
+  .section-header-wrap{text-align:center;margin-bottom:1.5rem}
+  .section-title{margin:0;font-size:1.25rem;font-weight:900;color:#1a1a2e;display:inline-block;position:relative}
+  .section-subtitle{margin:.3rem 0 0;color:#707070;font-size:.92rem}
   .product-card{background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.08);display:flex;flex-direction:column;transition:.25s}
   .product-card:hover{transform:translateY(-6px);box-shadow:0 12px 22px rgba(0,0,0,.16)}
   .product-image{height:220px;background:#f5f6f7;display:flex;align-items:center;justify-content:center}
@@ -52,27 +56,67 @@
     <button class="search-btn" type="submit"><i class="fas fa-search"></i></button>
   </form>
 
-  <div class="products-grid">
-    @forelse($products as $p)
-      <div class="product-card">
-        <div class="product-image">
-          <img src="{{ asset('storage/'.$p->imagen) }}" alt="{{ $p->nombre }}">
-        </div>
-        <div class="product-body">
-          <div class="product-category">{{ $p->type->nombre ?? 'Bebida' }}</div>
-          <div class="product-name">{{ $p->nombre }}</div>
-          <div class="product-price">${{ number_format($p->precio, 2) }}</div>
-          <a class="product-btn" href="{{ route('minibar.bebida.show', $p) }}"><i class="fas fa-eye"></i> Ver detalles</a>
-        </div>
-      </div>
-    @empty
+  @if($products->count() === 0)
+    <div class="products-grid">
       <div class="empty">
         <div style="font-size:3rem;opacity:.25;margin-bottom:.5rem"><i class="fas fa-search"></i></div>
         <div>No se encontraron bebidas para estos filtros.</div>
         <div style="margin-top:1rem"><a class="product-btn" style="display:inline-flex" href="{{ route('minibar.catalogo') }}"><i class="fas fa-redo"></i>&nbsp;Limpiar filtros</a></div>
       </div>
-    @endforelse
-  </div>
+    </div>
+  @else
+    @if($showNonAlcoholicSection)
+      <div class="products-section">
+        <div class="section-header-wrap">
+          <h2 class="section-title">Bebidas No Alcohólicas</h2>
+          <p class="section-subtitle">Refrescantes y ligeras para cualquier momento.</p>
+        </div>
+        <div class="products-grid">
+          @forelse($nonAlcoholicProducts as $p)
+            <div class="product-card">
+              <div class="product-image">
+                <img src="{{ asset('storage/'.$p->imagen) }}" alt="{{ $p->nombre }}">
+              </div>
+              <div class="product-body">
+                <div class="product-category">{{ $p->type->nombre ?? 'Bebida' }}</div>
+                <div class="product-name">{{ $p->nombre }}</div>
+                <div class="product-price">${{ number_format($p->precio, 2) }}</div>
+                <a class="product-btn" href="{{ route('minibar.bebida.show', $p) }}"><i class="fas fa-eye"></i> Ver detalles</a>
+              </div>
+            </div>
+          @empty
+            <div class="empty">No hay bebidas no alcohólicas en esta página.</div>
+          @endforelse
+        </div>
+      </div>
+    @endif
+
+    @if($showAlcoholicSection)
+      <div class="products-section">
+        <div class="section-header-wrap">
+          <h2 class="section-title">Bebidas Alcohólicas</h2>
+          <p class="section-subtitle">Selección para quienes buscan más intensidad y sabor.</p>
+        </div>
+        <div class="products-grid">
+          @forelse($alcoholicProducts as $p)
+            <div class="product-card">
+              <div class="product-image">
+                <img src="{{ asset('storage/'.$p->imagen) }}" alt="{{ $p->nombre }}">
+              </div>
+              <div class="product-body">
+                <div class="product-category">{{ $p->type->nombre ?? 'Bebida' }}</div>
+                <div class="product-name">{{ $p->nombre }}</div>
+                <div class="product-price">${{ number_format($p->precio, 2) }}</div>
+                <a class="product-btn" href="{{ route('minibar.bebida.show', $p) }}"><i class="fas fa-eye"></i> Ver detalles</a>
+              </div>
+            </div>
+          @empty
+            <div class="empty">No hay bebidas alcohólicas en esta página.</div>
+          @endforelse
+        </div>
+      </div>
+    @endif
+  @endif
 
   @if($products->hasPages())
     <div class="pagination">{{ $products->withQueryString()->links() }}</div>

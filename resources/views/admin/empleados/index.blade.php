@@ -9,6 +9,7 @@
         <span class="badge rounded-pill role-badge-reservas">Reservas</span>
         <span class="badge rounded-pill role-badge-minibar">Minibar</span>
         <span class="badge rounded-pill role-badge-recepcion">Recepción</span>
+        <span class="badge rounded-pill role-badge-mantenimiento">Mantenimiento</span>
       </div>
       <button type="button" id="btnNuevoEmpleado" class="btn btn-success shadow-sm">
         <i class="bi bi-person-plus"></i> <span class="d-none d-sm-inline">Nuevo empleado</span>
@@ -16,7 +17,7 @@
     </div>
   </div>
   <div class="alert alert-info py-2 px-3 small mb-3">
-    Los roles disponibles son fijos: <strong>Reservas</strong>, <strong>Minibar</strong> y <strong>Recepción</strong>. Usa el selector para reasignar rápidamente el acceso al panel correspondiente.
+    Los roles disponibles para creación son: <strong>Reservas</strong>, <strong>Minibar</strong>, <strong>Recepción</strong> y <strong>Mantenimiento</strong>. Usa el selector para reasignar rápidamente el acceso al panel correspondiente.
   </div>
 
   <!-- Formulario inline oculto -->
@@ -92,7 +93,7 @@
           <div class="row g-3">
             @foreach($rolesCreate as $id => $rname)
               <div class="col-md-6">
-                <label class="role-card-custom p-3 border rounded-2 d-flex align-items-center gap-3" style="cursor:pointer;transition:all .2s">
+                <label class="role-card-custom p-3 border rounded-2 d-flex align-items-center gap-3 h-100" style="cursor:pointer;transition:all .2s">
                   <input type="radio" name="role_id" value="{{ $id }}" class="form-check-input" style="width:20px;height:20px" required>
                   <div>
                     <div class="fw-bold text-capitalize" style="font-size:1rem">
@@ -100,15 +101,19 @@
                         <i class="bi bi-calendar-event me-2 text-warning"></i>Reservas
                       @elseif($rname === 'recepcion')
                         <i class="bi bi-person-badge me-2 text-primary"></i>Recepción
+                      @elseif($rname === 'mantenimiento')
+                        <i class="bi bi-tools me-2 text-danger"></i>Mantenimiento
                       @else
                         <i class="bi bi-shop me-2 text-success"></i>Minibar
                       @endif
                     </div>
-                    <small class="text-muted d-block">
+                    <small class="text-muted d-block mt-1">
                       @if($rname === 'reservas')
                         Gestión de habitaciones y reservas
                       @elseif($rname === 'recepcion')
                         Gestión de check-in, folios y atención al huésped
+                      @elseif($rname === 'mantenimiento')
+                        Gestión de órdenes de mantenimiento y reparaciones
                       @else
                         Gestión de productos y ventas
                       @endif
@@ -208,16 +213,7 @@
     @endif
   </div>
 
-  @if(session('success'))
-    <div class="toast-container position-fixed top-0 end-0 p-3">
-      <div class="toast align-items-center text-bg-success show" role="alert">
-        <div class="d-flex">
-          <div class="toast-body">{{ session('success') }}</div>
-          <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-        </div>
-      </div>
-    </div>
-  @endif
+
 
   @if ($errors->any())
     <div class="alert alert-danger mt-3">
@@ -234,6 +230,7 @@
   .empleados-page .role-badge-reservas { background: linear-gradient(135deg,#FFE0B2,#FFB74D); color:#000 !important; font-weight:600; }
   .empleados-page .role-badge-minibar { background: linear-gradient(135deg,#C8E6C9,#81C784); color:#000 !important; font-weight:600; }
   .empleados-page .role-badge-recepcion { background: linear-gradient(135deg,#D1ECFF,#90E0EF); color:#000 !important; font-weight:600; }
+  .empleados-page .role-badge-mantenimiento { background: linear-gradient(135deg,#FFD54F,#FFA000); color:#000 !important; font-weight:600; }
   .empleados-page .role-badge-administrador { background: linear-gradient(135deg,#E0F2FF,#90CAF9); color:#000 !important; font-weight:600; }
   .empleados-page .role-badge-invitado { background: linear-gradient(135deg,#F3E5F5,#CE93D8); color:#000 !important; font-weight:600; }
   .empleados-page .badge[class*="role-badge-"] { color:#000 !important; }

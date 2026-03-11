@@ -12,7 +12,7 @@ return new class extends Migration {
             $table->unsignedBigInteger('stay_id');
             $table->string('number')->unique();
             $table->string('status')->index();
-            $table->string('currency', 3)->default('USD');
+            $table->string('currency', 3)->default('COP');
             $table->decimal('balance', 12, 2)->default(0);
             $table->timestamps();
         });

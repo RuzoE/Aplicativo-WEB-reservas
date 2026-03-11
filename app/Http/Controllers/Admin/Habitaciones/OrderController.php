@@ -13,7 +13,7 @@ class OrderController extends Controller
      */
     public function index()
     {
-        $orders = Order::all();
+        $orders = Order::with(['user', 'room.roomtype'])->get();
         return view('admin.orders.index', compact('orders'));
     }
 
@@ -22,7 +22,7 @@ class OrderController extends Controller
      */
     public function create()
     {
-        //
+    //
     }
 
     /**
@@ -30,7 +30,7 @@ class OrderController extends Controller
      */
     public function store(Request $request)
     {
-        //
+    //
     }
 
     /**
@@ -38,7 +38,7 @@ class OrderController extends Controller
      */
     public function show(Order $order)
     {
-        //
+    //
     }
 
     /**
@@ -46,7 +46,7 @@ class OrderController extends Controller
      */
     public function edit(Order $order)
     {
-        //
+    //
     }
 
     /**
@@ -54,7 +54,7 @@ class OrderController extends Controller
      */
     public function update(Request $request, Order $order)
     {
-        //
+    //
     }
 
     /**
@@ -62,6 +62,6 @@ class OrderController extends Controller
      */
     public function destroy(Order $order)
     {
-        //
+    //
     }
 }

@@ -300,22 +300,8 @@
         <h1>Mi Carrito</h1>
     </div>
 
-    {{-- Mostrar alertas de éxito --}}
-    @if(session('success'))
-        <div class="alert alert-success">
-            <i class="fas fa-check-circle"></i> {{ session('success') }}
-        </div>
-    @endif
-
-    {{-- Mostrar alertas de error --}}
-    @if(session('error'))
-        <div class="alert alert-danger">
-            <i class="fas fa-exclamation-circle"></i> {{ session('error') }}
-        </div>
-    @endif
-
-    {{-- Verificar si hay items --}}
     @if($items->isEmpty())
+        <div class="cart-content">
         <div class="empty-cart">
             <div class="empty-cart-icon">
                 <i class="fas fa-shopping-cart"></i>

@@ -28,33 +28,35 @@
 
       <li class="nav-item">
         <a href="{{ route('admin.habitaciones.dashboard') }}" class="nav-link align-middle px-0 fs-5 pb-2">
-          <i class="fs-4 bi-speedometer2"></i> <span class="ms-1">Dashboard</span>
+          <i class="fs-4 bi-speedometer2"></i> <span class="ms-1">{{ __('messages.dashboard') }}</span>
         </a>
       </li>
 
       <li>
-        <a href="{{ route('admin.habitaciones.orders.index') }}" class="nav-link px-0 align-middle fs-5 pb-2">
-          <i class="fs-4 bi-table"></i> <span class="ms-1">Reservas</span>
+        <a href="{{ route('admin.habitaciones.reservas.index') }}" class="nav-link px-0 align-middle fs-5 pb-2">
+          <i class="fs-4 bi-table"></i> <span class="ms-1">{{ __('messages.orders') }}</span>
         </a>
       </li>
 
       <li>
-        <a href="{{ route('admin.habitaciones.roomtypes.index') }}" class="nav-link px-0 align-middle fs-5 pb-2">
-          <i class="fs-4 bi-grid"></i> <span class="ms-1">Tipo Habitación</span>
+        <a href="{{ route('admin.habitaciones.tipos-habitacion.index') }}" class="nav-link px-0 align-middle fs-5 pb-2">
+          <i class="fs-4 bi-grid"></i> <span class="ms-1">{{ __('messages.roomtypes') }}</span>
         </a>
       </li>
 
       <li>
-        <a href="{{ route('admin.habitaciones.rooms.index') }}" class="nav-link px-0 align-middle fs-5 pb-2">
-          <i class="fs-4 bi-grid"></i> <span class="ms-1">Habitaciones</span>
+        <a href="{{ route('admin.habitaciones.habitaciones.index') }}" class="nav-link px-0 align-middle fs-5 pb-2">
+          <i class="fs-4 bi-grid"></i> <span class="ms-1">{{ __('messages.rooms') }}</span>
         </a>
       </li>
 
+      @if(auth()->user()->hasRole('administrador'))
       <li class="nav-item mt-auto mb-2 pt-3 border-top w-100">
         <a href="{{ route('admin.index') }}" class="nav-link align-middle px-0 text-warning fs-5 pb-2">
-          <i class="fs-4 bi-arrow-left-circle"></i> <span class="ms-1">Panel Principal</span>
+          <i class="fs-4 bi-arrow-left-circle"></i> <span class="ms-1">{{ __('messages.main_panel') }}</span>
         </a>
       </li>
+      @endif
     </ul>
   </div>
 </div>

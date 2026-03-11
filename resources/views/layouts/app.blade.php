@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, viewport-fit=cover">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <!-- Google Web Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -98,7 +99,7 @@
                 transform: none !important;
                 z-index: 1040;
                 box-shadow: inset 0px -4px 6px -4px rgba(0,0,0,0.5) !important;
-                
+
                 max-height: 0;
                 overflow: hidden !important;
                 transition: max-height 0.4s ease-in-out !important;
@@ -117,8 +118,8 @@
                 height: auto !important;
             }
 
-            .admin-content { 
-                margin-left: 0 !important; 
+            .admin-content {
+                margin-left: 0 !important;
                 padding-left: 1rem !important;
                 padding-right: 1rem !important;
                 width: 100%;
@@ -143,19 +144,28 @@
 @endphp
 <body class="{{ implode(' ', $bodyClasses) }}">
         {{-- ✅ Notificación Global Única --}}
-        @if (session('success'))
-            <div id="global-notification" style="
+        @if (session('success') || session('message') || session('status'))
+            <div id="global-notification" class="animated fadeInDown" style="
                 position: fixed;
-                top: 80px;
+                top: 20px;
                 right: 20px;
-                background-color: #38c172;
+                background: linear-gradient(135deg, #28a745 0%, #218838 100%);
                 color: white;
-                padding: 15px 20px;
-                border-radius: 8px;
-                box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+                padding: 16px 24px;
+                border-radius: 12px;
+                box-shadow: 0 10px 30px rgba(40, 167, 69, 0.3);
                 z-index: 9999;
-                font-weight: bold;">
-                {{ session('success') }}
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                font-weight: 600;
+                border: 1px solid rgba(255,255,255,0.1);
+                backdrop-filter: blur(8px);
+                transition: all 0.5s ease;
+            ">
+                <i class="fas fa-check-circle fs-4"></i>
+                <span>{{ session('success') ?? session('message') ?? session('status') }}</span>
+                <button type="button" class="btn-close btn-close-white ms-2" onclick="this.parentElement.remove()" style="font-size: 0.8rem;"></button>
             </div>
             <script src="{{ asset('js/notificaciones.js') }}"></script>
         @endif
@@ -174,7 +184,9 @@
 
         <div class="container-fluid">
             <div class="row flex-nowrap">
-                @if(isset($sidebarView))
+                @if(View::hasSection('sidebar'))
+                    @yield('sidebar')
+                @elseif(isset($sidebarView))
                     @include($sidebarView)
                 @else
                     @include('admin.sidebar')
@@ -210,22 +222,6 @@
     <script src="{{ asset('lib/tempusdominus/js/moment.min.js') }}"></script>
     <script src="{{ asset('lib/tempusdominus/js/moment-timezone.min.js') }}"></script>
     <script src="{{ asset('lib/tempusdominus/js/tempusdominus-bootstrap-4.min.js') }}"></script>
-
-    <!-- Admin Mobile Sidebar Toggle JS -->
-    @if(isset($adminView))
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            var toggleBtn = document.getElementById('mobile-sidebar-toggle');
-            var sidebar = document.querySelector('.admin-sidebar-fixed');
-            
-            if (toggleBtn && sidebar) {
-                toggleBtn.addEventListener('click', function() {
-                    sidebar.classList.toggle('show');
-                });
-            }
-        });
-    </script>
-    @endif
 
     <!-- Template Javascript -->
     <script src="{{ asset('js/main.js') }}"></script>

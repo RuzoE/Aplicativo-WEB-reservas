@@ -91,10 +91,39 @@
     color: var(--primary);
 }
 
+.site-brand-title {
+    font-size: clamp(1.25rem, 3.4vw, 2.6rem);
+    line-height: 1;
+    white-space: nowrap;
+}
+
+.site-brand-mobile {
+    max-width: calc(100vw - 90px);
+}
+
+@media (min-width: 992px) and (max-width: 1399.98px) {
+    .site-brand-title {
+        font-size: clamp(1.4rem, 2.2vw, 2.2rem);
+    }
+
+    .navbar-dark .navbar-nav .nav-link {
+        margin-right: 18px;
+        font-size: 14px;
+    }
+}
+
 @media (max-width: 991.98px) {
     .navbar-dark .navbar-nav .nav-link  {
         margin-right: 0;
         padding: 10px 0;
+    }
+
+    .site-brand-mobile {
+        margin-right: .5rem;
+    }
+
+    .site-brand-mobile .site-brand-title {
+        font-size: clamp(1.1rem, 6vw, 1.85rem);
     }
 }
 

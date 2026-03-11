@@ -11,17 +11,22 @@ class EmployeeController extends Controller
 {
     public function index()
     {
-        // Filtrar solo usuarios con roles: administrador, reservas, minibar, recepcion
+        // Asegura que existan los roles operativos para mostrarlos en el formulario.
+        foreach (['reservas', 'minibar', 'recepcion', 'mantenimiento'] as $role) {
+            Role::firstOrCreate(['name' => $role, 'guard_name' => 'web']);
+        }
+
+        // Filtrar solo usuarios con roles: administrador, reservas, minibar, recepcion, mantenimiento
         $empleados = User::with('roles')
             ->whereHas('roles', function ($query) {
-            $query->whereIn('name', ['administrador', 'reservas', 'minibar', 'recepcion']);
+            $query->whereIn('name', ['administrador', 'reservas', 'minibar', 'recepcion', 'mantenimiento']);
         })
             ->orderBy('id', 'asc')
             ->get();
 
-        // Incluir recepcion en las opciones disponibles (sin exponer administrador)
-        $roles = Role::whereIn('name', ['reservas', 'minibar', 'recepcion'])->pluck('name'); // nombres para asignación rápida
-        $rolesCreate = Role::whereIn('name', ['reservas', 'minibar', 'recepcion'])->pluck('name', 'id'); // id => nombre para formulario crear
+        // Incluir recepcion y mantenimiento en las opciones disponibles (sin exponer administrador)
+        $roles = Role::whereIn('name', ['reservas', 'minibar', 'recepcion', 'mantenimiento'])->pluck('name'); // nombres para asignación rápida
+        $rolesCreate = Role::whereIn('name', ['reservas', 'minibar', 'recepcion', 'mantenimiento'])->pluck('name', 'id'); // id => nombre para formulario crear
         return view('admin.empleados.index', compact('empleados', 'roles', 'rolesCreate'));
     }
 
@@ -55,9 +60,8 @@ class EmployeeController extends Controller
         $roleName = Role::find($data['role_id'])->name;
         $user->assignRole($roleName);
 
-        return redirect()
-            ->route('admin.empleados.index')
-            ->with('success', 'Empleado creado correctamente.');
+        return redirect()->route('admin.empleados.index')
+            ->with('success', 'El empleado "' . $user->name . '" ha sido creado correctamente.');
     }
 
     public function update(Request $request, User $empleado)
@@ -84,7 +88,7 @@ class EmployeeController extends Controller
 
         return redirect()
             ->route('admin.empleados.index')
-            ->with('success', 'Empleado actualizado.');
+            ->with('success', 'Los datos de "' . $empleado->name . '" han sido actualizados.');
     }
 
     public function destroy(User $empleado)
@@ -93,7 +97,7 @@ class EmployeeController extends Controller
 
         return redirect()
             ->route('admin.empleados.index')
-            ->with('success', 'Empleado eliminado.');
+            ->with('success', 'El empleado ha sido eliminado del sistema.');
     }
 
     // POST: /admin/empleados/{user}/roles

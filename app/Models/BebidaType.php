@@ -12,6 +12,11 @@ class BebidaType extends Model
     protected $fillable = [
         'nombre',
         'descripcion',
+        'es_alcoholica',
+    ];
+
+    protected $casts = [
+        'es_alcoholica' => 'boolean',
     ];
 
     public function products()

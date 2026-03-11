@@ -223,15 +223,14 @@
 </style>
 
 <div class="rooms-container">
-  @include('components.show-success')
 
   <div class="rooms-header">
     <div class="rooms-title">
       <i class="bi bi-door-closed"></i>
-      Habitaciones
+      {{ __('messages.rooms') }}
     </div>
-    <a href="{{ route('admin.habitaciones.rooms.create') }}" class="btn-create-room">
-      <i class="bi bi-plus-lg"></i> Nueva Habitación
+    <a href="{{ route('admin.habitaciones.habitaciones.create') }}" class="btn-create-room">
+      <i class="bi bi-plus-lg"></i> {{ __('messages.create') }} {{ __('messages.rooms') }}
     </a>
   </div>
 
@@ -245,13 +244,13 @@
             <thead>
               <tr>
                 <th scope="col">#</th>
-                <th scope="col">Tipo</th>
+                <th scope="col">{{ __('messages.type') }}</th>
                 <th scope="col">Total</th>
-                <th scope="col">Camas</th>
-                <th scope="col">Precio</th>
-                <th scope="col">Imagen</th>
-                <th scope="col">Estado</th>
-                <th scope="col">Acciones</th>
+                <th scope="col">{{ __('messages.beds') }}</th>
+                <th scope="col">{{ __('messages.price') }}</th>
+                <th scope="col">{{ __('messages.image') }}</th>
+                <th scope="col">{{ __('messages.status') }}</th>
+                <th scope="col">{{ __('messages.action') }}</th>
               </tr>
             </thead>
             <tbody>
@@ -280,10 +279,10 @@
               </td>
               <td>
                 <div class="btn-actions">
-                  <a href="{{ route('admin.habitaciones.rooms.edit', ['room' => $room->id]) }}" class="btn-edit-room">
+                  <a href="{{ route('admin.habitaciones.habitaciones.edit', ['habitacione' => $room->id]) }}" class="btn-edit-room">
                     <i class="bi bi-pencil"></i>
                   </a>
-                  <form method="post" action="{{ route('admin.habitaciones.rooms.destroy', ['room' => $room->id]) }}" style="display: inline; margin: 0;">
+                  <form method="post" action="{{ route('admin.habitaciones.habitaciones.destroy', ['habitacione' => $room->id]) }}" style="display: inline; margin: 0;">
                     @csrf
                     @method('delete')
                     <button type="submit" class="btn-delete-room" onclick="return confirm('¿Estás seguro de que quieres eliminar esta habitación?')">

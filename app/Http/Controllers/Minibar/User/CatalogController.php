@@ -24,10 +24,26 @@ class CatalogController extends Controller
             ->take(8)
             ->get();
 
-        // las categorías para mostrarlas en el partial si quieres
-        $categories = BebidaType::withCount('products')->get();
+        // Mostrar solo 6 categorías en total: 3 alcohólicas + 3 no alcohólicas
+        $alcoholicCategories = BebidaType::withCount('products')
+            ->where('es_alcoholica', true)
+            ->orderByDesc('products_count')
+            ->orderBy('nombre')
+            ->take(3)
+            ->get();
 
-        return view('minibar.landing', compact('featured', 'categories'));
+        $nonAlcoholicCategories = BebidaType::withCount('products')
+            ->where('es_alcoholica', false)
+            ->orderByDesc('products_count')
+            ->orderBy('nombre')
+            ->take(3)
+            ->get();
+
+        $landingCategories = $nonAlcoholicCategories
+            ->concat($alcoholicCategories)
+            ->values();
+
+        return view('minibar.landing', compact('featured', 'landingCategories'));
     }
 
     /**
@@ -60,10 +76,74 @@ class CatalogController extends Controller
             ->paginate(12)
             ->appends(['q' => $q, 'tipo' => $tipo]);
 
+        $alcoholicProducts = $products->getCollection()->filter(function ($product) {
+            return $this->isAlcoholic($product);
+        })->values();
+
+        $nonAlcoholicProducts = $products->getCollection()->filter(function ($product) {
+            return !$this->isAlcoholic($product);
+        })->values();
+
         // Para el selector de tipos
         $categories = BebidaType::withCount('products')->get();
+        $selectedCategory = $tipo ? $categories->firstWhere('id', (int) $tipo) : null;
+        $selectedIsAlcoholic = $selectedCategory ? (bool) $selectedCategory->es_alcoholica : null;
 
-        return view('minibar.catalogo', compact('products', 'categories', 'q', 'tipo'));
+        // Si hay tipo seleccionado, muestra solo su bloque (alcoholico/no alcoholico).
+        $showNonAlcoholicSection = $selectedIsAlcoholic !== true;
+        $showAlcoholicSection = $selectedIsAlcoholic !== false;
+
+        return view(
+            'minibar.catalogo',
+            compact(
+                'products',
+                'categories',
+                'q',
+                'tipo',
+                'alcoholicProducts',
+                'nonAlcoholicProducts',
+                'showNonAlcoholicSection',
+                'showAlcoholicSection'
+            )
+        );
+    }
+
+    private function isAlcoholic(MinibarProduct $product): bool
+    {
+        if ($product->type && isset($product->type->es_alcoholica)) {
+            return (bool) $product->type->es_alcoholica;
+        }
+
+        $typeName = mb_strtolower((string) optional($product->type)->nombre);
+        $name = mb_strtolower((string) $product->nombre);
+
+        $alcoholKeywords = [
+            'alcohol',
+            'licor',
+            'cerveza',
+            'vino',
+            'ron',
+            'whisky',
+            'tequila',
+            'vodka',
+            'coctel',
+            'cocktail',
+            'sidra',
+            'gin',
+            'brandy',
+            'champagne',
+            'mezcal',
+            'pisco',
+            'aguardiente',
+        ];
+
+        foreach ($alcoholKeywords as $keyword) {
+            if (str_contains($typeName, $keyword) || str_contains($name, $keyword)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

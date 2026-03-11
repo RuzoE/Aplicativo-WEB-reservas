@@ -6,12 +6,14 @@ use App\Http\Controllers\Controller;
 use App\Models\RoomType;
 use Illuminate\Http\Request;
 
-class RoomTypeController extends Controller {
+class RoomTypeController extends Controller
+{
 
     /**
      * Display a listing of the resource.
      */
-    public function index() {
+    public function index()
+    {
 
         $types = RoomType::all();
         return view('admin.roomtypes.index', compact('types'));
@@ -20,14 +22,16 @@ class RoomTypeController extends Controller {
     /**
      * Show the form for creating a new resource.
      */
-    public function create() {
+    public function create()
+    {
         return view('admin.roomtypes.create');
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request) {
+    public function store(Request $request)
+    {
 
         $validatedData = $request->validate([
             'name' => ['required', 'unique:room_types,name']
@@ -35,21 +39,23 @@ class RoomTypeController extends Controller {
 
         RoomType::create($validatedData);
 
-        return redirect()->route('admin.habitaciones.roomtypes.index')
-            ->with('message', '¡Tu lista ha sido creada!');
+        return redirect()->route('admin.habitaciones.tipos-habitacion.index')
+            ->with('success', '¡El tipo de habitación "' . $validatedData['name'] . '" ha sido creado exitosamente!');
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(RoomType $roomType) {
-        //
+    public function show(RoomType $roomType)
+    {
+    //
     }
 
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(int $id) {
+    public function edit(int $id)
+    {
         $type = RoomType::findOrFail($id);
         // $this->authorize('update', $type);
 
@@ -59,27 +65,29 @@ class RoomTypeController extends Controller {
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, int $id) {
+    public function update(Request $request, int $id)
+    {
         $validatedData = $request->validate([
-            'name' => ['required', 'unique:room_types,name']
+            'name' => ['required', 'unique:room_types,name,' . $id]
         ]);
 
         $type = RoomType::findOrFail($id);
         $type->update($validatedData);
 
-        return redirect()->route('admin.habitaciones.roomtypes.index')
-            ->with('message', '¡Su tipo de habitación ha sido actualizado!');
+        return redirect()->route('admin.habitaciones.tipos-habitacion.index')
+            ->with('success', '¡El tipo de habitación "' . $validatedData['name'] . '" ha sido actualizado correctamente!');
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(int $id) {
+    public function destroy(int $id)
+    {
 
         $type = RoomType::findOrFail($id);
         $this->authorize('delete', $type);
         $type->delete();
-        return redirect()->route('admin.habitaciones.roomtypes.index')
-            ->with('message', '¡Su tipo de habitación ha sido eliminado!');
+        return redirect()->route('admin.habitaciones.tipos-habitacion.index')
+            ->with('success', '¡El tipo de habitación ha sido eliminado del sistema!');
     }
 }

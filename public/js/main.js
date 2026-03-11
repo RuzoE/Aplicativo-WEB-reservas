@@ -113,3 +113,14 @@
     });
 })(jQuery);
 
+// Admin mobile sidebar toggle (safe to run on every page — guards check for element existence)
+document.addEventListener('DOMContentLoaded', function () {
+    var toggleBtn = document.getElementById('mobile-sidebar-toggle');
+    var sidebar   = document.querySelector('.admin-sidebar-fixed');
+    if (toggleBtn && sidebar) {
+        toggleBtn.addEventListener('click', function () {
+            sidebar.classList.toggle('show');
+        });
+    }
+});
+

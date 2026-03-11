@@ -9,10 +9,7 @@ class BebidaTypeController extends Controller
 {
     public function index()
     {
-        // Renombramos la variable a $types
-        $types = BebidaType::latest()->paginate(10);
-
-        // Y compactamos 'types'
+        $types = BebidaType::where('es_alcoholica', true)->latest()->paginate(10);
         return view('admin.minibar.bebida-types.index', compact('types'));
     }
 
@@ -27,35 +24,98 @@ class BebidaTypeController extends Controller
             'nombre' => 'required|string|max:255|unique:bebida_types,nombre',
         ]);
 
-        BebidaType::create($request->only('nombre'));
+        BebidaType::create([
+            'nombre' => $request->nombre,
+            'es_alcoholica' => true,
+        ]);
 
         return redirect()
             ->route('admin.minibar.bebida-types.index')
-            ->with('success','Tipo de bebida creado.');
+            ->with('success', 'El tipo de bebida "' . $request->nombre . '" ha sido creado exitosamente.');
     }
 
     public function edit(BebidaType $bebida_type)
     {
+        abort_unless($bebida_type->es_alcoholica, 404);
         return view('admin.minibar.bebida-types.edit', compact('bebida_type'));
     }
 
     public function update(Request $request, BebidaType $bebida_type)
     {
+        abort_unless($bebida_type->es_alcoholica, 404);
+
         $request->validate([
-            'nombre' => 'required|string|max:255|unique:bebida_types,nombre,'.$bebida_type->id,
+            'nombre' => 'required|string|max:255|unique:bebida_types,nombre,' . $bebida_type->id,
         ]);
 
         $bebida_type->update($request->only('nombre'));
 
         return redirect()
             ->route('admin.minibar.bebida-types.index')
-            ->with('success','Tipo de bebida actualizado.');
+            ->with('success', 'El tipo de bebida "' . $request->nombre . '" ha sido actualizado.');
     }
 
     public function destroy(BebidaType $bebida_type)
     {
+        abort_unless($bebida_type->es_alcoholica, 404);
         $bebida_type->delete();
 
-        return back()->with('success','Tipo de bebida eliminado.');
+        return back()->with('success', 'El tipo de bebida ha sido eliminado correctamente.');
+    }
+
+    public function indexNonAlcoholic()
+    {
+        $types = BebidaType::where('es_alcoholica', false)->latest()->paginate(10);
+        return view('admin.minibar.bebida-types-na.index', compact('types'));
+    }
+
+    public function createNonAlcoholic()
+    {
+        return view('admin.minibar.bebida-types-na.create');
+    }
+
+    public function storeNonAlcoholic(Request $request)
+    {
+        $request->validate([
+            'nombre' => 'required|string|max:255|unique:bebida_types,nombre',
+        ]);
+
+        BebidaType::create([
+            'nombre' => $request->nombre,
+            'es_alcoholica' => false,
+        ]);
+
+        return redirect()
+            ->route('admin.minibar.bebida-types-na.index')
+            ->with('success', 'El tipo de bebida no alcohólica "' . $request->nombre . '" ha sido creado exitosamente.');
+    }
+
+    public function editNonAlcoholic(BebidaType $bebida_type)
+    {
+        abort_if($bebida_type->es_alcoholica, 404);
+        return view('admin.minibar.bebida-types-na.edit', compact('bebida_type'));
+    }
+
+    public function updateNonAlcoholic(Request $request, BebidaType $bebida_type)
+    {
+        abort_if($bebida_type->es_alcoholica, 404);
+
+        $request->validate([
+            'nombre' => 'required|string|max:255|unique:bebida_types,nombre,' . $bebida_type->id,
+        ]);
+
+        $bebida_type->update($request->only('nombre'));
+
+        return redirect()
+            ->route('admin.minibar.bebida-types-na.index')
+            ->with('success', 'El tipo de bebida no alcohólica "' . $request->nombre . '" ha sido actualizado.');
+    }
+
+    public function destroyNonAlcoholic(BebidaType $bebida_type)
+    {
+        abort_if($bebida_type->es_alcoholica, 404);
+        $bebida_type->delete();
+
+        return back()->with('success', 'El tipo de bebida no alcohólica ha sido eliminado correctamente.');
     }
 }

@@ -226,15 +226,14 @@
 </style>
 
 <div class="roomtypes-container">
-  @include('components.show-success')
 
   <div class="roomtypes-header">
     <div class="roomtypes-title">
       <i class="bi bi-collection"></i>
-      Tipos de Habitación
+      {{ __('messages.roomtypes') }}
     </div>
-    <a href="{{ route('admin.habitaciones.roomtypes.create') }}" class="btn-create-type" title="Crear nuevo tipo">
-      <span class="btn-create-type-text">CREAR</span>
+    <a href="{{ route('admin.habitaciones.tipos-habitacion.create') }}" class="btn-create-type" title="{{ __('messages.create') }}">
+      <span class="btn-create-type-text">{{ __('messages.create') }}</span>
     </a>
   </div>
 
@@ -246,8 +245,8 @@
         <thead>
           <tr>
             <th scope="col" style="width: 50px;"><i class="bi bi-list-ol"></i></th>
-            <th scope="col"><i class="bi bi-door-closed"></i>Nombre</th>
-            <th scope="col" style="width: 150px;"><i class="bi bi-gear"></i>Acción</th>
+            <th scope="col"><i class="bi bi-door-closed"></i>{{ __('messages.name') }}</th>
+            <th scope="col" style="width: 150px;"><i class="bi bi-gear"></i>{{ __('messages.action') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -257,13 +256,13 @@
               <td><span class="type-name">{{ $type->name }}</span></td>
               <td>
                 <div class="actions-cell">
-                  <a href="{{ route('admin.habitaciones.roomtypes.edit', ['roomtype' => $type->id]) }}" class="btn-action btn-edit" title="Editar">
+                  <a href="{{ route('admin.habitaciones.tipos-habitacion.edit', ['tipos_habitacion' => $type->id]) }}" class="btn-action btn-edit" title="{{ __('messages.edit') }}">
                     <i class="bi bi-pencil-square"></i>
                   </a>
-                  <form method="post" action="{{ route('admin.habitaciones.roomtypes.destroy', ['roomtype' => $type->id]) }}" style="display: inline;">
+                  <form method="post" action="{{ route('admin.habitaciones.tipos-habitacion.destroy', ['tipos_habitacion' => $type->id]) }}" style="display: inline;">
                     @csrf
                     @method('delete')
-                    <button type="submit" class="btn-action btn-delete" title="Eliminar" onclick="return confirm('¿Está seguro de que desea eliminar este tipo de habitación?');">
+                    <button type="submit" class="btn-action btn-delete" title="{{ __('messages.delete') }}" onclick="return confirm('¿Está seguro de que desea eliminar este tipo de habitación?');">
                       <i class="bi bi-trash-fill"></i>
                     </button>
                   </form>
@@ -283,8 +282,8 @@
         </div>
         <p class="empty-state-text">No hay tipos de habitación aún</p>
         <p class="empty-state-subtext">Crea tu primer tipo de habitación para comenzar</p>
-        <a href="{{ route('admin.habitaciones.roomtypes.create') }}" class="btn-create-first">
-          <i class="bi bi-plus-lg me-2"></i>Crear Tipo de Habitación
+        <a href="{{ route('admin.habitaciones.tipos-habitacion.create') }}" class="btn-create-first">
+          <i class="bi bi-plus-lg me-2"></i>{{ __('messages.create') }} {{ __('messages.roomtypes') }}
         </a>
       </div>
     </div>

@@ -185,14 +185,6 @@
 </style>
 
 <div class="bebidas-container">
-  {{-- Alerta de éxito --}}
-  @if(session('success'))
-    <div class="alert alert-success alert-dismissible fade show" role="alert" style="margin-bottom: 20px;">
-      <i class="bi bi-check-circle me-2"></i>
-      {{ session('success') }}
-      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
-    </div>
-  @endif
 
   {{-- Header con título y botón flotante --}}
   <div class="page-header">

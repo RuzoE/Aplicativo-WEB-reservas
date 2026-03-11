@@ -5,17 +5,19 @@ namespace App\Rules;
 use Closure;
 use Illuminate\Contracts\Validation\ValidationRule;
 
-class AlphaSpace implements ValidationRule {
+class AlphaSpace implements ValidationRule
+{
 
     /**
      * Run the validation rule.
      *
      * @param \Closure(string): \Illuminate\Translation\PotentiallyTranslatedString $fail
      */
-    public function validate(string $attribute, mixed $value, Closure $fail): void {
+    public function validate(string $attribute, mixed $value, Closure $fail): void
+    {
 
         if (!preg_match('/^[A-Za-z_\s\-]+$/', $value)) {
-            $fail("El atributo : debe contener sólo letras y espacios.");
+            $fail("El campo :attribute debe contener sólo letras y espacios.");
         }
     }
 }

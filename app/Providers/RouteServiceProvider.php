@@ -26,6 +26,9 @@ class RouteServiceProvider extends ServiceProvider
     {
         $this->configureRateLimiting();
 
+        // Model binding personalizado para MaintenanceOrder
+        Route::model('order', \App\Models\MaintenanceOrder::class);
+
         $this->routes(function () {
             Route::middleware('api')
                 ->prefix('api')

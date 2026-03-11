@@ -1,13 +1,13 @@
 <div class="col-auto col-md-3 col-xl-2 px-sm-2 px-0 bg-dark admin-sidebar-fixed">
   <div class="d-flex flex-column align-items-start w-100 px-3 pt-2 text-white min-vh-100">
     <a href="/" class="d-flex align-items-center pb-3 mb-md-0 me-md-auto text-white text-decoration-none">
-      <span class="fs-5">Menu</span>
+      <span class="fs-5">Menú</span>
     </a>
 
     <div class="dropdown pb-4">
       <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" id="dropdownUser1" data-bs-toggle="dropdown" aria-expanded="false">
         <img src="https://github.com/mdo.png" alt="hugenerd" width="30" height="30" class="rounded-circle">
-        <span class="d-none d-sm-inline mx-1">Admin</span>
+        <span class="d-none d-sm-inline mx-1">Administrador</span>
       </a>
       <ul class="dropdown-menu dropdown-menu-dark text-small shadow">
         <li>
@@ -28,25 +28,33 @@
 
       @if((auth()->user()->hasRole('administrador') || auth()->user()->hasRole('reservas')) && !request()->routeIs('reception.*'))
       <li>
-        <a href="{{ route('admin.habitaciones.dashboard') }}" class="nav-link px-0 align-middle fs-5 pb-2">
-          <i class="fs-4 bi-speedometer"></i> <span class="ms-1">Dashboard Reservas</span>
+        <a href="{{ route('admin.habitaciones.reservas.index') }}" class="nav-link px-0 align-middle fs-5 pb-2">
+          <i class="fs-4 bi-speedometer"></i> <span class="ms-1">{{ __('messages.dashboard_reservations') }}</span>
         </a>
       </li>
       @endif
 
       @if((auth()->user()->hasRole('administrador') || auth()->user()->hasRole('minibar')) && !request()->routeIs('reception.*'))
       <li>
-        <a href="{{ route('admin.minibar.dashboard') }}" class="nav-link px-0 align-middle fs-5 pb-2">
-          <i class="fs-4 bi-bar-chart"></i> <span class="ms-1">Dashboard Minibar</span>
+        <a href="{{ route('admin.minibar.ventas.index') }}" class="nav-link px-0 align-middle fs-5 pb-2">
+          <i class="fs-4 bi-bar-chart"></i> <span class="ms-1">{{ __('messages.dashboard_minibar') }}</span>
         </a>
       </li>
+      @endif
+
+      @if((auth()->user()->hasRole('administrador') || auth()->user()->hasRole('mantenimiento')) && !request()->routeIs('reception.*'))
+            <li>
+                <a href="{{ route('admin.mantenimiento.dashboard') }}" class="nav-link px-0 align-middle fs-5 pb-2">
+                    <i class="fs-4 bi-tools"></i> <span class="ms-1">Mantenimiento</span>
+                </a>
+            </li>
       @endif
 
       @if(auth()->user()->hasRole('administrador') || auth()->user()->hasRole('recepcion'))
       <li class="nav-item mt-3 mb-2">
         <a href="{{ route('reception.dashboard') }}" class="nav-link px-0 align-middle fs-5 pb-2">
           <i class="fs-4 bi-grid-3x3-gap-fill"></i>
-          <span class="ms-1">Dashboard Recepción</span>
+          <span class="ms-1">{{ __('messages.dashboard_reception') }}</span>
         </a>
       </li>
       @endif
@@ -84,11 +92,13 @@
       </li>
       @endif
 
+      @if(auth()->user()->hasRole('administrador') && !request()->routeIs('admin.index'))
       <li class="nav-item mt-auto mb-2 pt-3 border-top w-100">
         <a href="{{ route('admin.index') }}" class="nav-link align-middle px-0 fs-5 pb-2">
-          <i class="fs-4 bi-arrow-left-circle"></i> <span class="ms-1">Panel Principal</span>
+          <i class="fs-4 bi-arrow-left-circle"></i> <span class="ms-1">{{ __('messages.main_panel') }}</span>
         </a>
       </li>
+      @endif
     </ul>
   </div>
 </div>

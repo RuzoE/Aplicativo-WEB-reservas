@@ -13,15 +13,17 @@ class CheckOutService
 
     public function processCheckOut(Stay $stay): void
     {
-        $folio = $stay->folios()->where('status', 'Open')->firstOrFail();
+        $folio = $stay->folios()->whereIn('status', ['Open', 'Closed'])->firstOrFail();
 
-        // Validate balance
-        if (!$this->folioService->canClose($folio)) {
-            throw new \Exception('Cannot checkout with pending balance: ' . $folio->balance);
+        // Validate balance only if it's open
+        if ($folio->status === 'Open') {
+            if (!$this->folioService->canClose($folio)) {
+                throw new \Exception('Cannot checkout with pending balance: ' . $folio->balance);
+            }
+
+            // Close folio
+            $this->folioService->closeFolio($folio);
         }
-
-        // Close folio
-        $this->folioService->closeFolio($folio);
 
         // Update stay
         $stay->status = 'CheckedOut';

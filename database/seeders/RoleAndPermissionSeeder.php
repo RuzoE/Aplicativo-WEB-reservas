@@ -32,8 +32,15 @@ class RoleAndPermissionSeeder extends Seeder
             'minibar.ventas.manage',
         ];
 
+        $mantenimiento = [
+            'mantenimiento.view',
+            'mantenimiento.create',
+            'mantenimiento.update',
+            'mantenimiento.delete',
+        ];
+
         // Crear permisos (si no existen)
-        $all = array_unique(array_merge($habitaciones, $minibar));
+        $all = array_unique(array_merge($habitaciones, $minibar, $mantenimiento));
         foreach ($all as $name) {
             Permission::firstOrCreate(['name' => $name, 'guard_name' => 'web']);
         }
@@ -44,6 +51,7 @@ class RoleAndPermissionSeeder extends Seeder
         // Empleados de módulos específicos
         $reservasRole  = Role::firstOrCreate(['name' => 'reservas',      'guard_name' => 'web']);
         $minibarRole   = Role::firstOrCreate(['name' => 'minibar',       'guard_name' => 'web']);
+        $mantenimientoRole = Role::firstOrCreate(['name' => 'mantenimiento', 'guard_name' => 'web']);
 
         // Asignación de permisos por rol
         // Administrador: acceso total a todo
@@ -55,6 +63,7 @@ class RoleAndPermissionSeeder extends Seeder
             'habitaciones.orders.view',
             'minibar.view',
             'minibar.ventas.view',
+            'mantenimiento.view',
         ]);
 
         // Rol "reservas": acceso completo al módulo de habitaciones/reservas
@@ -62,6 +71,9 @@ class RoleAndPermissionSeeder extends Seeder
 
         // Rol "minibar": acceso completo al módulo de minibar/ventas
         $minibarRole->syncPermissions($minibar);
+
+        // Rol "mantenimiento": acceso completo al módulo de mantenimiento
+        $mantenimientoRole->syncPermissions($mantenimiento);
 
         // Nota: asignamos roles a usuarios en DatabaseSeeder
     }

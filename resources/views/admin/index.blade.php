@@ -173,6 +173,10 @@
         background: linear-gradient(135deg, #2196F3 0%, #0D47A1 100%);
     }
 
+    .panel-card.mantenimiento .panel-icon {
+        background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+    }
+
     .panel-card h2 {
         font-size: 1.25rem; /* antes 1.5rem */
         font-weight: 800;
@@ -380,6 +384,15 @@
             </div>
             <h2>Panel de Recepción</h2>
             <p>Gestionar check-in, folios, cargos y check-out de huéspedes</p>
+            <div class="arrow">→</div>
+        </a>
+
+        <a href="{{ route('admin.mantenimiento.dashboard') }}" class="panel-card mantenimiento">
+            <div class="panel-icon">
+                <i class="bi bi-tools"></i>
+            </div>
+            <h2>Panel de Mantenimiento</h2>
+            <p>Supervisar órdenes urgentes, rutinas de reparación y estado de habitaciones</p>
             <div class="arrow">→</div>
         </a>
     </div>

@@ -23,6 +23,11 @@ class DatabaseSeeder extends Seeder
             ['name' => 'user', 'password' => Hash::make('Password@1')]
         );
 
+        $mantenimiento = User::firstOrCreate(
+            ['email' => 'mantenimiento@gmail.com'],
+            ['name' => 'mantenimiento', 'password' => Hash::make('Password@1')]
+        );
+
         // 2) Datos de habitaciones
         RoomType::firstOrCreate(['name' => 'Standard']);
         RoomType::firstOrCreate(['name' => 'Deluxe']);
@@ -50,6 +55,7 @@ class DatabaseSeeder extends Seeder
         //    (Requiere que el trait HasRoles esté en User.php)
         $admin->syncRoles(['administrador']);  // acceso total
         $user->syncRoles(['invitado']);        // acceso de solo lectura
+        $mantenimiento->syncRoles(['mantenimiento']); // acceso a mantenimiento
 
         // Limpia cache de permisos/roles
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();

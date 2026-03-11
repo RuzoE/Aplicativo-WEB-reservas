@@ -45,16 +45,24 @@
       </li>
 
       <li>
+        <a href="{{ route('admin.minibar.bebida-types-na.index') }}" class="nav-link px-0 align-middle fs-5 pb-2">
+          <i class="fs-4 bi-droplet-fill"></i> <span class="ms-1">Tipos Bebidas no alcohólicas</span>
+        </a>
+      </li>
+
+      <li>
         <a href="{{ route('admin.minibar.bebidas.index') }}" class="nav-link px-0 align-middle fs-5 pb-2">
           <i class="fs-4 bi-cup-straw"></i> <span class="ms-1">Bebidas</span>
         </a>
       </li>
 
+      @if(auth()->user()->hasRole('administrador'))
       <li class="nav-item mt-auto mb-2 pt-3 border-top w-100">
         <a href="{{ route('admin.index') }}" class="nav-link align-middle px-0 text-warning fs-5 pb-2">
           <i class="fs-4 bi-arrow-left-circle"></i> <span class="ms-1">Panel Principal</span>
         </a>
       </li>
+      @endif
     </ul>
   </div>
 </div>

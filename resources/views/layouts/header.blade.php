@@ -3,14 +3,14 @@
         <div class="col-lg-3 bg-dark d-none d-lg-block">
             <a href="{{ route('home') }}"
                class="navbar-brand w-100 h-100 m-0 p-0 d-flex align-items-center justify-content-center">
-                <h1 class="m-0 text-primary text-uppercase">Hotel Oasis</h1>
+                <h1 class="m-0 text-primary text-uppercase site-brand-title">Hotel Oasis</h1>
             </a>
         </div>
 
         <div class="col-lg-9">
             <nav class="navbar navbar-expand-lg bg-dark navbar-dark p-3 p-lg-0">
-                <a href="{{ route('home') }}" class="navbar-brand d-block d-lg-none">
-                    <h1 class="m-0 text-primary text-uppercase">Hotel</h1>
+                <a href="{{ route('home') }}" class="navbar-brand d-block d-lg-none site-brand-mobile">
+                    <h1 class="m-0 text-primary text-uppercase site-brand-title">Hotel Oasis</h1>
                 </a>
 
                 <button type="button" class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#navbarCollapse">
@@ -53,7 +53,7 @@
                             </div>
 
                             {{-- Botón Panel según el rol del usuario --}}
-                            @hasanyrole('administrador|reservas|minibar|recepcion')
+                            @hasanyrole('administrador|reservas|minibar|recepcion|mantenimiento')
                                 @if(Auth::user()->hasRole('administrador'))
                                     <a href="{{ route('admin.index') }}"
                                        class="nav-item nav-link {{ request()->routeIs('admin.*') ? 'active' : '' }}">
@@ -74,13 +74,18 @@
                                        class="nav-item nav-link {{ request()->routeIs('reception.*') ? 'active' : '' }}">
                                         Panel
                                     </a>
+                                @elseif(Auth::user()->hasRole('mantenimiento'))
+                                    <a href="{{ route('admin.mantenimiento.dashboard') }}"
+                                       class="nav-item nav-link {{ request()->routeIs('admin.mantenimiento.*') ? 'active' : '' }}">
+                                        Panel
+                                    </a>
                                 @endif
                             @endhasanyrole
                         @endguest
                     </div>
 
                     {{-- Ícono carrito a la derecha --}}
-                    <div class="d-flex align-items-center me-5">
+                    <div class="d-flex align-items-center me-2 me-lg-3">
                         @auth
                             <a href="{{ route('minibar.carrito.index') }}" class="nav-link text-white">
                                 <i class="fas fa-shopping-cart fa-lg"></i>

@@ -303,29 +303,25 @@
 </style>
 
 <div class="form-container">
-  <a href="{{ route('admin.habitaciones.rooms.index') }}" class="back-link">
-    <i class="bi bi-arrow-left"></i> Volver
+
+  <a href="{{ route('admin.habitaciones.habitaciones.index') }}" class="back-link">
+    <i class="bi bi-arrow-left"></i> Volver a la lista
   </a>
 
   <div class="form-card">
     <div class="form-title">
       <i class="bi bi-pencil-square"></i>
-      Actualizar Habitación
+      Editar Habitación
     </div>
 
-    <div class="info-box">
-      <i class="bi bi-info-circle"></i>
-      Modifica los datos de la habitación
-    </div>
-
-    <form method="post" action="{{ route('admin.habitaciones.rooms.update', ['room' => $room->id]) }}" enctype="multipart/form-data">
+    <form method="POST" action="{{ route('admin.habitaciones.habitaciones.update', ['habitacione' => $room->id]) }}" enctype="multipart/form-data">
       @csrf
-      @method('put')
+      @method('PUT')
 
       <div class="form-group">
-        <label class="form-label">Tipo de Habitación *</label>
-        <select name="room_type_id" class="form-select @error('room_type_id') is-invalid @enderror">
-          <option value="">Selecciona un tipo...</option>
+        <label for="room_type_id" class="form-label">Tipo de habitación</label>
+        <select name="room_type_id" id="room_type_id" class="form-select @error('room_type_id') is-invalid @enderror">
+          <option value="">Seleccione un tipo</option>
           @foreach($types as $type)
             <option value="{{ $type->id }}" @selected(old('room_type_id', $room->room_type_id) == $type->id)>
               {{ $type->name }}
@@ -338,55 +334,48 @@
       </div>
 
       <div class="form-group">
-        <label class="form-label">Total de Habitaciones *</label>
-        <input type="number" name="total_room" value="{{ old('total_room', $room->total_room) }}" placeholder="Ej: 5"
-               class="form-input @error('total_room') is-invalid @enderror" min="1">
+        <label for="total_room" class="form-label">Total de habitaciones</label>
+        <input type="number" name="total_room" id="total_room" class="form-input @error('total_room') is-invalid @enderror" value="{{ old('total_room', $room->total_room) }}" min="1">
         @error('total_room')
           <span class="error-text">{{ $message }}</span>
         @enderror
       </div>
 
       <div class="form-group">
-        <label class="form-label">Número de Camas *</label>
-        <input type="number" name="no_beds" value="{{ old('no_beds', $room->no_beds) }}" placeholder="Ej: 2"
-               class="form-input @error('no_beds') is-invalid @enderror" min="1">
+        <label for="no_beds" class="form-label">Número de camas</label>
+        <input type="number" name="no_beds" id="no_beds" class="form-input @error('no_beds') is-invalid @enderror" value="{{ old('no_beds', $room->no_beds) }}" min="1">
         @error('no_beds')
           <span class="error-text">{{ $message }}</span>
         @enderror
       </div>
 
       <div class="form-group">
-        <label class="form-label">Precio por Noche (COP) *</label>
-        <input type="text" name="price" value="{{ old('price', number_format($room->price, 0, ',', '.')) }}" placeholder="Ej: 143.500"
-               class="form-input @error('price') is-invalid @enderror">
+        <label for="price" class="form-label">Precio</label>
+        <input type="number" name="price" id="price" class="form-input @error('price') is-invalid @enderror" value="{{ old('price', $room->price) }}" min="0" step="0.01">
         @error('price')
           <span class="error-text">{{ $message }}</span>
         @enderror
-        <small style="color:#666">Ingresa en pesos colombianos. Se permite 143.500, 143.900, 1.200.000, etc.</small>
       </div>
 
       <div class="form-group">
-        <label class="form-label">Descripción</label>
-        <textarea name="desc" placeholder="Describe características, amenidades, etc..."
-                  class="form-textarea @error('desc') is-invalid @enderror" rows="4">{{ old('desc', $room->desc) }}</textarea>
+        <label for="desc" class="form-label">Descripción</label>
+        <textarea name="desc" id="desc" rows="4" class="form-textarea @error('desc') is-invalid @enderror">{{ old('desc', $room->desc) }}</textarea>
         @error('desc')
           <span class="error-text">{{ $message }}</span>
         @enderror
       </div>
 
       <div class="form-group">
-        <label class="form-label">Imagen de Habitación</label>
-
+        <label class="form-label">Imagen actual</label>
         @if($room->image)
-          <!-- Preview de imagen actual -->
           <div class="image-preview-container">
-            <img src="{{ asset($room->image) }}" alt="{{ $room->roomtype->name }}" class="image-preview">
+            <img src="{{ asset($room->image) }}" alt="{{ $room->roomtype->name ?? 'Habitación' }}" class="image-preview">
             <div class="image-info">
               <span class="image-info-text">
-                <i class="bi bi-check-circle"></i> Imagen actual cargada
+                <i class="bi bi-image"></i> Imagen actual
               </span>
-              <button type="button" class="btn-remove-image" onclick="removeImage()">
-                <i class="bi bi-trash"></i> Cambiar
+              <button type="button" class="btn-remove-image" onclick="toggleImageField()">
+                <i class="bi bi-trash"></i> Cambiar imagen
               </button>
             </div>
           </div>
@@ -428,7 +417,7 @@
         <button type="submit" class="btn-submit">
           <i class="bi bi-check-circle"></i> Actualizar Habitación
         </button>
-        <a href="{{ route('admin.habitaciones.rooms.index') }}" class="btn-cancel">
+        <a href="{{ route('admin.habitaciones.habitaciones.index') }}" class="btn-cancel">
           <i class="bi bi-x-circle"></i> Cancelar
         </a>
       </div>

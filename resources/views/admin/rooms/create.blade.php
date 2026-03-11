@@ -302,14 +302,14 @@
       </a>
     </div>
   @else
-    <a href="{{ route('admin.habitaciones.rooms.index') }}" class="back-link">
-      <i class="bi bi-arrow-left"></i> Volver
+    <a href="{{ route('admin.habitaciones.habitaciones.index') }}" class="back-link">
+      <i class="bi bi-arrow-left"></i> {{ __('messages.back') }}
     </a>
 
     <div class="form-card">
       <div class="form-title">
         <i class="bi bi-door-closed"></i>
-        Nueva Habitación
+        {{ __('messages.create') }} {{ __('messages.rooms') }}
       </div>
 
       <div class="info-box">
@@ -317,11 +317,11 @@
         Completa los datos para crear una nueva habitación
       </div>
 
-      <form method="post" action="{{ route('admin.habitaciones.rooms.store') }}" enctype="multipart/form-data">
+      <form method="post" action="{{ route('admin.habitaciones.habitaciones.store') }}" enctype="multipart/form-data">
         @csrf
 
         <div class="form-group">
-          <label class="form-label">Tipo de Habitación *</label>
+          <label class="form-label">{{ __('messages.roomtypes') }} *</label>
           <select name="room_type_id" class="form-select @error('room_type_id') is-invalid @enderror">
             <option value="">Selecciona un tipo...</option>
             @foreach($types as $type)
@@ -345,7 +345,7 @@
         </div>
 
         <div class="form-group">
-          <label class="form-label">Número de Camas *</label>
+          <label class="form-label">Número de camas *</label>
           <input type="number" name="no_beds" value="{{ old('no_beds') }}" placeholder="Ej: 2"
                  class="form-input @error('no_beds') is-invalid @enderror" min="1">
           @error('no_beds')
@@ -409,10 +409,10 @@
 
         <div class="form-actions">
           <button type="submit" class="btn-submit">
-            <i class="bi bi-check-circle"></i> Crear Habitación
+            <i class="bi bi-check-circle"></i> {{ __('messages.create') }}
           </button>
-          <a href="{{ route('admin.habitaciones.rooms.index') }}" class="btn-cancel">
-            <i class="bi bi-x-circle"></i> Cancelar
+          <a href="{{ route('admin.habitaciones.habitaciones.index') }}" class="btn-cancel">
+            <i class="bi bi-x-circle"></i> {{ __('messages.cancel') }}
           </a>
         </div>
       </form>

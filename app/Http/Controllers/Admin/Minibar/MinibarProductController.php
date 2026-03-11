@@ -38,13 +38,13 @@ class MinibarProductController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'nombre'         => ['required','string','max:255'],
-            'bebida_type_id' => ['required','exists:bebida_types,id'],
-            'precio'         => ['required','numeric','min:0'],
-            'stock'          => ['required','integer','min:0'],
-            'descripcion'    => ['nullable','string'],
-            'estado'         => ['nullable','boolean'],
-            'imagen'         => ['nullable','image','max:2048'],
+            'nombre' => ['required', 'string', 'max:255'],
+            'bebida_type_id' => ['required', 'exists:bebida_types,id'],
+            'precio' => ['required', 'numeric', 'min:0'],
+            'stock' => ['required', 'integer', 'min:0'],
+            'descripcion' => ['nullable', 'string'],
+            'estado' => ['nullable', 'boolean'],
+            'imagen' => ['nullable', 'image', 'max:2048'],
         ]);
 
         if ($request->hasFile('imagen')) {
@@ -55,7 +55,7 @@ class MinibarProductController extends Controller
 
         return redirect()
             ->route('admin.minibar.bebidas.index')
-            ->with('success', 'Bebida creada correctamente.');
+            ->with('success', 'La bebida "' . $data['nombre'] . '" ha sido creada correctamente.');
     }
 
     /**
@@ -81,13 +81,13 @@ class MinibarProductController extends Controller
     public function update(Request $request, MinibarProduct $bebida)
     {
         $data = $request->validate([
-            'nombre'         => ['required','string','max:255'],
-            'bebida_type_id' => ['required','exists:bebida_types,id'],
-            'precio'         => ['required','numeric','min:0'],
-            'stock'          => ['required','integer','min:0'],
-            'descripcion'    => ['nullable','string'],
-            'estado'         => ['nullable','boolean'],
-            'imagen'         => ['nullable','image','max:2048'],
+            'nombre' => ['required', 'string', 'max:255'],
+            'bebida_type_id' => ['required', 'exists:bebida_types,id'],
+            'precio' => ['required', 'numeric', 'min:0'],
+            'stock' => ['required', 'integer', 'min:0'],
+            'descripcion' => ['nullable', 'string'],
+            'estado' => ['nullable', 'boolean'],
+            'imagen' => ['nullable', 'image', 'max:2048'],
         ]);
 
         if ($request->hasFile('imagen')) {
@@ -102,7 +102,7 @@ class MinibarProductController extends Controller
 
         return redirect()
             ->route('admin.minibar.bebidas.index')
-            ->with('success', 'Bebida actualizada correctamente.');
+            ->with('success', 'La bebida "' . $data['nombre'] . '" ha sido actualizada.');
     }
 
     /**
@@ -118,7 +118,6 @@ class MinibarProductController extends Controller
 
         return redirect()
             ->route('admin.minibar.bebidas.index')
-            ->with('success', 'Bebida eliminada correctamente.');
+            ->with('success', 'La bebida ha sido eliminada del inventario.');
     }
 }
-

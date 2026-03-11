@@ -113,7 +113,131 @@
         padding: 25px;
         border: 2px solid #e0e0e0;
     }
+
+    #guest-loading {
+        font-size: 0.9rem;
+        color: #666;
+    }
+
+    #guest-loading i {
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+
+    .form-select-lg {
+        border: 2px solid #e0e0e0;
+        transition: border-color 0.3s, box-shadow 0.3s;
+    }
+
+    .form-select-lg:focus {
+        border-color: #2196F3;
+        box-shadow: 0 0 0 0.2rem rgba(33, 150, 243, 0.25);
+    }
+
+    .folio-notification {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        min-width: 320px;
+        max-width: 500px;
+        background: white;
+        border-radius: 12px;
+        padding: 20px 25px;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+        z-index: 9999;
+        animation: slideInRight 0.4s ease-out;
+        border-left: 5px solid #2196F3;
+    }
+
+    .folio-notification.success {
+        border-left-color: #4CAF50;
+    }
+
+    .folio-notification.error {
+        border-left-color: #f44336;
+    }
+
+    .folio-notification.warning {
+        border-left-color: #ff9800;
+    }
+
+    .folio-notification .notification-content {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .folio-notification .notification-icon {
+        font-size: 28px;
+        line-height: 1;
+    }
+
+    .folio-notification.success .notification-icon {
+        color: #4CAF50;
+    }
+
+    .folio-notification.error .notification-icon {
+        color: #f44336;
+    }
+
+    .folio-notification.warning .notification-icon {
+        color: #ff9800;
+    }
+
+    .folio-notification .notification-text {
+        flex: 1;
+        color: #333;
+        font-size: 15px;
+        font-weight: 500;
+    }
+
+    .folio-notification .notification-close {
+        background: none;
+        border: none;
+        font-size: 24px;
+        color: #999;
+        cursor: pointer;
+        padding: 0;
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: color 0.2s;
+    }
+
+    .folio-notification .notification-close:hover {
+        color: #333;
+    }
+
+    @keyframes slideInRight {
+        from {
+            transform: translateX(400px);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+
+    @keyframes slideOutRight {
+        from {
+            transform: translateX(0);
+            opacity: 1;
+        }
+        to {
+            transform: translateX(400px);
+            opacity: 0;
+        }
+    }
 </style>
+
+<div id="notification-container"></div>
 
 <div class="folio-section">
     <div class="folio-header">
@@ -126,8 +250,13 @@
         <form id="folio-search" class="mt-3">
             <div class="row g-3">
                 <div class="col-md-6">
-                    <label class="form-label fw-bold">ID de estancia</label>
-                    <input id="folio-stay" class="form-control form-control-lg" placeholder="Ingrese ID de estancia" />
+                    <label class="form-label fw-bold">Huésped</label>
+                    <select id="folio-guest" class="form-select form-select-lg">
+                        <option value="">Seleccione un huésped...</option>
+                    </select>
+                    <div id="guest-loading" class="text-muted mt-2" style="display:none;">
+                        <i class="bi bi-hourglass-split"></i> Cargando huéspedes...
+                    </div>
                 </div>
                 <div class="col-md-6">
                     <label class="form-label fw-bold">Habitación</label>
@@ -144,43 +273,80 @@
         <div id="folio-sim-result" class="mt-4"></div>
     </div>
 
-    <div class="action-columns">
-        <div class="action-column">
-            <h3 class="folio-section-title">
-                <i class="bi bi-plus-circle"></i> Agregar Cargo
-            </h3>
-            <form id="add-charge">
-                <div class="mb-3">
-                    <label class="form-label fw-bold">Descripción</label>
-                    <input class="form-control form-control-lg" id="charge-desc" placeholder="Descripción del cargo" />
-                </div>
-                <div class="mb-3">
-                    <label class="form-label fw-bold">Monto</label>
-                    <input class="form-control form-control-lg" id="charge-amount" placeholder="0.00" type="number" step="0.01" />
-                </div>
-                <button type="button" id="charge-btn" class="btn-add-charge">
-                    <i class="bi bi-plus-lg"></i> Agregar Cargo
-                </button>
-            </form>
-        </div>
+    <div id="folio-actions" style="display:none;">
+        <div class="action-columns">
+            <div class="action-column">
+                <h3 class="folio-section-title">
+                    <i class="bi bi-plus-circle"></i> Agregar Cargo
+                </h3>
+                <form id="add-charge-form">
+                    <input type="hidden" id="current-stay-id" />
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Tipo de Cargo</label>
+                        <select class="form-select form-select-lg" id="charge-source">
+                            <option value="Minibar">Minibar</option>
+                            <option value="Restaurante">Restaurante</option>
+                            <option value="Lavandería">Lavandería</option>
+                            <option value="Servicio a la habitación">Servicio a la habitación</option>
+                            <option value="Bebidas">Bebidas</option>
+                            <option value="Otros">Otros</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Descripción</label>
+                        <input class="form-control form-control-lg" id="charge-desc" placeholder="Descripción del cargo" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Monto (COP)</label>
+                        <input class="form-control form-control-lg" id="charge-amount" placeholder="0.00" type="number" step="0.01" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Impuesto (opcional)</label>
+                        <input class="form-control form-control-lg" id="charge-tax" placeholder="0.00" type="number" step="0.01" />
+                    </div>
+                    <button type="submit" class="btn-add-charge">
+                        <i class="bi bi-plus-lg"></i> Agregar Cargo
+                    </button>
+                </form>
+            </div>
 
-        <div class="action-column">
-            <h3 class="folio-section-title">
-                <i class="bi bi-credit-card"></i> Registrar Pago
-            </h3>
-            <form id="add-payment">
-                <div class="mb-3">
-                    <label class="form-label fw-bold">Método de pago</label>
-                    <input class="form-control form-control-lg" id="pay-method" placeholder="Efectivo, Tarjeta, etc." />
-                </div>
-                <div class="mb-3">
-                    <label class="form-label fw-bold">Monto</label>
-                    <input class="form-control form-control-lg" id="pay-amount" placeholder="0.00" type="number" step="0.01" />
-                </div>
-                <button type="button" id="pay-btn" class="btn-add-payment">
-                    <i class="bi bi-check-lg"></i> Registrar Pago
-                </button>
-            </form>
+            <div class="action-column">
+                <h3 class="folio-section-title">
+                    <i class="bi bi-credit-card"></i> Registrar Pago
+                </h3>
+                <form id="add-payment-form">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Método de pago</label>
+                        <select class="form-select form-select-lg" id="pay-method" required>
+                            <option value="">Seleccione...</option>
+                            <option value="Efectivo">Efectivo</option>
+                            <option value="Tarjeta Débito">Tarjeta Débito</option>
+                            <option value="Tarjeta Crédito">Tarjeta Crédito</option>
+                            <option value="Transferencia">Transferencia</option>
+                            <option value="Cheque">Cheque</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Monto (COP)</label>
+                        <input class="form-control form-control-lg" id="pay-amount" placeholder="0.00" type="number" step="0.01" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Referencia Externa (opcional)</label>
+                        <input class="form-control form-control-lg" id="pay-reference" placeholder="Nº transacción, comprobante..." />
+                    </div>
+                    <button type="submit" class="btn-add-payment">
+                        <i class="bi bi-check-lg"></i> Registrar Pago
+                    </button>
+                </form>
+            </div>
         </div>
     </div>
 </div>
+
+<script>
+window.FolioFormConfig = {
+    guestsUrl: '{{ route('reception.folio.guests') }}',
+    searchUrl:  '{{ route('reception.folio.search') }}'
+};
+</script>
+<script src="{{ asset('js/reception-folio-form.js') }}"></script>

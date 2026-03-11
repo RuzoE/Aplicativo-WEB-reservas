@@ -76,6 +76,12 @@ class CheckoutController extends Controller
                     'precio_unitario' => $prod->precio,
                 ]);
 
+                // Deduct stock
+                if ($prod->stock !== null) {
+                    $prod->stock = max(0, $prod->stock - $item['qty']);
+                    $prod->save();
+                }
+
                 $total += $subtotal;
             }
 

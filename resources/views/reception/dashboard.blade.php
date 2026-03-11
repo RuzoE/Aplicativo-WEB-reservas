@@ -193,95 +193,12 @@
     </div>
 
     <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        function showSection(id) {
-            ['section-dashboard','section-checkin','section-folio','section-checkout'].forEach(function(s){
-                var el = document.getElementById(s);
-                if (!el) return;
-                el.style.display = (s === id) ? '' : 'none';
-            });
-        }
-
-        // Handle sidebar links with hashes
-        document.querySelectorAll('a[href$="#checkin"], a[href$="#folio"], a[href$="#checkout"], a[href$="{{ route('reception.dashboard') }}"]').forEach(function(a){
-            a.addEventListener('click', function(e){
-                // If the link goes to the reception dashboard (or an anchor) prevent full navigation
-                var href = a.getAttribute('href') || '';
-                if (href.indexOf('#checkin') !== -1) {
-                    e.preventDefault();
-                    history.replaceState(null,'', '#checkin');
-                    showSection('section-checkin');
-                } else if (href.indexOf('#folio') !== -1) {
-                    e.preventDefault();
-                    history.replaceState(null,'', '#folio');
-                    showSection('section-folio');
-                } else if (href.indexOf('#checkout') !== -1) {
-                    e.preventDefault();
-                    history.replaceState(null,'', '#checkout');
-                    showSection('section-checkout');
-                } else if (href === '{{ route('reception.dashboard') }}' || href.endsWith('/reception/dashboard')) {
-                    e.preventDefault();
-                    history.replaceState(null,'', location.pathname);
-                    showSection('section-dashboard');
-                }
-            });
-        });
-
-        // Always show dashboard on initial load
-        // Check for hash in URL on initial load
-        var hash = window.location.hash;
-        if (hash === '#checkin') {
-            showSection('section-checkin');
-        } else if (hash === '#folio') {
-            showSection('section-folio');
-        } else if (hash === '#checkout') {
-            showSection('section-checkout');
-        } else {
-            showSection('section-dashboard');
-        }
-
-        // Attach simulated handlers for folio and checkout forms (check-in now has its own script)
-        var folioSearch = document.getElementById('folio-search-btn');
-        if (folioSearch) {
-            folioSearch.addEventListener('click', function(){
-                var stay = document.getElementById('folio-stay').value || '';
-                var room = document.getElementById('folio-room').value || '';
-                var out = document.getElementById('folio-sim-result');
-                if (!stay.trim() && !room.trim()) { out.innerHTML = '<div class="text-muted">Ingrese ID de estancia o habitación.</div>'; return; }
-                out.innerHTML = '<div class="p-3 border rounded">Folio simulado para estancia <strong>'+escapeHtml(stay||room)+'</strong>.</div>';
-            });
-        }
-
-        var chargeBtn = document.getElementById('charge-btn');
-        if (chargeBtn) {
-            chargeBtn.addEventListener('click', function(){
-                var desc = document.getElementById('charge-desc').value || '';
-                var amt = document.getElementById('charge-amount').value || '';
-                alert('Cargo simulado: '+desc+' — '+amt);
-            });
-        }
-
-        var payBtn = document.getElementById('pay-btn');
-        if (payBtn) {
-            payBtn.addEventListener('click', function(){
-                var method = document.getElementById('pay-method').value || '';
-                var amt = document.getElementById('pay-amount').value || '';
-                alert('Pago simulado: '+method+' — '+amt);
-            });
-        }
-
-        var coBtn = document.getElementById('checkout-btn');
-        if (coBtn) {
-            coBtn.addEventListener('click', function(){
-                var stay = document.getElementById('co-stay').value || '';
-                if (!stay.trim()) { document.getElementById('checkout-result').innerHTML = '<div class="text-muted">Ingrese ID de estancia.</div>'; return; }
-                document.getElementById('checkout-result').innerHTML = '<div class="p-3 border rounded">Check-out simulado para estancia <strong>'+escapeHtml(stay)+'</strong>.</div>';
-            });
-        }
-
-        function escapeHtml(text) { return String(text).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-    });
+    window.ReceptionConfig = {
+        dashboardUrl:       '{{ route('reception.dashboard') }}',
+        showCheckinSection: @json((bool) session('show_checkin_section'))
+    };
     </script>
+    <script src="{{ asset('js/reception-dashboard.js') }}"></script>
 
 @endsection
 

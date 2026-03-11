@@ -40,4 +40,8 @@ class Room extends Model {
     public function orders(): HasMany {
         return $this->hasMany(Order::class, 'room_id', 'id');
     }
+
+    public function maintenanceOrders(): HasMany {
+        return $this->hasMany(MaintenanceOrder::class, 'room_id', 'id');
+    }
 }

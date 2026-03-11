@@ -124,7 +124,7 @@
 
 <div class="reservas-dashboard">
     <div class="page-header">
-        <h1><i class="bi bi-calendar-check"></i> Dashboard de Reservas</h1>
+        <h1><i class="bi bi-calendar-check"></i> {{ __('messages.dashboard_reservations_title') }}</h1>
         <p>Gestión de habitaciones, tipos de habitación y reservas del hotel</p>
     </div>
 
@@ -159,19 +159,19 @@
     </h2>
 
     <div class="action-buttons">
-        <a href="{{ route('admin.habitaciones.orders.index') }}" class="action-btn">
+        <a href="{{ route('admin.habitaciones.reservas.index') }}" class="action-btn">
             <i class="bi bi-list-check"></i>
-            Ver Todas las Reservas
+            {{ __('messages.orders') }}
         </a>
 
-        <a href="{{ route('admin.habitaciones.roomtypes.index') }}" class="action-btn secondary">
+        <a href="{{ route('admin.habitaciones.tipos-habitacion.index') }}" class="action-btn secondary">
             <i class="bi bi-grid-3x3"></i>
-            Gestionar Tipos de Habitación
+            {{ __('messages.roomtypes') }}
         </a>
 
-        <a href="{{ route('admin.habitaciones.rooms.index') }}" class="action-btn tertiary">
+        <a href="{{ route('admin.habitaciones.habitaciones.index') }}" class="action-btn tertiary">
             <i class="bi bi-house-door"></i>
-            Gestionar Habitaciones
+            {{ __('messages.rooms') }}
         </a>
     </div>
 </div>

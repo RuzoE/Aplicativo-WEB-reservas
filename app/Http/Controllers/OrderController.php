@@ -7,20 +7,24 @@ use App\Models\RoomType;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
-class OrderController extends Controller {
+class OrderController extends Controller
+{
 
-    public function __construct() {
+    public function __construct()
+    {
         $this->middleware('auth');
     }
 
-    public function index() {
+    public function index()
+    {
         $user = Auth::user();
 
         $orders = $user->orders()->with('room.roomtype')->orderBy('check_in', 'DESC')->get();
         return view('pages.list-orders', ['orders' => $orders]);
     }
 
-    public function store(Request $request) {
+    public function store(Request $request)
+    {
         $user = Auth::user();
         $order = new Order([
             'check_in' => $request->input('check_in'),
@@ -30,6 +34,6 @@ class OrderController extends Controller {
         $user->orders()->save($order);
 
         return redirect()->route('orders.index')
-            ->with('message', 'Su pedido ha sido creado exitosamente!');
+            ->with('success', '¡Su pedido ha sido creado exitosamente!');
     }
 }

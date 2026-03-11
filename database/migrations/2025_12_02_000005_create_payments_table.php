@@ -12,7 +12,7 @@ return new class extends Migration {
             $table->unsignedBigInteger('folio_id');
             $table->string('method');
             $table->decimal('amount', 12, 2);
-            $table->string('currency', 3)->default('USD');
+            $table->string('currency', 3)->default('COP');
             $table->unsignedBigInteger('received_by')->nullable();
             $table->dateTime('received_at')->nullable();
             $table->string('external_ref')->nullable();

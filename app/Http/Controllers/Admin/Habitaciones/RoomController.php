@@ -61,7 +61,7 @@ class RoomController extends Controller {
             'status' => $request->has('status') ? 1 : 0
         ]);
 
-        return redirect()->route('admin.habitaciones.rooms.index')
+        return redirect()->route('admin.habitaciones.habitaciones.index')
             ->with('message', 'La habitación ha sido creada!');
     }
 
@@ -120,7 +120,7 @@ class RoomController extends Controller {
         }
         $room->save();
 
-        return redirect()->route('admin.habitaciones.rooms.index')
+        return redirect()->route('admin.habitaciones.habitaciones.index')
             ->with('message', 'La habitación ha sido actualizada!');
     }
 
@@ -131,7 +131,7 @@ class RoomController extends Controller {
         $room = Room::findOrFail($id);
         $this->authorize('delete', $room);
         $room->delete();
-        return redirect()->route('admin.habitaciones.rooms.index')
+        return redirect()->route('admin.habitaciones.habitaciones.index')
             ->with('message', 'La habitación ha sido eliminada!');
     }
 

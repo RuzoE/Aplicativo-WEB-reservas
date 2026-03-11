@@ -2,22 +2,24 @@
 
 namespace App\Http\Controllers\Reception;
 
+use App\Events\Reception\StayStarted;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
+use App\Models\Room;
+use App\Models\Stay;
 use App\Services\Reception\CheckInService;
-use App\Events\Reception\StayStarted;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 
 class CheckInController extends Controller
 {
-    public function __construct(
-        protected CheckInService $checkInService
-    ) {}
+    public function __construct(protected CheckInService $checkInService)
+    {
+    }
 
     public function search(Request $request)
     {
-        // Obtener todas las reservas pendientes de check-in
-        // (reservas que aún no tienen un Stay asociado y la fecha de check-in es hoy o pasada)
+        // Reservas sin stay activo y con fecha de check-in hoy o pasada.
         $reservations = Order::whereDoesntHave('stays')
             ->whereDate('check_in', '<=', now())
             ->with(['user', 'room.roomtype'])
@@ -27,13 +29,13 @@ class CheckInController extends Controller
         if ($reservations->isEmpty()) {
             return response()->json([
                 'success' => false,
-                'message' => 'No hay reservas pendientes de check-in'
+                'message' => 'No hay reservas pendientes de check-in',
             ]);
         }
 
         return response()->json([
             'success' => true,
-            'reservations' => $reservations->map(function($order) {
+            'reservations' => $reservations->map(function ($order) {
                 return [
                     'id' => $order->id,
                     'codigo' => 'RES-' . str_pad($order->id, 6, '0', STR_PAD_LEFT),
@@ -45,43 +47,181 @@ class CheckInController extends Controller
                     'check_out' => $order->check_out->format('Y-m-d'),
                     'total' => number_format($order->stayDays * ($order->room->price ?? 0), 2),
                 ];
-            })
+            }),
         ]);
     }
 
     public function show($reservationId)
     {
-        $reservation = Order::findOrFail($reservationId);
-        $this->authorize('create', \App\Models\Stay::class);
+        $reservation = Order::with('room.roomtype')->findOrFail($reservationId);
+        $this->authorize('create', Stay::class);
 
-        return view('reception.check_in', compact('reservation'));
+        $reservedRoomTypeId = $reservation->room?->room_type_id;
+        $roomNumberOptions = $this->buildRoomNumberOptions($reservedRoomTypeId);
+
+        return view('reception.check_in', compact('reservation', 'roomNumberOptions'));
     }
 
     public function store(Request $request, $reservationId)
     {
-        $this->authorize('create', \App\Models\Stay::class);
+        $this->authorize('create', Stay::class);
 
-        $reservation = Order::findOrFail($reservationId);
+        $reservation = Order::with('room')->findOrFail($reservationId);
 
         $data = $request->validate([
+            'room_number' => 'required|integer|min:1',
             'first_name' => 'required|string|max:100',
             'last_name' => 'required|string|max:100',
-            'document_type' => 'nullable|string|max:50',
-            'document_number' => 'nullable|string|max:100',
-            'email' => 'nullable|email',
-            'phone' => 'nullable|string|max:50',
+            'document_type' => 'required|string|max:50|in:CC,CE,PA,NIT,TI',
+            'document_number' => 'required|string|max:100|unique:guests,document_number',
+            'email' => 'required|email|max:100',
+            'phone' => 'required|string|max:50',
+            'country' => 'nullable|string|max:100',
+            'notes' => 'nullable|string|max:500',
         ]);
 
-        if (!$this->checkInService->validateCheckIn($reservation)) {
-            return back()->withErrors(['reservation' => 'Esta reserva ya tiene un check-in activo.']);
+        $reservedRoomTypeId = $reservation->room?->room_type_id;
+        $roomNumberOptions = $this->buildRoomNumberOptions($reservedRoomTypeId);
+        $selectedNumber = (int) $data['room_number'];
+        $selectedOption = $roomNumberOptions->firstWhere('number', $selectedNumber);
+
+        if (!$selectedOption) {
+            return back()->withErrors([
+                'room_number' => 'El número de habitación seleccionado no existe entre las habitaciones activas.',
+            ])->withInput();
         }
 
-        $stay = $this->checkInService->processCheckIn($reservation, $data);
+        if ($selectedOption['status'] !== 'Disponible') {
+            return back()->withErrors([
+                'room_number' => 'La habitación seleccionada no está disponible. Estado actual: ' . $selectedOption['status'] . '.',
+            ])->withInput();
+        }
 
+        if (!$this->checkInService->validateCheckIn($reservation)) {
+            return back()->withErrors([
+                'reservation' => 'Esta reserva ya tiene un check-in activo.',
+            ]);
+        }
 
-        StayStarted::dispatch($stay);
+        try {
+            if ((int) $reservation->room_id !== (int) $selectedOption['room_id']) {
+                $reservation->update(['room_id' => $selectedOption['room_id']]);
+            }
 
-        return redirect()->route('reception.folio.show', ['stay' => $stay->id])
-            ->with('status', 'Check-in completado y folio abierto.');
+            $data['assigned_room_number'] = $selectedNumber;
+            $stay = $this->checkInService->processCheckIn($reservation, $data);
+            StayStarted::dispatch($stay);
+
+            return redirect()->route('reception.dashboard')
+                ->with(
+                    'success',
+                    '¡Check-in completado exitosamente! El folio para "' .
+                    $data['first_name'] . ' ' . $data['last_name'] .
+                    '" (Habitación ' . $selectedNumber .
+                    ') ha sido abierto. Folio número: ' . ($stay->folios()->first()->number ?? 'N/A')
+                )
+                ->with('show_checkin_section', true);
+        } catch (\Exception $e) {
+            return back()
+                ->withErrors(['error' => 'Error al procesar el check-in: ' . $e->getMessage()])
+                ->withInput();
+        }
+    }
+
+    private function buildRoomNumberOptions(?int $roomTypeId = null): Collection
+    {
+        // La numeración debe ser global (1..N) según todos los bloques activos,
+        // y luego se filtra por tipo para conservar el mismo orden que mantenimiento.
+        $roomBlocks = Room::with('roomtype')
+            ->where('status', true)
+            ->orderBy('id')
+            ->get();
+
+        $numberToRoomId = [];
+        $numberToType = [];
+        $numberToTypeId = [];
+        $roomPricesById = [];
+        $roomRanges = [];
+        $cursor = 1;
+
+        foreach ($roomBlocks as $roomBlock) {
+            $start = $cursor;
+            $capacity = max(0, (int) $roomBlock->total_room);
+            $roomPricesById[$roomBlock->id] = (float) ($roomBlock->price ?? 0);
+
+            for ($i = 0; $i < $capacity; $i++) {
+                $number = $cursor + $i;
+                $numberToRoomId[$number] = $roomBlock->id;
+                $numberToType[$number] = $roomBlock->roomtype->name ?? 'N/A';
+                $numberToTypeId[$number] = (int) $roomBlock->room_type_id;
+            }
+
+            if ($capacity > 0) {
+                $roomRanges[$roomBlock->id] = [
+                    'start' => $start,
+                    'end' => $cursor + $capacity - 1,
+                ];
+            }
+
+            $cursor += $capacity;
+        }
+
+        $inHouseStays = Stay::where('status', 'InHouse')->get();
+        $occupiedNumbers = [];
+
+        // 1) Ocupar números explícitamente guardados en notas.
+        foreach ($inHouseStays as $stay) {
+            $number = $this->extractAssignedRoomNumber($stay->notes);
+            if ($number !== null && isset($numberToRoomId[$number])) {
+                $occupiedNumbers[$number] = true;
+            }
+        }
+
+        // 2) Compatibilidad con estancias antiguas sin número explícito: ocupar huecos por bloque.
+        foreach ($inHouseStays as $stay) {
+            $hasExplicitNumber = $this->extractAssignedRoomNumber($stay->notes) !== null;
+            if ($hasExplicitNumber || !isset($roomRanges[$stay->room_id])) {
+                continue;
+            }
+
+            $range = $roomRanges[$stay->room_id];
+            for ($number = $range['start']; $number <= $range['end']; $number++) {
+                if (!isset($occupiedNumbers[$number])) {
+                    $occupiedNumbers[$number] = true;
+                    break;
+                }
+            }
+        }
+
+        $options = collect();
+        foreach ($numberToRoomId as $number => $roomId) {
+            if ($roomTypeId !== null && ($numberToTypeId[$number] ?? null) !== $roomTypeId) {
+                continue;
+            }
+
+            $status = isset($occupiedNumbers[$number]) ? 'Ocupada' : 'Disponible';
+            $options->push([
+                'number' => $number,
+                'room_id' => $roomId,
+                'room_type' => $numberToType[$number] ?? 'N/A',
+                'price' => $roomPricesById[$roomId] ?? 0,
+                'status' => $status,
+            ]);
+        }
+
+        return $options;
+    }
+
+    private function extractAssignedRoomNumber(?string $notes): ?int
+    {
+        if (!$notes) {
+            return null;
+        }
+
+        if (preg_match('/\[ROOM_NUM:(\d+)\]/', $notes, $matches)) {
+            return (int) $matches[1];
+        }
+
+        return null;
     }
 }

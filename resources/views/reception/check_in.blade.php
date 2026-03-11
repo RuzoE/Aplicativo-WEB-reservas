@@ -93,11 +93,11 @@
         <div class="row g-3">
             <div class="col-md-3">
                 <strong>Habitación:</strong>
-                <p class="mb-0">{{ $reservation->room->room_number ?? 'Sin asignar' }}</p>
+                <p class="mb-0" id="reservation-room-display"></p>
             </div>
             <div class="col-md-3">
                 <strong>Tipo:</strong>
-                <p class="mb-0">{{ $reservation->room->roomtype->name ?? 'N/A' }}</p>
+                <p class="mb-0" id="reservation-room-type-display">{{ $reservation->room->roomtype->name ?? 'N/A' }}</p>
             </div>
             <div class="col-md-3">
                 <strong>Check-in:</strong>
@@ -113,11 +113,11 @@
             </div>
             <div class="col-md-3">
                 <strong>Tarifa/noche:</strong>
-                <p class="mb-0">${{ number_format($reservation->room->price ?? 0, 2) }}</p>
+                <p class="mb-0" id="reservation-rate-display">${{ number_format($reservation->room->price ?? 0, 2) }}</p>
             </div>
             <div class="col-md-3">
                 <strong>Total:</strong>
-                <p class="mb-0 text-primary fw-bold">${{ number_format($reservation->stayDays * ($reservation->room->price ?? 0), 2) }}</p>
+                <p class="mb-0 text-primary fw-bold" id="reservation-total-display">${{ number_format($reservation->stayDays * ($reservation->room->price ?? 0), 2) }}</p>
             </div>
             <div class="col-md-3">
                 <strong>Usuario:</strong>
@@ -129,51 +129,121 @@
     <!-- Formulario de Datos del Huésped -->
     <div class="form-card">
         <h4 class="mb-3"><i class="bi bi-person-fill"></i> Datos del Huésped</h4>
-        <form method="POST" action="{{ route('reception.checkin.store', $reservation->id) }}">
+        <form method="POST" action="{{ route('reception.checkin.store', $reservation->id) }}" novalidate>
             @csrf
             <div class="row g-3">
                 <div class="col-md-6">
+                    <label class="form-label fw-bold">Habitación <span class="text-danger">*</span></label>
+                    <select name="room_number" id="room-number-select" class="form-select form-select-lg @error('room_number') is-invalid @enderror" required>
+                        <option value="">Seleccione una habitación...</option>
+                        @foreach($roomNumberOptions as $roomOption)
+                            <option value="{{ $roomOption['number'] }}"
+                                data-status="{{ $roomOption['status'] }}"
+                                data-room-type="{{ $roomOption['room_type'] }}"
+                                data-room-price="{{ $roomOption['price'] }}"
+                                @disabled($roomOption['status'] !== 'Disponible')
+                                @selected((string) old('room_number') === (string) $roomOption['number'])>
+                                Habitación {{ $roomOption['number'] }}
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('room_number')
+                        <div class="invalid-feedback" style="display: block;">{{ $message }}</div>
+                    @enderror
+                    <small class="text-muted">Se listan las habitaciones activas del tipo reservado.</small>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label fw-bold">Estado de la habitación</label>
+                    <input type="text" id="room-status-display" class="form-control form-control-lg" value="Seleccione una habitación" readonly />
+                </div>
+
+                <div class="col-md-6">
                     <label class="form-label fw-bold">Nombre <span class="text-danger">*</span></label>
-                    <input name="first_name" class="form-control form-control-lg" required />
+                    <input type="text" name="first_name" class="form-control form-control-lg @error('first_name') is-invalid @enderror" required value="{{ old('first_name') }}" />
+                    @error('first_name')
+                        <div class="invalid-feedback" style="display: block;">{{ $message }}</div>
+                    @enderror
                 </div>
                 <div class="col-md-6">
                     <label class="form-label fw-bold">Apellido <span class="text-danger">*</span></label>
-                    <input name="last_name" class="form-control form-control-lg" required />
+                    <input type="text" name="last_name" class="form-control form-control-lg @error('last_name') is-invalid @enderror" required value="{{ old('last_name') }}" />
+                    @error('last_name')
+                        <div class="invalid-feedback" style="display: block;">{{ $message }}</div>
+                    @enderror
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label fw-bold">Tipo de documento</label>
-                    <select name="document_type" class="form-select form-select-lg">
-                        <option value="">Seleccione...</option>
-                        <option value="DNI">DNI</option>
-                        <option value="Pasaporte">Pasaporte</option>
-                        <option value="Cédula">Cédula</option>
-                        <option value="Carnet de Extranjería">Carnet de Extranjería</option>
-                        <option value="RUC">RUC</option>
+                    <label class="form-label fw-bold">Tipo de documento <span class="text-danger">*</span></label>
+                    <select name="document_type" class="form-select form-select-lg @error('document_type') is-invalid @enderror" required>
+                        <option value="">Seleccione un tipo...</option>
+                        <option value="CC" @selected(old('document_type') === 'CC')>Cédula de Ciudadanía (CC)</option>
+                        <option value="CE" @selected(old('document_type') === 'CE')>Cédula de Extranjería (CE)</option>
+                        <option value="PA" @selected(old('document_type') === 'PA')>Pasaporte (PA)</option>
+                        <option value="NIT" @selected(old('document_type') === 'NIT')>NIT</option>
+                        <option value="TI" @selected(old('document_type') === 'TI')>Tarjeta de Identidad (TI)</option>
                     </select>
+                    @error('document_type')
+                        <div class="invalid-feedback" style="display: block;">{{ $message }}</div>
+                    @enderror
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label fw-bold">Número de documento</label>
-                    <input name="document_number" class="form-control form-control-lg" />
+                    <label class="form-label fw-bold">Número de documento <span class="text-danger">*</span></label>
+                    <input type="text" name="document_number" class="form-control form-control-lg @error('document_number') is-invalid @enderror" required value="{{ old('document_number') }}" />
+                    @error('document_number')
+                        <div class="invalid-feedback" style="display: block;">{{ $message }}</div>
+                    @enderror
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label fw-bold">Email</label>
-                    <input type="email" name="email" class="form-control form-control-lg" />
+                    <label class="form-label fw-bold">Email <span class="text-danger">*</span></label>
+                    <input type="email" name="email" class="form-control form-control-lg @error('email') is-invalid @enderror" required value="{{ old('email') }}" />
+                    @error('email')
+                        <div class="invalid-feedback" style="display: block;">{{ $message }}</div>
+                    @enderror
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label fw-bold">Teléfono</label>
-                    <input name="phone" class="form-control form-control-lg" />
+                    <label class="form-label fw-bold">Teléfono <span class="text-danger">*</span></label>
+                    <input type="tel" name="phone" class="form-control form-control-lg @error('phone') is-invalid @enderror" required value="{{ old('phone') }}" />
+                    @error('phone')
+                        <div class="invalid-feedback" style="display: block;">{{ $message }}</div>
+                    @enderror
                 </div>
-                <div class="col-12 mt-4">
-                    <button type="submit" class="btn-submit">
-                        <i class="bi bi-check-circle"></i> Completar Check-in
+                <div class="col-md-6">
+                    <label class="form-label fw-bold">País</label>
+                    <input type="text" name="country" class="form-control form-control-lg @error('country') is-invalid @enderror" placeholder="Ej: Colombia" value="{{ old('country') }}" />
+                    @error('country')
+                        <div class="invalid-feedback" style="display: block;">{{ $message }}</div>
+                    @enderror
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-bold">Notas adicionales</label>
+                    <textarea name="notes" class="form-control form-control-lg @error('notes') is-invalid @enderror" rows="2" placeholder="Información adicional del huésped...">{{ old('notes') }}</textarea>
+                    @error('notes')
+                        <div class="invalid-feedback" style="display: block;">{{ $message }}</div>
+                    @enderror
+                </div>
+                <div class="col-12 mt-4 d-flex gap-2">
+                    <button type="submit" id="submitBtn" class="btn-submit flex-grow-1" style="position: relative; overflow: hidden;">
+                        <span class="spinner-border spinner-border-sm me-2" id="spinner" role="status" aria-hidden="true" style="display:none; width: 16px; height: 16px;"></span>
+                        <i class="bi bi-check-circle" id="submitIcon"></i>
+                        <span id="submitText">Completar Check-in</span>
                     </button>
-                    <a href="{{ route('reception.dashboard') }}#checkin" class="btn btn-secondary ms-2">
+                    <a href="{{ route('reception.dashboard') }}" class="btn btn-secondary">
                         <i class="bi bi-arrow-left"></i> Cancelar
                     </a>
                 </div>
+
+                <script>
+                window.CheckInConfig = {
+                    stayNights:       {{ (int) $reservation->stayDays }},
+                    defaultRoomType:  @json($reservation->room->roomtype->name ?? 'N/A'),
+                    defaultRoomPrice: {{ (float) ($reservation->room->price ?? 0) }}
+                };
+                </script>
+                <script src="{{ asset('js/reception-checkin.js') }}"></script>
             </div>
         </form>
     </div>
 </div>
+
 @endsection
 
