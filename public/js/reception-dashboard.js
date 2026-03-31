@@ -1,12 +1,12 @@
 // Reception dashboard: section switcher + simulated stubs
 // PHP data injected via window.ReceptionConfig (set inline in reception/dashboard.blade.php)
 document.addEventListener('DOMContentLoaded', function () {
-    var config          = window.ReceptionConfig || {};
-    var dashboardUrl    = config.dashboardUrl    || '';
-    var showCheckinNow  = config.showCheckinSection || false;
+    var configEl = document.getElementById('reception-dashboard-config');
+    var dashboardUrl = configEl ? (configEl.dataset.dashboardUrl || '') : '';
+    var showCheckinNow = configEl ? (configEl.dataset.showCheckinSection === '1') : false;
 
     function showSection(id) {
-        ['section-dashboard', 'section-checkin', 'section-folio', 'section-checkout'].forEach(function (s) {
+        ['section-dashboard', 'section-checkin', 'section-userlink', 'section-folio', 'section-checkout'].forEach(function (s) {
             var el = document.getElementById(s);
             if (!el) return;
             el.style.display = (s === id) ? '' : 'none';
@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // Build selector including the dashboard URL if we have it
-    var baseSelector = 'a[href$="#checkin"], a[href$="#folio"], a[href$="#checkout"]';
+    var baseSelector = 'a[href$="#checkin"], a[href$="#userlink"], a[href$="#folio"], a[href$="#checkout"]';
     var selectorWithDash = dashboardUrl
         ? baseSelector + ', a[href="' + dashboardUrl + '"]'
         : baseSelector;
@@ -26,6 +26,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 e.preventDefault();
                 history.replaceState(null, '', '#checkin');
                 showSection('section-checkin');
+            } else if (href.indexOf('#userlink') !== -1) {
+                e.preventDefault();
+                history.replaceState(null, '', '#userlink');
+                showSection('section-userlink');
             } else if (href.indexOf('#folio') !== -1) {
                 e.preventDefault();
                 history.replaceState(null, '', '#folio');
@@ -49,6 +53,8 @@ document.addEventListener('DOMContentLoaded', function () {
         var hash = window.location.hash;
         if (hash === '#checkin') {
             showSection('section-checkin');
+        } else if (hash === '#userlink') {
+            showSection('section-userlink');
         } else if (hash === '#folio') {
             showSection('section-folio');
         } else if (hash === '#checkout') {
@@ -79,7 +85,7 @@ document.addEventListener('DOMContentLoaded', function () {
         chargeBtn.addEventListener('click', function () {
             var desc = document.getElementById('charge-desc') ? document.getElementById('charge-desc').value : '';
             var amt  = document.getElementById('charge-amount') ? document.getElementById('charge-amount').value : '';
-            console.log('Cargo simulado: ' + desc + ' — ' + amt);
+            if (!desc.trim() || !amt.trim()) return;
         });
     }
 
@@ -88,7 +94,7 @@ document.addEventListener('DOMContentLoaded', function () {
         payBtn.addEventListener('click', function () {
             var method = document.getElementById('pay-method') ? document.getElementById('pay-method').value : '';
             var amt    = document.getElementById('pay-amount') ? document.getElementById('pay-amount').value : '';
-            console.log('Pago simulado: ' + method + ' — ' + amt);
+            if (!method.trim() || !amt.trim()) return;
         });
     }
 

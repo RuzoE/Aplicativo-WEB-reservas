@@ -9,136 +9,7 @@
 @section('title', 'Tipos de Bebidas no alcohólicas')
 
 @section('content')
-<style>
-  .bebida-types-container {
-    padding: 30px;
-  }
-  .page-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 30px;
-  }
-  .page-title {
-    font-size: 2rem;
-    font-weight: 700;
-    color: #333;
-    margin: 0;
-  }
-  .btn-create-floating {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%);
-    color: white;
-    border: none;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.5rem;
-    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
-    transition: transform 0.2s, box-shadow 0.2s;
-    text-decoration: none;
-  }
-  .btn-create-floating:hover {
-    transform: scale(1.1);
-    box-shadow: 0 6px 16px rgba(76, 175, 80, 0.4);
-    color: white;
-  }
-  .types-card {
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-    overflow: hidden;
-  }
-  .types-table {
-    width: 100%;
-    border-collapse: collapse;
-  }
-  .types-table thead {
-    background: linear-gradient(135deg, #f5f5f5 0%, #ebebeb 100%);
-    border-bottom: 2px solid #ddd;
-  }
-  .types-table thead th {
-    padding: 16px;
-    text-align: left;
-    font-weight: 600;
-    color: #333;
-    font-size: 0.85rem;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
-  .types-table tbody tr {
-    border-bottom: 1px solid #eee;
-    transition: background-color 0.2s;
-  }
-  .types-table tbody tr:hover {
-    background-color: #f9f9f9;
-  }
-  .types-table tbody td {
-    padding: 14px 16px;
-    color: #555;
-  }
-  .type-name {
-    font-weight: 600;
-    color: #333;
-    font-size: 1rem;
-  }
-  .actions-cell {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-  }
-  .btn-edit {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 38px;
-    height: 38px;
-    background: linear-gradient(135deg, #FFC107 0%, #FF9800 100%);
-    color: white;
-    border-radius: 6px;
-    text-decoration: none;
-    border: none;
-    cursor: pointer;
-    transition: transform 0.2s, box-shadow 0.2s;
-    font-size: 0.9rem;
-  }
-  .btn-edit:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 10px rgba(255, 152, 0, 0.3);
-    color: white;
-    text-decoration: none;
-  }
-  .btn-delete {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 38px;
-    height: 38px;
-    background: linear-gradient(135deg, #EF5350 0%, #D32F2F 100%);
-    color: white;
-    border-radius: 6px;
-    border: none;
-    cursor: pointer;
-    transition: transform 0.2s, box-shadow 0.2s;
-    font-size: 0.9rem;
-  }
-  .btn-delete:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 10px rgba(239, 83, 80, 0.3);
-  }
-  .empty-state {
-    text-align: center;
-    padding: 60px 20px;
-    color: #999;
-  }
-  .empty-state i {
-    font-size: 3rem;
-    margin-bottom: 15px;
-    opacity: 0.5;
-  }
-</style>
+<link rel="stylesheet" href="{{ asset('css/blade/admin/minibar/bebida-types-na/index--style1.css') }}">
 
 <div class="bebida-types-container">
   <div class="page-header">
@@ -176,7 +47,7 @@
                 <form action="{{ route('admin.minibar.bebida-types-na.destroy', $type) }}"
                       method="POST"
                       style="display: inline;"
-                      onsubmit="return confirm('¿Estás seguro de eliminar este tipo de bebida no alcohólica?');">
+                      data-confirm-message="¿Estás seguro de eliminar este tipo de bebida no alcohólica?">
                   @csrf
                   @method('DELETE')
                   <button class="btn-delete" title="Eliminar">
@@ -208,3 +79,5 @@
   @endif
 </div>
 @endsection
+
+

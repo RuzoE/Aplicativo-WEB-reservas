@@ -1,9 +1,9 @@
 // Reception folio form: guest list, folio search, charges, payments
 // PHP routes injected via window.FolioFormConfig (set inline in folio-form.blade.php)
 document.addEventListener('DOMContentLoaded', function () {
-    var config     = window.FolioFormConfig || {};
-    var guestsUrl  = config.guestsUrl || '';
-    var searchUrl  = config.searchUrl || '';
+    var configEl = document.getElementById('folio-section-config');
+    var guestsUrl = configEl ? (configEl.dataset.guestsUrl || '') : '';
+    var searchUrl = configEl ? (configEl.dataset.searchUrl || '') : '';
 
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
 
@@ -34,7 +34,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 guests.forEach(guest => {
                     const option = document.createElement('option');
                     option.value = guest.id;
-                    option.textContent = guest.name;
+                    option.textContent = guest.name + (guest.room ? ' (Hab: ' + guest.room + ')' : '');
                     guestSelect.appendChild(option);
                 });
             })
@@ -107,14 +107,14 @@ document.addEventListener('DOMContentLoaded', function () {
                 html += '<div class="row g-3 mb-4">';
                 html += '<div class="col-md-3"><strong>Estancia ID:</strong><br>' + data.stay.id + '</div>';
                 html += '<div class="col-md-3"><strong>Huésped:</strong><br>' + (data.stay.guest ? data.stay.guest.first_name + ' ' + data.stay.guest.last_name : 'N/A') + '</div>';
-                html += '<div class="col-md-3"><strong>Habitación:</strong><br>' + (data.stay.room ? data.stay.room.room_number : 'N/A') + '</div>';
-                html += '<div class="col-md-3"><strong>Estado:</strong><br><span class="badge bg-info">' + data.stay.status + '</span></div>';
+                html += '<div class="col-md-3"><strong>Habitación:</strong><br>' + (data.stay.assigned_room_number || (data.stay.room ? data.stay.room.room_number : 'N/A')) + '</div>';
+                html += '<div class="col-md-3"><strong>Estado:</strong><br><span class="badge bg-info">' + (data.stay.status == 'InHouse' ? 'En Casa' : data.stay.status) + '</span></div>';
                 html += '</div>';
 
                 if (data.folio) {
                     html += '<div class="row g-3 mb-4">';
                     html += '<div class="col-md-3"><strong>Número Folio:</strong><br><span class="text-primary">' + data.folio.number + '</span></div>';
-                    html += '<div class="col-md-3"><strong>Estado:</strong><br><span class="badge bg-warning">' + data.folio.status + '</span></div>';
+                    html += '<div class="col-md-3"><strong>Estado:</strong><br><span class="badge bg-warning">' + (data.folio.status == 'Open' ? 'Abierto' : data.folio.status) + '</span></div>';
                     html += '<div class="col-md-3"><strong>Moneda:</strong><br>' + data.folio.currency + '</div>';
                     html += '<div class="col-md-3"><strong>Balance:</strong><br><span class="text-danger fw-bold">$' + parseFloat(data.folio.balance).toLocaleString('es-CO', {minimumFractionDigits: 2}) + '</span></div>';
                     html += '</div>';
@@ -124,6 +124,11 @@ document.addEventListener('DOMContentLoaded', function () {
                     if (data.charges && data.charges.length > 0) {
                         html += '<table class="table table-sm table-striped"><thead><tr><th>Fecha</th><th>Tipo</th><th>Descripción</th><th>Monto</th><th>Impuesto</th><th>Total</th></tr></thead><tbody>';
                         data.charges.forEach(charge => {
+                            // Ocultar cargos de Minibar si el usuario prefiere verlos solo en Pagos
+                            if (charge.source === 'Minibar' || charge.source === 'minibar') {
+                                return;
+                            }
+
                             let total = parseFloat(charge.amount) + parseFloat(charge.tax || 0);
                             html += '<tr>';
                             html += '<td>' + (charge.posted_at || charge.created_at).substring(0, 10) + '</td>';
@@ -143,11 +148,12 @@ document.addEventListener('DOMContentLoaded', function () {
                     // Pagos
                     html += '<div class="mb-4"><h5 class="fw-bold">Pagos Registrados</h5>';
                     if (data.payments && data.payments.length > 0) {
-                        html += '<table class="table table-sm table-striped"><thead><tr><th>Fecha</th><th>Método</th><th>Monto</th><th>Referencia</th></tr></thead><tbody>';
+                        html += '<table class="table table-sm table-striped"><thead><tr><th>Fecha</th><th>Método</th><th>Descripción</th><th>Monto</th><th>Referencia</th></tr></thead><tbody>';
                         data.payments.forEach(payment => {
                             html += '<tr>';
                             html += '<td>' + (payment.received_at || payment.created_at).substring(0, 10) + '</td>';
                             html += '<td>' + payment.method + '</td>';
+                            html += '<td>' + (payment.description || 'Abono a estancia') + '</td>';
                             html += '<td class="fw-bold text-success">$' + parseFloat(payment.amount).toLocaleString('es-CO', {minimumFractionDigits: 2}) + '</td>';
                             html += '<td>' + (payment.external_ref || '-') + '</td>';
                             html += '</tr>';
@@ -181,11 +187,15 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
+        const amountVal = parseFloat(document.getElementById('charge-amount').value);
+        const ivaPercent = parseFloat(document.getElementById('charge-tax').value || 0);
+        const calculatedTax = ivaPercent > 0 ? (amountVal * (ivaPercent / 100)) : 0;
+
         const formData = {
             source:      document.getElementById('charge-source').value,
             description: document.getElementById('charge-desc').value,
-            amount:      document.getElementById('charge-amount').value,
-            tax:         document.getElementById('charge-tax').value || 0
+            amount:      amountVal,
+            tax:         calculatedTax
         };
 
         fetch(`/reception/stay/${currentStayId}/charges`, {
@@ -229,6 +239,7 @@ document.addEventListener('DOMContentLoaded', function () {
             method:       document.getElementById('pay-method').value,
             amount:       document.getElementById('pay-amount').value,
             currency:     'COP',
+            description:  document.getElementById('pay-description')?.value || null,
             external_ref: document.getElementById('pay-reference').value || null
         };
 

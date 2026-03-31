@@ -33,13 +33,13 @@ class AuthServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // Bypass total para el rol admin (Spatie)
+        // Bypass total para el rol administrador (Spatie)
         Gate::before(function (?Authenticatable $user, string $ability) {
             // si no hay usuario autenticado, no decide
             if (!$user) return null;
 
             // hasRole() es de Spatie (asegúrate de usar HasRoles en el modelo User)
-            return method_exists($user, 'hasRole') && $user->hasRole('admin') ? true : null;
+            return method_exists($user, 'hasRole') && $user->hasRole('administrador') ? true : null;
         });
     }
 }

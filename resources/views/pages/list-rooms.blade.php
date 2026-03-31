@@ -19,22 +19,17 @@
     </div>
     <!-- Page Header End -->
     <!-- Booking -->
-    @include('sections.booking-header')
+    @include('components.sections.booking-header')
 @endsection
 
 @section('content')
     <!-- Room -->
-    @include('sections.room-container-details')
+    @include('components.sections.room-container-details')
     <!-- Testimonial -->
-    @include('sections.testimonial')
+    @include('components.sections.testimonial')
     <!-- Newsletter -->
-    @include('sections.newsletter')
+    @include('components.sections.newsletter')
 @endsection
-
-@section('footer')
-    @include('layouts.footer')
-@endsection
-
 
 @section('footer')
     @include('layouts.footer')

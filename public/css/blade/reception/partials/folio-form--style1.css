@@ -1,0 +1,238 @@
+
+    .folio-section {
+        padding: 40px 60px;
+        max-width: 100%;
+    }
+
+    .folio-header {
+        margin-bottom: 30px;
+        border-bottom: 3px solid #2196F3;
+        padding-bottom: 20px;
+    }
+
+    .folio-header h2 {
+        color: #2196F3;
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 10px;
+    }
+
+    .folio-header p {
+        color: #666;
+        font-size: 1.1rem;
+        margin: 0;
+    }
+
+    .folio-card {
+        background: white;
+        border-radius: 12px;
+        padding: 30px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        margin-bottom: 30px;
+    }
+
+    .folio-card h3 {
+        color: #333;
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 15px;
+    }
+
+    .folio-section-title {
+        color: #333;
+        font-size: 1.3rem;
+        font-weight: 700;
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #e0e0e0;
+    }
+
+    .btn-search-folio {
+        background: linear-gradient(135deg, #2196F3 0%, #1565C0 100%);
+        color: white;
+        border: none;
+        padding: 12px 30px;
+        border-radius: 8px;
+        font-weight: 600;
+        transition: transform 0.3s, box-shadow 0.3s;
+        box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);
+    }
+
+    .btn-search-folio:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(33, 150, 243, 0.4);
+        color: white;
+    }
+
+    .btn-add-charge {
+        background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%);
+        color: white;
+        border: none;
+        padding: 12px 30px;
+        border-radius: 8px;
+        font-weight: 600;
+        transition: transform 0.3s, box-shadow 0.3s;
+        box-shadow: 0 4px 12px rgba(255, 152, 0, 0.3);
+        width: 100%;
+    }
+
+    .btn-add-charge:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(255, 152, 0, 0.4);
+        color: white;
+    }
+
+    .btn-add-payment {
+        background: linear-gradient(135deg, #4CAF50 0%, #388E3C 100%);
+        color: white;
+        border: none;
+        padding: 12px 30px;
+        border-radius: 8px;
+        font-weight: 600;
+        transition: transform 0.3s, box-shadow 0.3s;
+        box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+        width: 100%;
+    }
+
+    .btn-add-payment:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+        color: white;
+    }
+
+    .action-columns {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        gap: 30px;
+        margin-top: 30px;
+    }
+
+    .action-column {
+        background: #f8f9fa;
+        border-radius: 12px;
+        padding: 25px;
+        border: 2px solid #e0e0e0;
+    }
+
+    #guest-loading {
+        font-size: 0.9rem;
+        color: #666;
+    }
+
+    #guest-loading i {
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+
+    .form-select-lg {
+        border: 2px solid #e0e0e0;
+        transition: border-color 0.3s, box-shadow 0.3s;
+    }
+
+    .form-select-lg:focus {
+        border-color: #2196F3;
+        box-shadow: 0 0 0 0.2rem rgba(33, 150, 243, 0.25);
+    }
+
+    .folio-notification {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        min-width: 320px;
+        max-width: 500px;
+        background: white;
+        border-radius: 12px;
+        padding: 20px 25px;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+        z-index: 9999;
+        animation: slideInRight 0.4s ease-out;
+        border-left: 5px solid #2196F3;
+    }
+
+    .folio-notification.success {
+        border-left-color: #4CAF50;
+    }
+
+    .folio-notification.error {
+        border-left-color: #f44336;
+    }
+
+    .folio-notification.warning {
+        border-left-color: #ff9800;
+    }
+
+    .folio-notification .notification-content {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .folio-notification .notification-icon {
+        font-size: 28px;
+        line-height: 1;
+    }
+
+    .folio-notification.success .notification-icon {
+        color: #4CAF50;
+    }
+
+    .folio-notification.error .notification-icon {
+        color: #f44336;
+    }
+
+    .folio-notification.warning .notification-icon {
+        color: #ff9800;
+    }
+
+    .folio-notification .notification-text {
+        flex: 1;
+        color: #333;
+        font-size: 15px;
+        font-weight: 500;
+    }
+
+    .folio-notification .notification-close {
+        background: none;
+        border: none;
+        font-size: 24px;
+        color: #999;
+        cursor: pointer;
+        padding: 0;
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: color 0.2s;
+    }
+
+    .folio-notification .notification-close:hover {
+        color: #333;
+    }
+
+    @keyframes slideInRight {
+        from {
+            transform: translateX(400px);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+
+    @keyframes slideOutRight {
+        from {
+            transform: translateX(0);
+            opacity: 1;
+        }
+        to {
+            transform: translateX(400px);
+            opacity: 0;
+        }
+    }
+

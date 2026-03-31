@@ -13,6 +13,31 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule): void
     {
         // $schedule->command('inspire')->hourly();
+
+        $schedule
+            ->command('backup:run --only-db')
+            ->dailyAt('02:00')
+            ->withoutOverlapping()
+            ->runInBackground();
+
+        $schedule
+            ->command('backup:clean')
+            ->dailyAt('02:30')
+            ->withoutOverlapping()
+            ->runInBackground();
+
+        $schedule
+            ->command('backup:monitor')
+            ->dailyAt('02:45')
+            ->withoutOverlapping()
+            ->runInBackground();
+
+        if (config('auditoria.cleanup.enabled', true)) {
+            $schedule
+                ->command('auditoria:purge')
+                ->dailyAt(config('auditoria.cleanup.schedule', '03:15'))
+                ->withoutOverlapping();
+        }
     }
 
     /**

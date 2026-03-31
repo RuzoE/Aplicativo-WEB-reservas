@@ -12,3 +12,6 @@ function decreaseQty(button) {
         quantitySpan.textContent = currentQty - 1;
     }
 }
+
+window.increaseQty = increaseQty;
+window.decreaseQty = decreaseQty;

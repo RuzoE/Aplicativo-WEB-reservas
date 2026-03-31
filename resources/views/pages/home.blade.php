@@ -3,20 +3,20 @@
 @section('header')
     @include('layouts.header')
     <!-- Carousel -->
-    @include('sections.carousel')
+    @include('components.sections.carousel')
 @endsection
 
 @section('content')
     <!-- Service -->
-    @include('sections.service')
+    @include('components.sections.service')
     <!-- Room -->
-    @include('sections.room-container-brief')
+    @include('components.sections.room-container-brief')
     <!-- Testimonial -->
-    @include('sections.testimonial')
+    @include('components.sections.testimonial')
     <!-- Team -->
-    @include('sections.team')
+    @include('components.sections.team')
     <!-- Newsletter -->
-    @include('sections.newsletter')
+    @include('components.sections.newsletter')
 @endsection
 
 @section('footer')

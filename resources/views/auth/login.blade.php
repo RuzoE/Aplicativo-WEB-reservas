@@ -11,6 +11,10 @@
                 @error('login_err')
                 @include('components.alert-error')
                 @enderror
+
+                @if(session('success'))
+                @include('components.alert-success')
+                @endif
                 <div class="card shadow-lg">
                     <div class="card-body">
                         <h4 class="card-title my-4 text-center">Ingresa a tu cuenta</h4>
@@ -21,6 +25,8 @@
                                     <span class="input-group-text"> <i class="fa-solid fa-envelope"></i> </span>
                                     <input type="email" placeholder="Correo electrónico" name="email"
                                            value="{{ old('email') }}"
+                                         pattern="^[^\s@]+@(gmail\.com|hotmail\.com)$"
+                                         title="Solo se permiten correos @gmail.com o @hotmail.com"
                                            class="form-control @error('email') is-invalid @enderror">
                                     @error('email')
                                     <div class="invalid-feedback">{{ $message }}</div>

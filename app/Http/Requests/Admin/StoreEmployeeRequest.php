@@ -2,7 +2,10 @@
 
 namespace App\Http\Requests\Admin;
 
+use App\Rules\AllowedEmailDomain;
+use App\Rules\PhoneNumberByPrefix;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rules\Password;
 
 class StoreEmployeeRequest extends FormRequest
 {
@@ -11,7 +14,7 @@ class StoreEmployeeRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return (bool) $this->user()?->hasRole('admin');
+        return (bool) $this->user()?->hasRole('administrador');
     }
 
     /**
@@ -24,12 +27,16 @@ class StoreEmployeeRequest extends FormRequest
         return [
             'name'                  => ['required','string','max:100'],
             'last_name'             => ['nullable','string','max:100'],
-            'email'                 => ['required','email','max:255','unique:users,email'],
-            'phone'                 => ['nullable','string','max:30'],
+            'email'                 => ['required','email','max:255', new AllowedEmailDomain(), 'unique:users,email'],
+            'phone'                 => ['nullable', new PhoneNumberByPrefix()],
 
             // Si tu modelo User tiene cast 'password' => 'hashed',
             // no necesitas Hash::make en el controlador.
-            'password'              => ['required','string','min:8','confirmed'],
+            'password'              => [
+                'required',
+                'confirmed',
+                Password::min(12)->letters()->mixedCase()->numbers()->symbols()->uncompromised(),
+            ],
 
             // Rol por nombre (ej: admin, recepcionista, minibar)
             'role'                  => ['required','string','exists:roles,name'],

@@ -4,14 +4,14 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
-use App\Rules\alphaSpace;
-use Closure;
+use App\Rules\AllowedEmailDomain;
+use App\Rules\AlphaSpace;
+use App\Rules\PhoneNumberByPrefix;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rules\Password;
 
 class AuthController extends Controller
@@ -50,26 +50,31 @@ class AuthController extends Controller
 
         $request->validate([
             'name' => ['required', new AlphaSpace, 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
+            'last_name' => ['required', new AlphaSpace, 'max:255'],
+            'phone' => ['required', new PhoneNumberByPrefix()],
+            'email' => ['required', 'string', 'email', 'max:255', new AllowedEmailDomain(), 'unique:users'],
             'password' => ['required',
-                Password::min(6)
-                ->letters() // Require at least one letter
-                ->mixedCase() // Require at least one uppercase and one lowercase letter
-                ->numbers() // Require at least one number
-                ->symbols(), // Require at least one symbol
+                Password::min(12)
+                ->letters()
+                ->mixedCase()
+                ->numbers()
+                ->symbols()
+                ->uncompromised(),
                 'confirmed'],
             'password_confirmation' => ['required']
         ]);
 
         $user = User::create([
             'name' => $request->name,
+            'last_name' => $request->last_name,
+            'phone' => $request->phone,
             'email' => $request->email,
             'password' => Hash::make($request->password),
         ]);
 
-        Auth::login($user);
+        /* Auth::login($user); */
 
-        return redirect()->route('home');
+        return redirect()->route('login')->with('success', 'Cuenta creada exitosamente. Por favor, inicia sesión.');
     }
 
     /**
@@ -78,7 +83,7 @@ class AuthController extends Controller
     public function login(Request $request): RedirectResponse
     {
         $credentials = $request->validate([
-            'email' => ['required', 'email'],
+            'email' => ['required', 'email', new AllowedEmailDomain()],
             'password' => ['required'],
         ]);
 
@@ -92,6 +97,16 @@ class AuthController extends Controller
             }
             return redirect()->intended('/');
         }
+
+        $failedUser = User::where('email', $request->input('email'))->first();
+        registrarAuditoria(
+            'LOGIN_FAILED',
+            'usuarios',
+            $failedUser?->id,
+            'Intento de inicio de sesion web fallido para el correo ' . $request->input('email') . ' desde IP ' . $request->ip(),
+            $failedUser?->id,
+            ['skip_duplicate' => false]
+        );
 
         return back()->withErrors([
             'login_err' => __('auth.failed'),

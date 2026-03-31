@@ -17,6 +17,7 @@ class Payment extends Model
         'received_by',
         'received_at',
         'external_ref',
+        'description',
     ];
 
     protected $casts = [

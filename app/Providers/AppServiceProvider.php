@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Schema;
@@ -13,16 +14,29 @@ class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        //
+        $this->app->singleton(\App\Services\AuditoriaService::class, function () {
+            return new \App\Services\AuditoriaService();
+        });
     }
 
     public function boot(): void
     {
+        $certificateBundle = $this->configureCertificateBundle();
+        $this->registerGoogleDriveFilesystem($certificateBundle);
+
         Schema::defaultStringLength(191);
         Paginator::useBootstrapFive();
 
         View::composer('admin.*', function ($view) {
             $view->with('adminView', true);
+        });
+
+        View::composer('admin.sidebar', function ($view) {
+            $anticiposCount = \App\Models\Order::whereIn('status', [\App\Models\Order::STATUS_ANTICIPO_PAGADO, 'confirmada'])
+                ->where('down_payment_amount', '>', 0)
+                ->where('is_paid', true)
+                ->count();
+            $view->with('anticiposCount', $anticiposCount);
         });
 
         // Blade directive to format prices in Colombian Pesos (COP)
@@ -43,9 +57,62 @@ class AppServiceProvider extends ServiceProvider
             app('debugbar')->disable();
         }
 
-        if ($this->app->environment('production')) {
+        if (filter_var(env('APP_FORCE_HTTPS', false), FILTER_VALIDATE_BOOL)) {
             $this->app['request']->server->set('HTTPS','on');
             URL::forceScheme('https');
         }
+    }
+
+    protected function configureCertificateBundle(): ?string
+    {
+        $certificateBundle = env('CA_BUNDLE_PATH');
+
+        if (! $certificateBundle && is_file('C:/laragon/etc/ssl/cacert.pem')) {
+            $certificateBundle = 'C:/laragon/etc/ssl/cacert.pem';
+        }
+
+        if (! $certificateBundle || ! is_file($certificateBundle)) {
+            return null;
+        }
+
+        putenv("SSL_CERT_FILE={$certificateBundle}");
+        putenv("CURL_CA_BUNDLE={$certificateBundle}");
+        ini_set('openssl.cafile', $certificateBundle);
+        ini_set('curl.cainfo', $certificateBundle);
+
+        return $certificateBundle;
+    }
+
+    protected function registerGoogleDriveFilesystem(?string $certificateBundle): void
+    {
+        Storage::extend('google', function ($app, array $config) use ($certificateBundle) {
+            $options = [];
+
+            if (! empty($config['teamDriveId'] ?? null)) {
+                $options['teamDriveId'] = $config['teamDriveId'];
+            }
+
+            $client = new \Google\Client;
+            $client->setClientId($config['clientId']);
+            $client->setClientSecret($config['clientSecret']);
+
+            if ($certificateBundle) {
+                $client->setHttpClient(new \GuzzleHttp\Client([
+                    'verify' => $certificateBundle,
+                ]));
+            }
+
+            $client->refreshToken($config['refreshToken']);
+
+            if (! empty($config['accessToken'])) {
+                $client->setAccessToken($config['accessToken']);
+            }
+
+            $service = new \Google\Service\Drive($client);
+            $adapter = new \Masbug\Flysystem\GoogleDriveAdapter($service, $config['folder'] ?? '/', $options);
+            $driver = new \League\Flysystem\Filesystem($adapter);
+
+            return new \Illuminate\Filesystem\FilesystemAdapter($driver, $adapter);
+        });
     }
 }

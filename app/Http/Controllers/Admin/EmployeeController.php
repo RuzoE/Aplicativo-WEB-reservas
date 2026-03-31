@@ -4,7 +4,11 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Rules\AllowedEmailDomain;
+use App\Rules\AlphaSpace;
+use App\Rules\PhoneNumberByPrefix;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rules\Password;
 use Spatie\Permission\Models\Role;
 
 class EmployeeController extends Controller
@@ -40,11 +44,11 @@ class EmployeeController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'name' => ['required', 'string', 'max:100'],
-            'last_name' => ['required', 'string', 'max:100'],
-            'email' => ['required', 'email', 'max:150', 'unique:users,email'],
-            'phone' => ['required', 'string', 'max:30'],
-            'password' => ['required', 'confirmed', 'min:8'],
+            'name' => ['required', new AlphaSpace, 'max:100'],
+            'last_name' => ['required', new AlphaSpace, 'max:100'],
+            'email' => ['required', 'email', 'max:150', new AllowedEmailDomain(), 'unique:users,email'],
+            'phone' => ['required', new PhoneNumberByPrefix()],
+            'password' => ['required', 'confirmed', Password::min(12)->letters()->mixedCase()->numbers()->symbols()->uncompromised()],
             'role_id' => ['required', 'exists:roles,id'],
         ]);
 
@@ -60,6 +64,15 @@ class EmployeeController extends Controller
         $roleName = Role::find($data['role_id'])->name;
         $user->assignRole($roleName);
 
+        registrarAuditoria(
+            'ROLE_CHANGE',
+            'usuarios',
+            $user->id,
+            'Rol inicial asignado al usuario ID ' . $user->id . ': ' . $roleName,
+            auth()->id() ?? $user->id,
+            ['skip_duplicate' => false]
+        );
+
         return redirect()->route('admin.empleados.index')
             ->with('success', 'El empleado "' . $user->name . '" ha sido creado correctamente.');
     }
@@ -67,23 +80,41 @@ class EmployeeController extends Controller
     public function update(Request $request, User $empleado)
     {
         $data = $request->validate([
-            'name' => ['required', 'string', 'max:100'],
-            'last_name' => ['nullable', 'string', 'max:100'],
-            'email' => ['required', 'email', 'max:150', 'unique:users,email,' . $empleado->id],
-            'phone' => ['nullable', 'string', 'max:30'],
-            'password' => ['nullable', 'confirmed', 'min:8'],
+            'name' => ['required', new AlphaSpace, 'max:100'],
+            'last_name' => ['nullable', new AlphaSpace, 'max:100'],
+            'email' => ['required', 'email', 'max:150', new AllowedEmailDomain(), 'unique:users,email,' . $empleado->id],
+            'phone' => ['nullable', new PhoneNumberByPrefix()],
+            'password' => ['nullable', 'confirmed', Password::min(12)->letters()->mixedCase()->numbers()->symbols()->uncompromised()],
             'role_id' => ['nullable', 'exists:roles,id'],
         ]);
 
         $empleado->fill(collect($data)->except('password', 'role_id')->toArray());
         if (!empty($data['password'])) {
             $empleado->password = $data['password'];
+
+            registrarAuditoria(
+                'PASSWORD_CHANGE',
+                'usuarios',
+                $empleado->id,
+                'Contraseña actualizada para usuario ID ' . $empleado->id,
+                auth()->id() ?? $empleado->id,
+                ['skip_duplicate' => false]
+            );
         }
         $empleado->save();
 
         if (!empty($data['role_id'])) {
             $roleName = Role::find($data['role_id'])->name;
             $empleado->syncRoles([$roleName]); // reemplaza rol actual por el nuevo
+
+            registrarAuditoria(
+                'ROLE_CHANGE',
+                'usuarios',
+                $empleado->id,
+                'Rol actualizado para usuario ID ' . $empleado->id . ': ' . $roleName,
+                auth()->id() ?? $empleado->id,
+                ['skip_duplicate' => false]
+            );
         }
 
         return redirect()
@@ -108,6 +139,16 @@ class EmployeeController extends Controller
         ]);
 
         $user->syncRoles([$data['role']]); // o ->assignRole($data['role']) si no quieres reemplazar
+
+        registrarAuditoria(
+            'ROLE_CHANGE',
+            'usuarios',
+            $user->id,
+            'Rol actualizado desde acción rápida para usuario ID ' . $user->id . ': ' . $data['role'],
+            auth()->id() ?? $user->id,
+            ['skip_duplicate' => false]
+        );
+
         return back()->with('success', 'Rol asignado.');
     }
 }

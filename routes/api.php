@@ -35,10 +35,13 @@ Route::get('/health', function () {
     ], 200);
 });
 
-Route::get('/ping-db', function () {
-    DB::select('SELECT 1');
-    return response()->json(['db' => 'ok'], 200);
-});
+if (app()->environment(['local', 'testing'])) {
+    Route::get('/ping-db', function () {
+        DB::select('SELECT 1');
+
+        return response()->json(['db' => 'ok'], 200);
+    });
+}
 
 /*
 |--------------------------------------------------------------------------
@@ -51,8 +54,12 @@ Route::get('/ping-db', function () {
 */
 
 Route::prefix('auth')->name('api.auth.')->group(function () {
-    Route::post('register', [ApiAuthController::class, 'register'])->name('register');
-    Route::post('login', [ApiAuthController::class, 'login'])->name('login');
+    Route::post('register', [ApiAuthController::class, 'register'])
+        ->middleware('throttle:auth-register')
+        ->name('register');
+    Route::post('login', [ApiAuthController::class, 'login'])
+        ->middleware('throttle:auth-login')
+        ->name('login');
 
     Route::middleware('auth:sanctum')->group(function () {
         Route::get('me', [ApiAuthController::class, 'me'])->name('me');
@@ -85,12 +92,13 @@ Route::apiResource('minibar-products', MinibarProductController::class)
 // -------------------------------------------
 Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('minibar-products', MinibarProductController::class)
+    ->middleware(['role:administrador|minibar,sanctum', 'abilities:minibar:write'])
         ->only(['store', 'update', 'destroy']);
 });
 
 Route::prefix('admin')
     ->name('api.admin.')
-    ->middleware(['auth:sanctum', 'role:administrador,sanctum'])
+    ->middleware(['auth:sanctum', 'role:administrador,sanctum', 'audit.admin'])
     ->group(function () {
         Route::get('/', [AdminDashboardController::class, 'index'])->name('index');
 
@@ -106,7 +114,7 @@ Route::prefix('admin')
 
 Route::prefix('admin/habitaciones')
     ->name('api.admin.habitaciones.')
-    ->middleware(['auth:sanctum', 'role:administrador|reservas,sanctum'])
+    ->middleware(['auth:sanctum', 'role:administrador|reservas,sanctum', 'audit.admin'])
     ->group(function () {
         Route::get('dashboard', [HabitacionesDashboardController::class, 'index'])->name('dashboard');
         Route::resource('reservas', AdminOrderController::class);
@@ -116,7 +124,7 @@ Route::prefix('admin/habitaciones')
 
 Route::prefix('admin/minibar')
     ->name('api.admin.minibar.')
-    ->middleware(['auth:sanctum', 'role:administrador|minibar,sanctum'])
+    ->middleware(['auth:sanctum', 'role:administrador|minibar,sanctum', 'audit.admin'])
     ->group(function () {
         Route::get('dashboard', [MinibarDashboardController::class, 'index'])->name('dashboard');
 
@@ -145,21 +153,21 @@ Route::prefix('admin/minibar')
 
 Route::prefix('reservas')
     ->name('api.reservas.')
-    ->middleware(['auth:sanctum', 'role:administrador|reservas,sanctum'])
+    ->middleware(['auth:sanctum', 'role:administrador|reservas,sanctum', 'audit.admin'])
     ->group(function () {
         Route::get('dashboard', [HabitacionesDashboardController::class, 'index'])->name('dashboard');
     });
 
 Route::prefix('minibar-admin')
     ->name('api.minibarAdmin.')
-    ->middleware(['auth:sanctum', 'role:administrador|minibar,sanctum'])
+    ->middleware(['auth:sanctum', 'role:administrador|minibar,sanctum', 'audit.admin'])
     ->group(function () {
         Route::get('dashboard', [MinibarDashboardController::class, 'index'])->name('dashboard');
     });
 
 Route::prefix('admin/mantenimiento')
     ->name('api.admin.mantenimiento.')
-    ->middleware(['auth:sanctum', 'role:administrador|mantenimiento,sanctum'])
+    ->middleware(['auth:sanctum', 'role:administrador|mantenimiento,sanctum', 'audit.admin'])
     ->group(function () {
         Route::get('dashboard', [MaintenanceController::class, 'dashboard'])->name('dashboard');
         Route::get('/', [MaintenanceController::class, 'index'])->name('index');
@@ -186,16 +194,30 @@ Route::prefix('minibar')->name('api.minibar.')->group(function () {
 
 Route::prefix('reception')
     ->name('api.reception.')
-    ->middleware(['auth:sanctum', 'role:administrador|reservas|recepcion,sanctum'])
+    ->middleware(['auth:sanctum', 'role:administrador|reservas|recepcion,sanctum', 'audit.admin'])
     ->group(function () {
         Route::get('dashboard', [ReceptionDashboardController::class, 'index'])->name('dashboard');
-        Route::post('search-reservation', [ReceptionCheckInController::class, 'search'])->name('checkin.search');
+        Route::post('search-reservation', [ReceptionCheckInController::class, 'search'])
+            ->middleware('throttle:reception-sensitive')
+            ->name('checkin.search');
         Route::get('check-in/{reservation}', [ReceptionCheckInController::class, 'show'])->name('checkin.show');
-        Route::post('check-in/{reservation}', [ReceptionCheckInController::class, 'store'])->name('checkin.store');
-        Route::get('folio/active-guests', [ReceptionFolioController::class, 'getActiveGuests'])->name('folio.guests');
-        Route::post('folio/search', [ReceptionFolioController::class, 'search'])->name('folio.search');
+        Route::post('check-in/{reservation}', [ReceptionCheckInController::class, 'store'])
+            ->middleware('throttle:reception-sensitive')
+            ->name('checkin.store');
+        Route::get('folio/active-guests', [ReceptionFolioController::class, 'getActiveGuests'])
+            ->middleware('throttle:reception-sensitive')
+            ->name('folio.guests');
+        Route::post('folio/search', [ReceptionFolioController::class, 'search'])
+            ->middleware('throttle:reception-sensitive')
+            ->name('folio.search');
         Route::get('stay/{stay}/folio', [ReceptionFolioController::class, 'show'])->name('folio.show');
-        Route::post('stay/{stay}/charges', [ReceptionFolioController::class, 'postCharge'])->name('folio.charge');
-        Route::post('stay/{stay}/payments', [ReceptionFolioController::class, 'postPayment'])->name('folio.payment');
-        Route::post('check-out/{stay}', [ReceptionCheckOutController::class, 'store'])->name('checkout.store');
+        Route::post('stay/{stay}/charges', [ReceptionFolioController::class, 'postCharge'])
+            ->middleware('throttle:reception-sensitive')
+            ->name('folio.charge');
+        Route::post('stay/{stay}/payments', [ReceptionFolioController::class, 'postPayment'])
+            ->middleware('throttle:reception-sensitive')
+            ->name('folio.payment');
+        Route::post('check-out/{stay}', [ReceptionCheckOutController::class, 'store'])
+            ->middleware('throttle:reception-sensitive')
+            ->name('checkout.store');
     });

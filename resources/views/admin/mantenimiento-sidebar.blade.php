@@ -4,6 +4,8 @@
       <span class="fs-5">Menu</span>
     </a>
 
+    <link rel="stylesheet" href="{{ asset('css/blade/admin/mantenimiento-sidebar--style1.css') }}">
+
     <div class="dropdown pb-4">
       <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" id="dropdownUser1" data-bs-toggle="dropdown" aria-expanded="false">
         <img src="https://github.com/mdo.png" alt="Admin" width="30" height="30" class="rounded-circle">
@@ -48,3 +50,5 @@
     </ul>
   </div>
 </div>
+
+

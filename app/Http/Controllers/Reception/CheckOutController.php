@@ -8,6 +8,8 @@ use App\Services\Reception\CheckOutService;
 use App\Events\Reception\StayEnded;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Log;
 
 class CheckOutController extends Controller
 {
@@ -22,35 +24,62 @@ class CheckOutController extends Controller
         $this->authorize('checkOut', $stay);
 
         try {
-            $this->checkOutService->processCheckOut($stay);
+            $invoice = $this->checkOutService->processCheckOut($stay);
 
             StayEnded::dispatch($stay);
 
-            // Refrescar para cargar transacciones actualizadas (por si las hay en el processCheckOut)
-            $stay->load(['folios.charges', 'folios.payments']);
+            // Refrescar para cargar transacciones actualizadas
+            $stay->load(['folios.charges', 'folios.payments', 'order', 'room', 'guest']);
 
-            $pdf = Pdf::loadView('reception.invoice', compact('stay'));
+            $pdf = Pdf::loadView('reception.invoice', compact('stay', 'invoice'));
+            $filename = $this->buildComprobanteFilename($invoice->invoice_number);
 
             if ($request->wantsJson()) {
                 return response()->json([
                     'success' => true,
-                    'message' => 'Check-out completado exitosamente.',
-                    // No podemos retornar el PDF directamente en JSON, requeriría una URL de descarga
-                    // Pero la vista actual no usa Ajax para el submit final.
+                    'message' => 'Check-out completado exitosamente. Comprobante N° ' . $invoice->invoice_number . ' generado.',
+                    'invoice_url' => route('reception.invoices.download', $invoice->id),
                 ]);
             }
 
-            // Descargar el PDF generado
-            return $pdf->download('factura-estancia-' . $stay->id . '.pdf');
+            return $pdf->download($filename);
 
         } catch (\Exception $e) {
+            Log::error('Error al procesar check-out.', [
+                'stay_id' => $stayId,
+                'user_id' => $request->user()?->id,
+                'message' => $e->getMessage(),
+            ]);
+
             if ($request->wantsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => $e->getMessage()
+                    'message' => 'No fue posible completar el check-out. Intenta nuevamente o contacta al administrador.'
                 ], 422);
             }
-            return back()->withErrors(['checkout' => $e->getMessage()]);
+
+            return back()->withErrors([
+                'checkout' => 'No fue posible completar el check-out. Intenta nuevamente o contacta al administrador.'
+            ]);
         }
+    }
+
+    public function download($invoiceId)
+    {
+        $invoice = \App\Models\Invoice::with('stay')->findOrFail($invoiceId);
+        $stay = $invoice->stay;
+        $stay->load(['folios.charges', 'folios.payments', 'order', 'room', 'guest']);
+
+        $pdf = Pdf::loadView('reception.invoice', compact('stay', 'invoice'));
+        $filename = $this->buildComprobanteFilename($invoice->invoice_number);
+
+        return $pdf->download($filename);
+    }
+
+    private function buildComprobanteFilename(string $invoiceNumber): string
+    {
+        $downloadDate = Carbon::now()->format('Y-m-d_H-i');
+
+        return 'Comprobante_de_pago_N_' . $invoiceNumber . '_' . $downloadDate . '.pdf';
     }
 }

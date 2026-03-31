@@ -7,12 +7,15 @@
         "screenshot:example": "node scripts/screenshot.mjs https://example.com evidencias/screenshots/example.png"
     },
     "devDependencies": {
+        "@vitejs/plugin-vue": "^4.5.2",
         "autoprefixer": "^10.4.27",
         "axios": "^1.1.2",
+        "esbuild": "^0.27.4",
         "laravel-vite-plugin": "^0.7.2",
         "postcss": "^8.5.6",
         "puppeteer": "^23.7.0",
         "tailwindcss": "^3.4.4",
-        "vite": "^4.0.0"
+        "vite": "^4.0.0",
+        "vue": "^3.5.31"
     }
 }

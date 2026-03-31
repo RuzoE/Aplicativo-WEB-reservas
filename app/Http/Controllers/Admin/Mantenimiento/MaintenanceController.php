@@ -63,7 +63,15 @@ class MaintenanceController extends Controller
                 ->withInput();
         }
 
-        MaintenanceOrder::create($validated);
+        $order = MaintenanceOrder::create($validated);
+
+        registrarAuditoria(
+            'CREATE',
+            'mantenimiento',
+            $order->id,
+            'Orden de mantenimiento creada para room_id ' . $order->room_id . ' (habitacion ' . ($order->room_number ?? 'N/A') . ')',
+            auth()->id()
+        );
 
         return redirect()->route('admin.mantenimiento.index')
             ->with('success', 'Orden de mantenimiento creada exitosamente');
@@ -75,12 +83,20 @@ class MaintenanceController extends Controller
         // Por ahora usamos el campo status como bandera
 
         // Crear una orden activa si no existe
-        MaintenanceOrder::create([
+        $order = MaintenanceOrder::create([
             'room_id' => $room->id,
             'description' => 'Habitación marcada en mantenimiento',
             'status' => 'asignada',
             'priority' => 'normal',
         ]);
+
+        registrarAuditoria(
+            'UPDATE',
+            'habitaciones',
+            $room->id,
+            'Habitacion marcada en mantenimiento mediante orden ID ' . $order->id,
+            auth()->id()
+        );
 
         return back()->with('success', 'Habitación ' . $room->total_room . ' marcada en mantenimiento');
     }
@@ -92,6 +108,14 @@ class MaintenanceController extends Controller
                 'status' => 'completada',
                 'completed_at' => now(),
             ]);
+
+            registrarAuditoria(
+                'UPDATE',
+                'mantenimiento',
+                $order->id,
+                'Orden de mantenimiento completada para room_id ' . $order->room_id . ' (habitacion ' . ($order->room_number ?? 'N/A') . ')',
+                auth()->id()
+            );
 
             if (request()->ajax() || request()->wantsJson()) {
                 return response()->json([
@@ -111,7 +135,7 @@ class MaintenanceController extends Controller
             if (request()->ajax() || request()->wantsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Error al completar: ' . $e->getMessage()
+                    'message' => 'No fue posible completar la orden. Intenta nuevamente o contacta al administrador.'
                 ], 500);
             }
 
@@ -130,13 +154,28 @@ class MaintenanceController extends Controller
         return back()->with('success', 'Orden marcada como urgente');
     }
 
-    public function showHistory(Room $room)
+    public function showHistory(Request $request, Room $room)
     {
-        $history = MaintenanceOrder::where('room_id', $room->id)
+        $selectedRoomNumber = $request->integer('room_number');
+
+        $historyQuery = MaintenanceOrder::query()
+            ->where('room_id', $room->id);
+
+        // In this project, one room row can represent multiple physical rooms.
+        // Keep room_id as primary filter and narrow by room_number when provided.
+        if ($selectedRoomNumber > 0) {
+            $historyQuery->where('room_number', $selectedRoomNumber);
+        }
+
+        $history = $historyQuery
             ->orderBy('created_at', 'desc')
             ->get();
 
-        return view('admin.mantenimiento.history', compact('room', 'history'));
+        if (request()->ajax() || request()->wantsJson()) {
+            return view('components.admin.mantenimiento.history-list', compact('room', 'history', 'selectedRoomNumber'));
+        }
+
+        return view('admin.mantenimiento.history', compact('room', 'history', 'selectedRoomNumber'));
     }
 
     private function buildIndividualRooms(Collection $roomTypes): Collection

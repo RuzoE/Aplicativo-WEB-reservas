@@ -6,10 +6,13 @@ use App\Events\Reception\StayStarted;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\Room;
+use App\Rules\AllowedEmailDomain;
+use App\Rules\PhoneNumberByPrefix;
 use App\Models\Stay;
 use App\Services\Reception\CheckInService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
 
 class CheckInController extends Controller
 {
@@ -56,8 +59,8 @@ class CheckInController extends Controller
         $reservation = Order::with('room.roomtype')->findOrFail($reservationId);
         $this->authorize('create', Stay::class);
 
-        $reservedRoomTypeId = $reservation->room?->room_type_id;
-        $roomNumberOptions = $this->buildRoomNumberOptions($reservedRoomTypeId);
+        $reservedRoomTypeId = $reservation->room_type_id;
+        $roomNumberOptions = $this->buildRoomNumberOptions($reservedRoomTypeId, $reservationId);
 
         return view('reception.check_in', compact('reservation', 'roomNumberOptions'));
     }
@@ -74,14 +77,14 @@ class CheckInController extends Controller
             'last_name' => 'required|string|max:100',
             'document_type' => 'required|string|max:50|in:CC,CE,PA,NIT,TI',
             'document_number' => 'required|string|max:100|unique:guests,document_number',
-            'email' => 'required|email|max:100',
-            'phone' => 'required|string|max:50',
+            'email' => ['required', 'email', 'max:100', new AllowedEmailDomain()],
+            'phone' => ['required', new PhoneNumberByPrefix()],
             'country' => 'nullable|string|max:100',
             'notes' => 'nullable|string|max:500',
         ]);
 
         $reservedRoomTypeId = $reservation->room?->room_type_id;
-        $roomNumberOptions = $this->buildRoomNumberOptions($reservedRoomTypeId);
+        $roomNumberOptions = $this->buildRoomNumberOptions($reservedRoomTypeId, $reservationId);
         $selectedNumber = (int) $data['room_number'];
         $selectedOption = $roomNumberOptions->firstWhere('number', $selectedNumber);
 
@@ -122,18 +125,23 @@ class CheckInController extends Controller
                 )
                 ->with('show_checkin_section', true);
         } catch (\Exception $e) {
+            Log::error('Error al procesar check-in.', [
+                'reservation_id' => $reservationId,
+                'user_id' => $request->user()?->id,
+                'message' => $e->getMessage(),
+            ]);
+
             return back()
-                ->withErrors(['error' => 'Error al procesar el check-in: ' . $e->getMessage()])
+                ->withErrors(['error' => 'No fue posible completar el check-in. Intenta nuevamente o contacta al administrador.'])
                 ->withInput();
         }
     }
 
-    private function buildRoomNumberOptions(?int $roomTypeId = null): Collection
+    private function buildRoomNumberOptions(?int $roomTypeId = null, ?int $currentReservationId = null): Collection
     {
         // La numeración debe ser global (1..N) según todos los bloques activos,
         // y luego se filtra por tipo para conservar el mismo orden que mantenimiento.
         $roomBlocks = Room::with('roomtype')
-            ->where('status', true)
             ->orderBy('id')
             ->get();
 
@@ -167,13 +175,34 @@ class CheckInController extends Controller
         }
 
         $inHouseStays = Stay::where('status', 'InHouse')->get();
+        $activeMaintenance = \App\Models\MaintenanceOrder::active()->get();
         $occupiedNumbers = [];
+        $maintenanceNumbers = [];
 
         // 1) Ocupar números explícitamente guardados en notas.
         foreach ($inHouseStays as $stay) {
             $number = $this->extractAssignedRoomNumber($stay->notes);
             if ($number !== null && isset($numberToRoomId[$number])) {
                 $occupiedNumbers[$number] = true;
+            }
+        }
+
+        // Marcar números en mantenimiento
+        foreach ($activeMaintenance as $order) {
+            if ($order->room_number && isset($numberToRoomId[$order->room_number])) {
+                $maintenanceNumbers[$order->room_number] = true;
+            }
+        }
+
+        // Marcar números en pre-reserva
+        $preReservas = \App\Models\Order::where('status', \App\Models\Order::STATUS_RESERVA_PREVIA)->get();
+        $preReservaNumbers = [];
+        foreach ($preReservas as $order) {
+            if ($currentReservationId !== null && (int)$order->id === (int)$currentReservationId) {
+                continue; // Allow the current reservation to be checked in to its pre-reserved room
+            }
+            if ($order->room_number && isset($numberToRoomId[$order->room_number])) {
+                $preReservaNumbers[$order->room_number] = true;
             }
         }
 
@@ -199,7 +228,16 @@ class CheckInController extends Controller
                 continue;
             }
 
-            $status = isset($occupiedNumbers[$number]) ? 'Ocupada' : 'Disponible';
+            $status = 'Disponible';
+            if (isset($occupiedNumbers[$number])) {
+                $status = 'Ocupada';
+            } elseif (isset($maintenanceNumbers[$number])) {
+                $status = 'Mantenimiento';
+            } elseif (isset($preReservaNumbers[$number])) {
+                $status = 'Pre-Reserva';
+            }
+
+            // Include all rooms as requested by user
             $options->push([
                 'number' => $number,
                 'room_id' => $roomId,

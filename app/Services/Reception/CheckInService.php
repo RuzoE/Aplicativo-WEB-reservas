@@ -58,7 +58,7 @@ class CheckInService
 
         // 3. Crear el folio
         $folioNumber = $this->generateFolioNumber();
-        Folio::create([
+        $folio = Folio::create([
             'stay_id' => $stay->id,
             'number' => $folioNumber,
             'status' => 'Open',
@@ -66,8 +66,34 @@ class CheckInService
             'balance' => 0,
         ]);
 
+        // 3.1. Registrar anticipo si existe y está pagado
+        if ($order->is_paid && $order->down_payment_amount > 0) {
+            \App\Models\Payment::create([
+                'folio_id' => $folio->id,
+                'method' => 'Transferencia/Tarjeta (Anticipo)',
+                'amount' => $order->down_payment_amount,
+                'currency' => 'COP',
+                'received_by' => \Illuminate\Support\Facades\Auth::id() ?? 1, // Fallback to system admin if no auth
+                'received_at' => now(),
+                'external_ref' => 'ANT-' . $order->payment_token,
+                'description' => 'Abono Inicial 30% Reserva',
+            ]);
+
+            // Actualizar balance del folio
+            $folio->decrement('balance', $order->down_payment_amount);
+        }
+
         // 4. Actualizar el estado de la reserva
         $order->update(['check_in' => now()]);
+
+        registrarAuditoria(
+            'CHECK_IN',
+            'recepcion',
+            $stay->id,
+            'Check-in registrado para reserva ID ' . $order->id . ' en habitacion ' . ($assignedRoomNumber ?? 'N/A'),
+
+            \Illuminate\Support\Facades\Auth::id()
+        );
 
         return $stay;
     }

@@ -11,18 +11,33 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        $arrivals = Stay::whereDate('arrival_at', now()->toDateString())->get();
+        // Personas que ya hicieron check-in hoy
+        $checkedInToday = Stay::whereDate('arrival_at', now()->toDateString())->get();
+        
+        // Reservas confirmadas que se esperan hoy pero no han llegado
+        $expectedArrivalsToday = Order::where('status', 'confirmada')
+            ->whereDoesntHave('stays')
+            ->whereDate('check_in', now()->toDateString())
+            ->get();
+
         $departures = Stay::whereDate('departure_at', now()->toDateString())->get();
         $inHouse = Stay::where('status', 'InHouse')->get();
 
-        // Reservas pendientes de check-in (orders sin stay asociado y fecha de check-in <= hoy)
-        $pendingCheckIns = Order::whereDoesntHave('stays')
+        // Lista completa de reservas pendientes (confirmadas, para hoy o pasadas que no han vencido)
+        $pendingCheckIns = Order::where('status', 'confirmada')
+            ->whereDoesntHave('stays')
             ->whereDate('check_in', '<=', now())
             ->where('check_out', '>', now())
             ->with(['room.roomtype', 'user'])
             ->orderBy('check_in', 'asc')
             ->get();
 
-        return view('reception.dashboard', compact('arrivals', 'departures', 'inHouse', 'pendingCheckIns'));
+        return view('reception.dashboard', compact(
+            'checkedInToday', 
+            'expectedArrivalsToday', 
+            'departures', 
+            'inHouse', 
+            'pendingCheckIns'
+        ));
     }
 }

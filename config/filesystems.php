@@ -56,6 +56,17 @@ return [
             'throw' => false,
         ],
 
+        'google' => [
+            'driver' => 'google',
+            'clientId' => env('GOOGLE_DRIVE_CLIENT_ID'),
+            'clientSecret' => env('GOOGLE_DRIVE_CLIENT_SECRET'),
+            'refreshToken' => env('GOOGLE_DRIVE_REFRESH_TOKEN'),
+            'accessToken' => env('GOOGLE_DRIVE_ACCESS_TOKEN'),
+            'folder' => env('GOOGLE_DRIVE_FOLDER_ID', env('GOOGLE_DRIVE_FOLDER', '/')),
+            'teamDriveId' => env('GOOGLE_DRIVE_SHARED_DRIVE_ID'),
+            'throw' => false,
+        ],
+
     ],
 
     /*

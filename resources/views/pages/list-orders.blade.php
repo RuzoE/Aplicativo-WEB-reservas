@@ -34,16 +34,26 @@
                     <th scope="col">Check out</th>
                     <th scope="col">Total</th>
                     <th scope="col">Reservado</th>
+                    <th scope="col">Estado</th>
                 </tr>
                 </thead>
                 <tbody>
                 @forelse($orders as $order)
                     <tr>
-                        <td>{{ $order->room->roomtype->name }}</td>
-                        <td>{{ $order->check_in->setTimezone('America/Bogota')->format('d/m/Y h:i A') }}</td>
-                        <td>{{ $order->check_out->setTimezone('America/Bogota')->format('d/m/Y h:i A') }}</td>
-                        <td>@cop($order->room->price, $order->stayDays)</td>
-                        <td>{{ $order->created_at->setTimezone('America/Bogota')->format('d/m/Y h:i A') }}</td>
+                        <td>{{ $order->roomType->name ?? ($order->room->roomtype->name ?? 'N/A') }}</td>
+                        <td>{{ $order->check_in->format('d/m/Y') }}</td>
+                        <td>{{ $order->check_out->format('d/m/Y') }}</td>
+                        <td>@cop($order->room->price ?? ($order->roomType->rooms->first()->price ?? 0), $order->stayDays)</td>
+                        <td>{{ $order->created_at->format('d/m/Y h:i A') }}</td>
+                        <td>
+                            @if($order->status == 'pendiente')
+                                <span class="badge bg-warning text-dark">Pendiente Pago</span>
+                            @elseif($order->status == 'confirmada')
+                                <span class="badge bg-success">Confirmada</span>
+                            @else
+                                <span class="badge bg-secondary">{{ ucfirst($order->status) }}</span>
+                            @endif
+                        </td>
                     </tr>
                 @empty
                     <p class="text-primary fw-bold">No tienes reservas aún.</p>
@@ -53,7 +63,7 @@
         </div>
     </div>
     <!-- Newsletter -->
-    @include('sections.newsletter')
+    @include('components.sections.newsletter')
 @endsection
 
 @section('footer')

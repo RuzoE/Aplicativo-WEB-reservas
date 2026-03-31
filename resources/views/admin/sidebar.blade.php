@@ -4,6 +4,8 @@
       <span class="fs-5">Menú</span>
     </a>
 
+    <link rel="stylesheet" href="{{ asset('css/blade/admin/sidebar--style1.css') }}">
+
     <div class="dropdown pb-4">
       <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" id="dropdownUser1" data-bs-toggle="dropdown" aria-expanded="false">
         <img src="https://github.com/mdo.png" alt="hugenerd" width="30" height="30" class="rounded-circle">
@@ -51,20 +53,43 @@
       @endif
 
       @if(auth()->user()->hasRole('administrador') || auth()->user()->hasRole('recepcion'))
-      <li class="nav-item mt-3 mb-2">
-        <a href="{{ route('reception.dashboard') }}" class="nav-link px-0 align-middle fs-5 pb-2">
+      <li class="nav-item mb-2">
+        <a href="{{ route('reception.dashboard') }}" class="nav-link px-0 align-middle fs-5 pb-2 {{ request()->routeIs('reception.dashboard') && !request()->hasHeader('referer') ? 'active text-warning' : '' }}">
           <i class="fs-4 bi-grid-3x3-gap-fill"></i>
           <span class="ms-1">{{ __('messages.dashboard_reception') }}</span>
         </a>
       </li>
-      @endif
 
-      {{-- Mostrar accesos específicos de Recepción solo cuando estamos en las rutas de recepción --}}
-      @if(auth()->user()->hasAnyRole(['administrador','recepcion']) && request()->routeIs('reception.*'))
+      {{-- Solo mostrar los sub-módulos específicos cuando estamos en el panel de recepción --}}
+      @if(request()->routeIs('reception.*'))
+      <li class="nav-item mb-2">
+        <a href="{{ route('reception.anticipos.index') }}" class="nav-link px-0 align-middle fs-5 pb-2 {{ request()->routeIs('reception.anticipos.*') ? 'active text-warning' : '' }}">
+          <i class="fs-4 bi bi-cash-stack"></i>
+          <span class="ms-1">Anticipos</span>
+          @if($anticiposCount > 0)
+            <span class="badge bg-warning text-dark ms-1 shadow-sm">{{ $anticiposCount }}</span>
+          @endif
+        </a>
+      </li>
+
+      <li class="nav-item mb-2">
+        <a href="{{ route('reception.asignacion.index') }}" class="nav-link px-0 align-middle fs-5 pb-2 {{ request()->routeIs('reception.asignacion.*') ? 'active text-warning' : '' }}">
+          <i class="fs-4 bi bi-building"></i>
+          <span class="ms-1">Asignar Habitación</span>
+        </a>
+      </li>
+
       <li class="nav-item mb-2">
         <a href="{{ route('reception.dashboard') }}#checkin" class="nav-link px-0 align-middle fs-5 pb-2">
           <i class="fs-4 bi-door-open-fill"></i>
           <span class="ms-1">Check-in</span>
+        </a>
+      </li>
+
+      <li class="nav-item mb-2">
+        <a href="{{ route('reception.dashboard') }}#userlink" class="nav-link px-0 align-middle fs-5 pb-2">
+          <i class="fs-4 bi-person-plus-fill"></i>
+          <span class="ms-1">Asociar Cuentas</span>
         </a>
       </li>
 
@@ -82,12 +107,23 @@
         </a>
       </li>
       @endif
+      @endif
 
       {{-- Gestión de empleados - solo para administradores --}}
       @if(auth()->user()->hasRole('administrador') && !request()->routeIs('reception.*'))
       <li>
-        <a href="{{ route('admin.empleados.index') }}" class="nav-link px-0 align-middle fs-5 pb-2">
+        <a href="{{ route('admin.empleados.index') }}" class="nav-link px-0 align-middle fs-5 pb-2 {{ request()->routeIs('admin.empleados.*') ? 'active' : '' }}">
           <i class="fs-4 bi-people"></i> <span class="ms-1">Empleados</span>
+        </a>
+      </li>
+      <li>
+        <a href="{{ route('admin.report.preview') }}" class="nav-link px-0 align-middle fs-5 pb-2 {{ request()->routeIs('admin.report.preview') ? 'active' : '' }}">
+          <i class="fs-4 bi-file-earmark-bar-graph"></i> <span class="ms-1">Informe General</span>
+        </a>
+      </li>
+      <li>
+        <a href="{{ route('admin.auditorias.index') }}" class="nav-link px-0 align-middle fs-5 pb-2 {{ request()->routeIs('admin.auditorias.*') ? 'active' : '' }}">
+          <i class="fs-4 bi-shield-check"></i> <span class="ms-1">Auditoria</span>
         </a>
       </li>
       @endif
@@ -102,3 +138,5 @@
     </ul>
   </div>
 </div>
+
+

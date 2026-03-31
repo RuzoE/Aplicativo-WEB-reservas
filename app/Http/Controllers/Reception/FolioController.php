@@ -10,6 +10,7 @@ use App\Services\Reception\FolioService;
 use App\Events\Reception\ChargePosted;
 use App\Events\Reception\PaymentReceived;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class FolioController extends Controller
 {
@@ -28,11 +29,12 @@ class FolioController extends Controller
         ->orderBy('first_name')
         ->get()
         ->map(function($guest) {
+            $stay = $guest->stays->first();
             return [
                 'id' => $guest->id,
                 'name' => $guest->first_name . ' ' . $guest->last_name,
-                'stay_id' => $guest->stays->first()?->id,
-                'room' => $guest->stays->first()?->room?->total_room
+                'stay_id' => $stay?->id,
+                'room' => $stay?->assigned_room_number ?? ($stay?->room?->total_room)
             ];
         });
 
@@ -46,23 +48,31 @@ class FolioController extends Controller
         $queryStr = $request->input('query'); // General search string (for name, document, or room)
 
         $stayQuery = Stay::where('status', 'InHouse')
-            ->with(['folios.charges', 'folios.payments', 'guest', 'room']);
+            ->with(['folios.charges', 'folios.payments', 'guest', 'room', 'user']);
 
         if ($guestId) {
             $stay = (clone $stayQuery)->where('guest_id', $guestId)->first();
         } elseif ($roomNumber) {
-            $room = Room::where('total_room', $roomNumber)->first();
-            if ($room) {
-                $stay = (clone $stayQuery)->where('room_id', $room->id)->first();
-            } else {
-                $stay = null;
+            // Priority 1: Search by assigned room number in notes (Walk-ins)
+            $stay = (clone $stayQuery)->where('notes', 'like', "%[ROOM_NUM:{$roomNumber}]%")->first();
+
+            // Priority 2: Fallback to model total_room
+            if (!$stay) {
+                $room = Room::where('total_room', $roomNumber)->first();
+                if ($room) {
+                    $stay = (clone $stayQuery)->where('room_id', $room->id)->first();
+                }
             }
         } elseif ($queryStr) {
-            // Priority 1: Exact room number
-            $room = Room::where('total_room', $queryStr)->first();
-            if ($room) {
-                $stay = clone $stayQuery;
-                $stay = $stay->where('room_id', $room->id)->first();
+            // Priority 1: Exact room number (assigned in notes)
+            $stay = (clone $stayQuery)->where('notes', 'like', "%[ROOM_NUM:{$queryStr}]%")->first();
+
+            // Priority 2: Exact room number (model total_room)
+            if (!$stay) {
+                $room = Room::where('total_room', $queryStr)->first();
+                if ($room) {
+                    $stay = (clone $stayQuery)->where('room_id', $room->id)->first();
+                }
             }
 
             // Priority 2: Document number
@@ -87,13 +97,28 @@ class FolioController extends Controller
         }
 
         if ($stay) {
+            $stay->append('assigned_room_number'); // Ensure the accessor is included
+
+            // Auto-vincular si coinciden los correos y no está vinculado aún
+            if (!$stay->user_id && $stay->guest && $stay->guest->email) {
+                $match = \App\Models\User::where('email', $stay->guest->email)->first();
+                if ($match) {
+                    $stay->user_id = $match->id;
+                    $stay->save();
+                    $stay->load('user'); // Cargar el usuario recién vinculado
+                }
+            }
+
             $folio = $stay->folios()->where('status', 'Open')->first();
+            $billing = $stay->getBillingBreakdown();
+
             return response()->json([
                 'success' => true,
                 'stay' => $stay,
                 'folio' => $folio,
                 'charges' => $folio ? $folio->charges : [],
                 'payments' => $folio ? $folio->payments : [],
+                'billing' => $billing,
             ]);
         }
 
@@ -141,9 +166,15 @@ class FolioController extends Controller
                 'balance' => $folio->fresh()->balance
             ]);
         } catch (\Exception $e) {
+            Log::error('Error al agregar cargo al folio.', [
+                'stay_id' => $stayId,
+                'user_id' => $request->user()?->id,
+                'message' => $e->getMessage(),
+            ]);
+
             return response()->json([
                 'success' => false,
-                'message' => 'Error al agregar el cargo: ' . $e->getMessage()
+                'message' => 'No fue posible agregar el cargo. Intenta nuevamente o contacta al administrador.'
             ], 422);
         }
     }
@@ -161,6 +192,7 @@ class FolioController extends Controller
                 'amount' => 'required|numeric|min:0',
                 'currency' => 'required|string|size:3',
                 'external_ref' => 'nullable|string',
+                'description' => 'nullable|string',
             ]);
 
             $payment = $this->folioService->receivePayment($folio, $data, $request->user());
@@ -174,9 +206,15 @@ class FolioController extends Controller
                 'balance' => $folio->fresh()->balance
             ]);
         } catch (\Exception $e) {
+            Log::error('Error al registrar pago en folio.', [
+                'stay_id' => $stayId,
+                'user_id' => $request->user()?->id,
+                'message' => $e->getMessage(),
+            ]);
+
             return response()->json([
                 'success' => false,
-                'message' => 'Error al registrar el pago: ' . $e->getMessage()
+                'message' => 'No fue posible registrar el pago. Intenta nuevamente o contacta al administrador.'
             ], 422);
         }
     }

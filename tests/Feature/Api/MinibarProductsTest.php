@@ -7,11 +7,29 @@ use App\Models\BebidaType;
 use App\Models\MinibarProduct;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
+use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
 class MinibarProductsTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        Role::findOrCreate('minibar', 'web');
+    }
+
+    private function actingAsMinibarUser(): User
+    {
+        $user = User::factory()->create();
+        $user->assignRole('minibar');
+
+        Sanctum::actingAs($user, ['minibar:write']);
+
+        return $user;
+    }
 
     /** @test */
     public function puede_listar_las_bebidas_publicamente()
@@ -40,7 +58,7 @@ class MinibarProductsTest extends TestCase
     /** @test */
     public function puede_crear_producto_con_token()
     {
-        Sanctum::actingAs(User::factory()->create());
+        $this->actingAsMinibarUser();
         $type = BebidaType::factory()->create();
 
         $response = $this->postJson('/api/minibar-products', [
@@ -57,7 +75,7 @@ class MinibarProductsTest extends TestCase
     /** @test */
     public function puede_actualizar_producto_con_token()
     {
-        Sanctum::actingAs(User::factory()->create());
+        $this->actingAsMinibarUser();
         $producto = MinibarProduct::factory()->create(['precio' => 2000]);
 
         $response = $this->putJson("/api/minibar-products/{$producto->id}", [
@@ -71,7 +89,7 @@ class MinibarProductsTest extends TestCase
     /** @test */
     public function puede_eliminar_producto_con_token()
     {
-        Sanctum::actingAs(User::factory()->create());
+        $this->actingAsMinibarUser();
         $producto = MinibarProduct::factory()->create();
 
         $this->deleteJson("/api/minibar-products/{$producto->id}")

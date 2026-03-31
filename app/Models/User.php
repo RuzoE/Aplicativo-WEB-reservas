@@ -53,4 +53,12 @@ class User extends Authenticatable
     {
         return $this->hasMany(Order::class, 'user_id', 'id');
     }
+
+    /**
+     * Relación: un usuario tiene muchas estancias (reservas)
+     */
+    public function stays(): HasMany
+    {
+        return $this->hasMany(Stay::class, 'user_id', 'id');
+    }
 }

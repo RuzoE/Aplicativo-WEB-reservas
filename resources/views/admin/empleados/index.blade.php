@@ -51,7 +51,7 @@
             <label class="form-label fw-semibold">Email *</label>
             <div class="input-group input-group-lg">
               <span class="input-group-text">@</span>
-              <input type="email" name="email" class="form-control" placeholder="correo@example.com" required>
+              <input type="email" name="email" class="form-control" placeholder="correo@example.com" pattern="^[^\s@]+@(gmail\.com|hotmail\.com)$" title="Solo se permiten correos @gmail.com o @hotmail.com" required>
             </div>
             <small class="text-muted d-block mt-1">Email corporativo único</small>
           </div>
@@ -61,13 +61,13 @@
         <div class="row g-3 mb-4">
           <div class="col-md-4">
             <label class="form-label fw-semibold">Teléfono *</label>
-            <input type="text" name="phone" class="form-control form-control-lg" placeholder="+57 3xx xxx xxxx" required>
+            <input type="text" name="phone" class="form-control form-control-lg" placeholder="+57 3xx xxx xxxx" inputmode="tel" minlength="10" maxlength="16" data-phone-sanitize="true" pattern="^(3\d{9}|(?:\+57|57)3\d{9}|\+\d{8,15}|\d{8,15})$" title="Si inicia en 3 debe tener 10 dígitos (Colombia). También se acepta formato internacional válido." required>
             <small class="text-muted d-block mt-1">Contacto del empleado</small>
           </div>
           <div class="col-md-4">
             <label class="form-label fw-semibold">Contraseña *</label>
             <div class="input-group input-group-lg">
-              <input type="password" name="password" id="passwordInline" minlength="8" class="form-control" placeholder="••••••••" required>
+              <input type="password" name="password" id="passwordInline" minlength="12" class="form-control" placeholder="••••••••" title="Mínimo 12 caracteres con mayúscula, minúscula, número y símbolo" required>
               <button class="btn btn-outline-secondary" type="button" id="togglePassInline" title="Ver/ocultar">
                 <i class="bi bi-eye"></i>
               </button>
@@ -185,7 +185,7 @@
               <td class="text-center">
                 @if($u->id !== auth()->id())
                   <form action="{{ route('admin.empleados.destroy', $u) }}" method="POST"
-                        onsubmit="return confirm('¿Estás seguro de eliminar a {{ $u->name }}?');">
+                    data-confirm-message="¿Estás seguro de eliminar a {{ $u->name }}?">
                     @csrf
                     @method('DELETE')
                     <button type="submit" class="btn btn-sm btn-danger shadow-sm" title="Eliminar empleado">
@@ -226,97 +226,9 @@
   @endif
 </div>
 
-<style>
-  .empleados-page .role-badge-reservas { background: linear-gradient(135deg,#FFE0B2,#FFB74D); color:#000 !important; font-weight:600; }
-  .empleados-page .role-badge-minibar { background: linear-gradient(135deg,#C8E6C9,#81C784); color:#000 !important; font-weight:600; }
-  .empleados-page .role-badge-recepcion { background: linear-gradient(135deg,#D1ECFF,#90E0EF); color:#000 !important; font-weight:600; }
-  .empleados-page .role-badge-mantenimiento { background: linear-gradient(135deg,#FFD54F,#FFA000); color:#000 !important; font-weight:600; }
-  .empleados-page .role-badge-administrador { background: linear-gradient(135deg,#E0F2FF,#90CAF9); color:#000 !important; font-weight:600; }
-  .empleados-page .role-badge-invitado { background: linear-gradient(135deg,#F3E5F5,#CE93D8); color:#000 !important; font-weight:600; }
-  .empleados-page .badge[class*="role-badge-"] { color:#000 !important; }
-  .empleados-page td.roles-cell .badge { color:#000 !important; }
-  .empleados-table thead tr { background: #f8f9fa; }
-  .empleados-table tbody tr:hover { background:#fdf7ed; }
-  .empleados-page .card { overflow:hidden; }
-  .empleados-page .card-body { padding:0; }
-  .empleados-page .table > :not(caption) > * > * { padding:0.85rem 0.75rem; }
-
-  /* Estilos mejorados del formulario -->
-  .empleado-form-card {
-    animation: slideDown 0.3s ease-out;
-  }
-  @keyframes slideDown {
-    from { opacity: 0; transform: translateY(-20px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-  .empleado-form-card .card-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-    color: white;
-    border-bottom: 3px solid #667eea;
-  }
-  .empleado-form-card .card-header h5 {
-    color: white;
-    margin: 0;
-  }
-  .empleado-form-card .card-header small {
-    color: rgba(255,255,255,0.85) !important;
-  }
-  .empleado-form-card .btn-outline-secondary {
-    color: white;
-    border-color: rgba(255,255,255,0.3);
-  }
-  .empleado-form-card .btn-outline-secondary:hover {
-    background: rgba(255,255,255,0.15);
-    border-color: rgba(255,255,255,0.5);
-    color: white;
-  }
-  .empleado-form-card .form-label {
-    color: #333;
-    margin-bottom: 8px;
-  }
-  .empleado-form-card .form-control,
-  .empleado-form-card .form-control-lg {
-    border: 1px solid #ddd;
-    border-radius: 6px;
-  }
-  .empleado-form-card .form-control:focus,
-  .empleado-form-card .form-control-lg:focus {
-    border-color: #667eea;
-    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.15);
-  }
-  .role-card-custom {
-    border: 2px solid #e9ecef !important;
-    background: #f8f9fa;
-    transition: all 0.2s;
-  }
-  .role-card-custom:hover {
-    border-color: #667eea !important;
-    background: #f0f4ff;
-  }
-  .role-card-custom input[type="radio"]:checked + div ~ * {
-    border-color: #667eea !important;
-    background: #e8eef9 !important;
-  }
-  .empleado-form-card .progress-bar {
-    background: linear-gradient(90deg, #ef4444, #f59e0b, #22c55e) !important;
-    transition: width 0.3s;
-  }
-  .empleado-form-card .btn-success {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border: none;
-    font-weight: 600;
-  }
-  .empleado-form-card .btn-success:hover {
-    background: linear-gradient(135deg, #5568d3 0%, #6a3f91 100%);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-  }
-
-  @media (max-width: 992px) {
-    .empleados-page .empleados-table thead tr th:nth-child(3),
-    .empleados-page .empleados-table tbody tr td:nth-child(3) { display:none; }
-  }
-</style>
+<link rel="stylesheet" href="{{ asset('css/blade/admin/empleados/index--style1.css') }}">
 
 <script src="{{ asset('js/admin-empleados-form.js') }}"></script>
 @endsection
+
+

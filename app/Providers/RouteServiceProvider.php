@@ -47,5 +47,42 @@ class RouteServiceProvider extends ServiceProvider
         RateLimiter::for('api', function (Request $request) {
             return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
         });
+
+        RateLimiter::for('auth-login', function (Request $request) {
+            $email = (string) $request->input('email', 'guest');
+            $key = strtolower($email) . '|' . $request->ip();
+
+            return [
+                Limit::perMinute(5)->by($key),
+                Limit::perMinute(20)->by($request->ip()),
+            ];
+        });
+
+        RateLimiter::for('auth-register', function (Request $request) {
+            $email = (string) $request->input('email', 'guest');
+            $key = strtolower($email) . '|' . $request->ip();
+
+            return [
+                Limit::perMinutes(10, 3)->by($key),
+                Limit::perMinutes(10, 10)->by($request->ip()),
+            ];
+        });
+
+        RateLimiter::for('password-recovery', function (Request $request) {
+            $email = (string) $request->input('email', 'guest');
+            $key = strtolower($email) . '|' . $request->ip();
+
+            return [
+                Limit::perMinutes(10, 3)->by($key),
+                Limit::perHour(10)->by($request->ip()),
+            ];
+        });
+
+        RateLimiter::for('reception-sensitive', function (Request $request) {
+            return [
+                Limit::perMinute(30)->by(($request->user()?->id ?: 'guest') . '|' . $request->route()?->getName()),
+                Limit::perMinute(60)->by($request->ip()),
+            ];
+        });
     }
 }

@@ -29,3 +29,6 @@ function pdDec(){
     const val = Math.max(1, (parseInt(i.value||'1',10)-1));
     i.value = val;
 }
+
+window.pdInc = pdInc;
+window.pdDec = pdDec;

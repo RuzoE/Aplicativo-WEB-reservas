@@ -1,7 +1,12 @@
 // Check-in form: room status sync + currency display + submit spinner
 // PHP data injected via window.CheckInConfig (set inline in check_in.blade.php)
 document.addEventListener('DOMContentLoaded', function () {
-    var config = window.CheckInConfig || {};
+    var configEl = document.getElementById('checkin-page-config');
+    var config = {
+        stayNights: configEl ? Number(configEl.dataset.stayNights || 0) : 0,
+        defaultRoomType: configEl ? (configEl.dataset.defaultRoomType || 'N/A') : 'N/A',
+        defaultRoomPrice: configEl ? Number(configEl.dataset.defaultRoomPrice || 0) : 0,
+    };
     var stayNights     = config.stayNights     || 0;
     var defaultRoomType  = config.defaultRoomType  || 'N/A';
     var defaultRoomPrice = config.defaultRoomPrice || 0;
@@ -30,6 +35,16 @@ document.addEventListener('DOMContentLoaded', function () {
         var status = selectedOption ? selectedOption.dataset.status : null;
         roomStatusDisplay.value = status || 'Seleccione una habitación';
 
+        // Update colors
+        roomStatusDisplay.classList.remove('disponible', 'mantenimiento', 'ocupada');
+        if (status === 'Disponible') {
+            roomStatusDisplay.classList.add('disponible');
+        } else if (status === 'Mantenimiento') {
+            roomStatusDisplay.classList.add('mantenimiento');
+        } else if (status === 'Ocupada') {
+            roomStatusDisplay.classList.add('ocupada');
+        }
+
         var roomNumber = selectedOption && selectedOption.value ? selectedOption.value : '';
         var roomType = selectedOption && selectedOption.value
             ? (selectedOption.dataset.roomType || 'N/A')
@@ -42,6 +57,23 @@ document.addEventListener('DOMContentLoaded', function () {
         if (reservationRoomTypeDisplay) reservationRoomTypeDisplay.textContent = roomType;
         if (reservationRateDisplay)     reservationRateDisplay.textContent     = formatCurrencyCOP(roomPrice);
         if (reservationTotalDisplay)    reservationTotalDisplay.textContent    = formatCurrencyCOP(roomPrice * stayNights);
+
+        // Disable submit button if room is not Disponible
+        var submitBtn = document.getElementById('submitBtn');
+        if (submitBtn) {
+            if (selectedOption && selectedOption.value && status !== 'Disponible') {
+                submitBtn.disabled = true;
+                submitBtn.style.opacity = '0.5';
+                submitBtn.title = 'Habitación no disponible';
+            } else if (selectedOption && selectedOption.value) {
+                submitBtn.disabled = false;
+                submitBtn.style.opacity = '1';
+                submitBtn.title = '';
+            } else {
+                submitBtn.disabled = true;
+                submitBtn.style.opacity = '0.5';
+            }
+        }
     }
 
     roomNumberSelect.addEventListener('change', syncRoomStatus);

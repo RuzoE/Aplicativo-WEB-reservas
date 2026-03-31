@@ -58,7 +58,9 @@ class RoomController extends Controller {
             'price' => (float)$parsedPrice,
             'desc' => $request->desc,
             'image' => $imagePath,
-            'status' => $request->has('status') ? 1 : 0
+            // El estado de bloque no representa mantenimiento individual.
+            // Usamos disponible/no disponible para evitar mezclar semánticas.
+            'status' => $request->has('status') ? Room::STATUS_DISPONIBLE : Room::STATUS_OCUPADA
         ]);
 
         return redirect()->route('admin.habitaciones.habitaciones.index')
@@ -108,7 +110,8 @@ class RoomController extends Controller {
         $room->no_beds = $request->no_beds;
         $room->price = (float)$parsedPrice;
         $room->desc = $request->desc;
-        $room->status = $request->has('status') ? 1 : 0;
+        // El estado de bloque no representa mantenimiento individual.
+        $room->status = $request->has('status') ? Room::STATUS_DISPONIBLE : Room::STATUS_OCUPADA;
 
         if ($request->hasFile('image') && !empty($request->file('image'))) {
             $imageName = time() . '.' . $request->file('image')->extension();

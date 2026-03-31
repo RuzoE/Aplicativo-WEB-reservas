@@ -42,6 +42,8 @@ use App\Http\Controllers\Reception\CheckInController as ReceptionCheckInControll
 use App\Http\Controllers\Reception\FolioController as ReceptionFolioController;
 use App\Http\Controllers\Reception\CheckOutController as ReceptionCheckOutController;
 use App\Http\Controllers\Admin\Mantenimiento\MaintenanceController;
+use App\Http\Controllers\Admin\ReportController;
+use App\Http\Controllers\Admin\AuditoriaController;
 
 /* |-------------------------------------------------------------------------- | Rutas públicas |-------------------------------------------------------------------------- */
 Route::get('/', [PageController::class , 'index'])->name('home');
@@ -70,21 +72,25 @@ Route::middleware('auth')->group(function () {
 
     Route::post('/orders', [OrderController::class , 'store'])->name('orders.store');
     Route::get('/orders', [OrderController::class , 'index'])->name('orders.index');
+
+    // Rutas de Pago (con token)
+    Route::get('/orders/payment/{token}', [OrderController::class, 'paymentPage'])->name('orders.payment');
+    Route::post('/orders/payment/{token}/confirm', [OrderController::class, 'confirmPayment'])->name('orders.confirm_payment');
 });
 
 /* |-------------------------------------------------------------------------- | Autenticación (simple) |-------------------------------------------------------------------------- */
 Route::controller(AuthController::class)->group(function () {
     Route::get('register', 'showRegistrationForm')->name('register');
-    Route::post('register', 'register');
+    Route::post('register', 'register')->middleware('throttle:auth-register');
     Route::get('login', 'showLoginForm')->name('login');
-    Route::post('login', 'login');
+    Route::post('login', 'login')->middleware('throttle:auth-login');
     Route::post('logout', 'logout')->name('logout');
 });
 
 /* |-------------------------------------------------------------------------- | ADMINISTRACIÓN (solo rol: administrador) |-------------------------------------------------------------------------- */
 Route::prefix('admin')
     ->name('admin.')
-    ->middleware(['auth', 'role:administrador,web'])
+    ->middleware(['auth', 'role:administrador,web', 'audit.admin'])
     ->group(function () {
 
         // Dashboard global admin (nuevo dashboard con 3 botones)
@@ -102,12 +108,23 @@ Route::prefix('admin')
         Route::post('empleados/{user}/roles', [EmployeeController::class , 'assignRole'])
             ->whereNumber('user')
             ->name('empleados.roles.assign');
+
+        // Informe General – vista web ejecutiva
+        Route::get('informe-general/preview', [ReportController::class, 'preview'])->name('report.preview');
+
+        // Informe General (descarga PDF)
+        Route::get('informe-general', [ReportController::class, 'download'])->name('report.download');
+
+        // Auditoria del sistema
+        Route::get('auditorias', [AuditoriaController::class, 'index'])->name('auditorias.index');
+        // Aliases sin prefijo para compatibilidad legacy
+        // Las rutas anteriores generan: admin.report.preview / admin.report.download
     });
 
 /* |-------------------------------------------------------------------------- | PANEL RESERVAS (administrador|reservas) |-------------------------------------------------------------------------- */
 Route::prefix('admin/habitaciones')
     ->name('admin.habitaciones.')
-    ->middleware(['auth', 'role:administrador|reservas,web'])
+    ->middleware(['auth', 'role:administrador|reservas,web', 'audit.admin'])
     ->group(function () {
         Route::get('dashboard', [HabitacionesDashboardController::class , 'index'])->name('dashboard');
 
@@ -119,7 +136,7 @@ Route::prefix('admin/habitaciones')
 /* |-------------------------------------------------------------------------- | PANEL MINIBAR (administrador|minibar) |-------------------------------------------------------------------------- */
 Route::prefix('admin/minibar')
     ->name('admin.minibar.')
-    ->middleware(['auth', 'role:administrador|minibar,web'])
+    ->middleware(['auth', 'role:administrador|minibar,web', 'audit.admin'])
     ->group(function () {
         // Dashboard del módulo Minibar
         Route::get('dashboard', [MinibarDashboardController::class , 'index'])->name('dashboard');
@@ -149,7 +166,7 @@ Route::prefix('admin/minibar')
 /* |-------------------------------------------------------------------------- | DASHBOARDS OPERATIVOS (empleados con rol administrador) |-------------------------------------------------------------------------- */
 Route::prefix('reservas')
     ->name('reservas.')
-    ->middleware(['auth', 'role:administrador|reservas,web'])
+    ->middleware(['auth', 'role:administrador|reservas,web', 'audit.admin'])
     ->group(function () {
         Route::get('dashboard', [HabitacionesDashboardController::class , 'index'])->name('dashboard');
     // ...rutas operativas de reservas
@@ -157,7 +174,7 @@ Route::prefix('reservas')
 
 Route::prefix('minibar-admin')
     ->name('minibarAdmin.')
-    ->middleware(['auth', 'role:administrador|minibar,web'])
+    ->middleware(['auth', 'role:administrador|minibar,web', 'audit.admin'])
     ->group(function () {
         Route::get('dashboard', [MinibarDashboardController::class , 'index'])->name('dashboard');
     // ...rutas operativas de minibar
@@ -166,7 +183,7 @@ Route::prefix('minibar-admin')
 /* |-------------------------------------------------------------------------- | PANEL MANTENIMIENTO (administrador|mantenimiento) |-------------------------------------------------------------------------- */
 Route::prefix('admin/mantenimiento')
     ->name('admin.mantenimiento.')
-    ->middleware(['auth', 'role:administrador|mantenimiento,web'])
+    ->middleware(['auth', 'role:administrador|mantenimiento,web', 'audit.admin'])
     ->group(function () {
         Route::get('dashboard', [MaintenanceController::class , 'dashboard'])->name('dashboard');
         Route::get('/', [MaintenanceController::class , 'index'])->name('index');
@@ -202,16 +219,52 @@ Route::prefix('minibar')->name('minibar.')->group(function () {
 /* |-------------------------------------------------------------------------- | RECEPCIÓN (dashboard & front desk operations) |-------------------------------------------------------------------------- */
 Route::prefix('reception')
     ->name('reception.')
-    ->middleware(['auth', 'role:administrador|reservas|recepcion,web'])
+    ->middleware(['auth', 'role:administrador|reservas|recepcion,web', 'audit.admin'])
     ->group(function () {
         Route::get('dashboard', [ReceptionDashboardController::class , 'index'])->name('dashboard');
-        Route::post('search-reservation', [ReceptionCheckInController::class , 'search'])->name('checkin.search');
+        Route::post('search-reservation', [ReceptionCheckInController::class , 'search'])
+            ->middleware('throttle:reception-sensitive')
+            ->name('checkin.search');
         Route::get('check-in/{reservation}', [ReceptionCheckInController::class , 'show'])->name('checkin.show');
-        Route::post('check-in/{reservation}', [ReceptionCheckInController::class , 'store'])->name('checkin.store');
-        Route::get('folio/active-guests', [ReceptionFolioController::class , 'getActiveGuests'])->name('folio.guests');
-        Route::post('folio/search', [ReceptionFolioController::class , 'search'])->name('folio.search');
+        Route::post('check-in/{reservation}', [ReceptionCheckInController::class , 'store'])
+            ->middleware('throttle:reception-sensitive')
+            ->name('checkin.store');
+        Route::get('folio/active-guests', [ReceptionFolioController::class , 'getActiveGuests'])
+            ->middleware('throttle:reception-sensitive')
+            ->name('folio.guests');
+        Route::post('folio/search', [ReceptionFolioController::class , 'search'])
+            ->middleware('throttle:reception-sensitive')
+            ->name('folio.search');
         Route::get('stay/{stay}/folio', [ReceptionFolioController::class , 'show'])->name('folio.show');
-        Route::post('stay/{stay}/charges', [ReceptionFolioController::class , 'postCharge'])->name('folio.charge');
-        Route::post('stay/{stay}/payments', [ReceptionFolioController::class , 'postPayment'])->name('folio.payment');
-        Route::post('check-out/{stay}', [ReceptionCheckOutController::class , 'store'])->name('checkout.store');
+        Route::post('stay/{stay}/charges', [ReceptionFolioController::class , 'postCharge'])
+            ->middleware('throttle:reception-sensitive')
+            ->name('folio.charge');
+        Route::post('stay/{stay}/payments', [ReceptionFolioController::class , 'postPayment'])
+            ->middleware('throttle:reception-sensitive')
+            ->name('folio.payment');
+        Route::post('check-out/{stay}', [ReceptionCheckOutController::class , 'store'])
+            ->middleware('throttle:reception-sensitive')
+            ->name('checkout.store');
+        Route::get('invoices/{invoice}/download', [ReceptionCheckOutController::class , 'download'])->name('invoices.download');
+
+        // Walk-In Registrations
+        Route::get('walk-in', [\App\Http\Controllers\Reception\WalkInController::class , 'create'])->name('walkin.create');
+        Route::post('walk-in', [\App\Http\Controllers\Reception\WalkInController::class , 'store'])
+            ->middleware('throttle:reception-sensitive')
+            ->name('walkin.store');
+
+        // Stay Management (Linking Users)
+        Route::get('users/search', [\App\Http\Controllers\Reception\StayController::class, 'searchUsers'])
+            ->middleware('throttle:reception-sensitive')
+            ->name('users.search');
+        Route::post('stay/{stay}/link-user', [\App\Http\Controllers\Reception\StayController::class, 'linkUser'])
+            ->middleware('throttle:reception-sensitive')
+            ->name('stay.link_user');
+
+        // Advance Payments & Room Assignment
+        Route::get('anticipos', [\App\Http\Controllers\Reception\AdvanceController::class, 'index'])->name('anticipos.index');
+        Route::get('asignacion/{reserva?}', [\App\Http\Controllers\Reception\AssignmentController::class, 'index'])->name('asignacion.index');
+        Route::post('asignacion/{reserva}/confirm/{room}', [\App\Http\Controllers\Reception\AssignmentController::class, 'assign'])
+            ->middleware('throttle:reception-sensitive')
+            ->name('asignacion.confirm');
     });

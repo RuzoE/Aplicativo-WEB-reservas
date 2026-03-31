@@ -1,0 +1,48 @@
+
+    .user-link-section {
+        padding: 40px 60px;
+        max-width: 100%;
+    }
+    .user-link-header {
+        margin-bottom: 30px;
+        border-bottom: 3px solid #673AB7;
+        padding-bottom: 20px;
+    }
+    .user-link-header h2 {
+        color: #673AB7;
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 10px;
+    }
+    .user-link-card {
+        background: white;
+        border-radius: 12px;
+        padding: 30px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        margin-bottom: 30px;
+        border-top: 5px solid #673AB7;
+    }
+    .btn-user-link {
+        background: linear-gradient(135deg, #673AB7 0%, #512DA8 100%);
+        color: white;
+        border: none;
+        padding: 12px 30px;
+        border-radius: 8px;
+        font-weight: 600;
+        transition: all 0.3s;
+        box-shadow: 0 4px 12px rgba(103, 58, 183, 0.3);
+    }
+    .btn-user-link:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(103, 58, 183, 0.4);
+        color: white;
+    }
+    .user-link-notification {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 1060;
+        min-width: 300px;
+        animation: fadeInRight 0.5s;
+    }
+

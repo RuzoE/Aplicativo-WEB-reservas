@@ -58,6 +58,15 @@ return [
             'prefix_indexes' => true,
             'strict' => true,
             'engine' => null,
+            'dump' => [
+                'dump_binary_path' => env('MYSQLDUMP_PATH', ''),
+                'useSingleTransaction' => true,
+                'timeout' => 60,
+                'exclude_tables' => array_values(array_filter(array_map(
+                    'trim',
+                    explode(',', (string) env('BACKUP_DB_EXCLUDE_TABLES', 'jobs,failed_jobs'))
+                ))),
+            ],
             'options' => extension_loaded('pdo_mysql') ? array_filter([
                 PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
             ]) : [],

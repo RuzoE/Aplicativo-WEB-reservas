@@ -1,15 +1,14 @@
 // Reception checkout form: search stay, register payment, process check-out
 // PHP routes injected via window.CheckoutFormConfig (set inline in checkout-form.blade.php)
 document.addEventListener('DOMContentLoaded', function () {
-    var config      = window.CheckoutFormConfig || {};
-    var searchUrl   = config.folioSearchUrl || '';
-    var dashboardUrl = config.dashboardUrl  || '/reception/dashboard';
+    var configEl = document.getElementById('checkout-section-config');
+    var searchUrl = configEl ? (configEl.dataset.folioSearchUrl || '') : '';
+    var dashboardUrl = configEl ? (configEl.dataset.dashboardUrl || '/reception/dashboard') : '/reception/dashboard';
 
     const searchBtn        = document.getElementById('co-btn-search');
     const searchInput      = document.getElementById('co-search-input');
     const searchError      = document.getElementById('co-search-error');
     const detailsContainer = document.getElementById('co-details-container');
-    const paymentSection   = document.getElementById('co-payment-section');
     const processBtn       = document.getElementById('co-btn-process');
     const processMsg       = document.getElementById('co-process-msg');
 
@@ -73,22 +72,29 @@ document.addEventListener('DOMContentLoaded', function () {
         document.getElementById('co-stay-id').value = currentStayId;
 
         processMsg.innerHTML = '';
-        document.getElementById('co-pay-msg').innerHTML = '';
 
         document.getElementById('co-guest-name').innerText   = data.stay.guest.first_name + ' ' + data.stay.guest.last_name;
         document.getElementById('co-guest-doc').innerText    = data.stay.guest.document_type + ' ' + data.stay.guest.document_number;
-        document.getElementById('co-guest-room').innerText   = data.stay.room ? data.stay.room.total_room : 'N/A';
+        document.getElementById('co-guest-room').innerText   = data.stay.assigned_room_number || (data.stay.room ? data.stay.room.total_room : 'N/A');
 
         let dateObj = new Date(data.stay.arrival_at);
         document.getElementById('co-guest-checkin').innerText = isNaN(dateObj) ? 'N/A' : dateObj.toLocaleDateString();
 
         let totalCharges  = 0;
         let totalPayments = 0;
+        let reservationTotal = 0;
 
-        if (data.charges)  totalCharges  = data.charges.reduce((sum, item)  => sum + parseFloat(item.amount), 0);
-        if (data.payments) totalPayments = data.payments.reduce((sum, item) => sum + parseFloat(item.amount), 0);
+        if (data.billing) {
+            reservationTotal = parseFloat(data.billing.reservation_total);
+            totalCharges = parseFloat(data.billing.additional_charges) + reservationTotal;
+            totalPayments = parseFloat(data.billing.total_paid);
+            currentBalance = parseFloat(data.billing.balance);
+        } else {
+            if (data.charges)  totalCharges  = data.charges.reduce((sum, item)  => sum + parseFloat(item.amount), 0);
+            if (data.payments) totalPayments = data.payments.reduce((sum, item) => sum + parseFloat(item.amount), 0);
+            currentBalance = totalCharges - totalPayments;
+        }
 
-        currentBalance = totalCharges - totalPayments;
         if (Math.abs(currentBalance) < 0.01) currentBalance = 0;
 
         document.getElementById('co-total-charges').innerText  = '$' + totalCharges.toFixed(2);
@@ -100,17 +106,14 @@ document.addEventListener('DOMContentLoaded', function () {
         if (currentBalance > 0) {
             balanceEl.classList.remove('text-success');
             balanceEl.classList.add('text-danger');
-            paymentSection.style.display = 'block';
-            document.getElementById('co-pay-amount').value = currentBalance.toFixed(2);
-            processBtn.disabled = true;
-            processBtn.style.opacity = '0.5';
         } else {
             balanceEl.classList.remove('text-danger');
             balanceEl.classList.add('text-success');
-            paymentSection.style.display = 'none';
-            processBtn.disabled = false;
-            processBtn.style.opacity = '1';
         }
+
+        // Always enable checkout button if a stay is loaded
+        processBtn.disabled = false;
+        processBtn.style.opacity = '1';
 
         detailsContainer.style.display = 'block';
     }
@@ -120,60 +123,41 @@ document.addEventListener('DOMContentLoaded', function () {
         searchError.style.display = 'block';
     }
 
-    // Registrar Pago
-    document.getElementById('co-btn-pay').addEventListener('click', function () {
+    function showNotification(msg, type = 'success') {
+        const container = document.getElementById('checkout-notification-container');
+        const alertDiv = document.createElement('div');
+        const icon = type === 'success' ? 'bi-check-circle' : 'bi-exclamation-circle';
+        const color = type === 'success' ? 'success' : 'danger';
+
+        alertDiv.className = `alert alert-${color} d-flex align-items-center shadow-lg border-0 alert-dismissible fade show`;
+        alertDiv.innerHTML = `
+            <i class="bi ${icon} me-2 fs-4"></i>
+            <div>${msg}</div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        `;
+        container.appendChild(alertDiv);
+        setTimeout(() => {
+            const bsAlert = new bootstrap.Alert(alertDiv);
+            bsAlert.close();
+        }, 5000);
+    }
+
+    // Procesar Check-out (Modal)
+    const checkoutModal = new bootstrap.Modal(document.getElementById('confirmCheckoutModal'));
+
+    processBtn.addEventListener('click', function () {
         if (!currentStayId) return;
 
-        const amount = parseFloat(document.getElementById('co-pay-amount').value);
-        if (isNaN(amount) || amount <= 0) {
-            document.getElementById('co-pay-msg').innerHTML = '<span class="text-danger">Ingrese un monto válido</span>';
-            return;
-        }
-
-        const method = document.getElementById('co-pay-method').value;
-        const btn = this;
-        btn.disabled = true;
-        btn.innerHTML = 'Procesando...';
-
-        fetch(`/reception/stay/${currentStayId}/payments`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': csrfToken,
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify({ method: method, amount: amount, currency: 'USD' })
-        })
-        .then(response => response.json())
-        .then(data => {
-            btn.disabled = false;
-            btn.innerHTML = 'Registrar Pago';
-
-            if (data.success) {
-                document.getElementById('co-pay-msg').innerHTML = '<span class="text-success"><i class="bi bi-check-circle"></i> Pago registrado correctamente</span>';
-                setTimeout(() => performSearch(), 1000);
-            } else {
-                document.getElementById('co-pay-msg').innerHTML = `<span class="text-danger">${data.message || 'Error al procesar el pago'}</span>`;
-            }
-        })
-        .catch(error => {
-            btn.disabled = false;
-            btn.innerHTML = 'Registrar Pago';
-            document.getElementById('co-pay-msg').innerHTML = '<span class="text-danger">Error de conexión</span>';
-            console.error(error);
-        });
+        const guestName = document.getElementById('co-guest-name').innerText;
+        document.getElementById('confirm-co-guest').innerText = guestName;
+        checkoutModal.show();
     });
 
-    // Procesar Check-out
-    processBtn.addEventListener('click', function () {
-        if (!currentStayId || currentBalance > 0) return;
-
-        if (!confirm('¿Está seguro de procesar el Check-out? Esto cerrará la estancia de forma permanente.')) {
-            return;
-        }
+    document.getElementById('btn-confirm-checkout-finalize').onclick = function() {
+        checkoutModal.hide();
 
         processBtn.disabled = true;
-        processBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Procesando Check-out...';
+        processBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Procesando...';
 
         fetch(`/reception/check-out/${currentStayId}`, {
             method: 'POST',
@@ -186,12 +170,28 @@ document.addEventListener('DOMContentLoaded', function () {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                processMsg.innerHTML = `<div class="alert alert-success mt-2"><i class="bi bi-check-circle-fill"></i> ${data.message} Redirigiendo...</div>`;
-                setTimeout(() => { window.location.href = dashboardUrl; }, 1500);
+                let downloadBtnHtml = '';
+                if (data.invoice_url) {
+                    downloadBtnHtml = `<br><a href="${data.invoice_url}" class="btn btn-sm btn-outline-success mt-2 fw-bold" target="_blank"><i class="bi bi-download"></i> Descargar Comprobante PDF</a>`;
+
+                    // Intentar descarga automática
+                    const link = document.createElement('a');
+                    link.href = data.invoice_url;
+                    link.target = '_blank';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                }
+
+                processMsg.innerHTML = `<div class="alert alert-success mt-2"><i class="bi bi-check-circle-fill"></i> ${data.message} ${downloadBtnHtml}<br>Redirigiendo...</div>`;
+                showNotification('Check-out completado con éxito');
+
+                setTimeout(() => { window.location.href = dashboardUrl; }, 4000);
             } else {
                 processBtn.disabled = false;
                 processBtn.innerHTML = '<i class="bi bi-check-circle"></i> Procesar Check-out';
                 processMsg.innerHTML = `<div class="alert alert-danger mt-2"><i class="bi bi-exclamation-triangle-fill"></i> ${data.message || 'Error al procesar check-out'}</div>`;
+                showNotification(data.message || 'Error en el proceso', 'error');
             }
         })
         .catch(error => {
@@ -199,6 +199,7 @@ document.addEventListener('DOMContentLoaded', function () {
             processBtn.innerHTML = '<i class="bi bi-check-circle"></i> Procesar Check-out';
             processMsg.innerHTML = '<div class="alert alert-danger mt-2">Error de red. Asegúrate de estar conectado e inténtalo de nuevo.</div>';
             console.error('Error:', error);
+            showNotification('Error de red al procesar salida', 'error');
         });
-    });
+    };
 });

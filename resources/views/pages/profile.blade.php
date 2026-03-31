@@ -49,7 +49,7 @@
                         </div>
                         <div class="col-6">
                             <label class="form-label">Telefono</label>
-                            <input type="text" name="phone" value="{{ old('phone', $user->phone) }}"
+                            <input type="text" name="phone" value="{{ old('phone', $user->phone) }}" inputmode="tel" minlength="10" maxlength="16" data-phone-sanitize="true" pattern="^(3\d{9}|(?:\+57|57)3\d{9}|\+\d{8,15}|\d{8,15})$" title="Si inicia en 3 debe tener 10 dígitos (Colombia). También se acepta formato internacional válido."
                                    class="form-control @error('phone') is-invalid @enderror">
                             @error('phone')
                             <div class="invalid-feedback">{{ $message }}</div>
@@ -72,7 +72,7 @@
         </div>
     </div>
     <!-- Newsletter -->
-    @include('sections.newsletter')
+    @include('components.sections.newsletter')
 @endsection
 
 @section('footer')

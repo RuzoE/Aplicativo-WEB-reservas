@@ -12,8 +12,12 @@ class Room extends Model {
 
     use HasFactory;
 
+    const STATUS_DISPONIBLE = 'disponible';
+    const STATUS_OCUPADA = 'ocupada';
+    const STATUS_MANTENIMIENTO = 'mantenimiento';
+
     protected $fillable = [
-        'total_room',
+        'total_room', // Numero de habitación
         'no_beds',
         'price',
         'image',
@@ -23,7 +27,7 @@ class Room extends Model {
     ];
 
     protected $casts = [
-        'status' => 'boolean'
+        // 'status' => 'boolean' // Ya no es booleano
     ];
 
     protected $appends = ['room_number'];

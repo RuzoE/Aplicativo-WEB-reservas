@@ -6,82 +6,15 @@
     $sidebarView = 'admin.sidebar';
 @endphp
 
-<style>
-    .checkin-form-page {
-        padding: 40px 60px;
-        max-width: 100%;
-    }
+<link rel="stylesheet" href="{{ asset('css/blade/reception/check_in--style1.css') }}">
 
-    .form-header {
-        margin-bottom: 30px;
-        border-bottom: 3px solid #2196F3;
-        padding-bottom: 20px;
-    }
-
-    .form-header h2 {
-        color: #2196F3;
-        font-size: 2.5rem;
-        font-weight: 700;
-        margin-bottom: 10px;
-    }
-
-    .form-card {
-        background: white;
-        border-radius: 12px;
-        padding: 30px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        max-width: 900px;
-        margin: 0 auto;
-    }
-
-    .info-card {
-        background: #f8f9fa;
-        border-radius: 12px;
-        padding: 25px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-        max-width: 900px;
-        margin: 0 auto;
-        border-left: 5px solid #2196F3;
-    }
-
-    .info-card h4 {
-        color: #2196F3;
-        font-weight: 700;
-        font-size: 1.2rem;
-    }
-
-    .info-card strong {
-        color: #666;
-        font-size: 0.9rem;
-        display: block;
-        margin-bottom: 5px;
-    }
-
-    .info-card p {
-        color: #333;
-        font-size: 1.1rem;
-        font-weight: 600;
-    }
-
-    .btn-submit {
-        background: linear-gradient(135deg, #2196F3 0%, #1565C0 100%);
-        color: white;
-        border: none;
-        padding: 12px 30px;
-        border-radius: 8px;
-        font-weight: 600;
-        transition: transform 0.3s, box-shadow 0.3s;
-        box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);
-    }
-
-    .btn-submit:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(33, 150, 243, 0.4);
-        color: white;
-    }
-</style>
-
-<div class="checkin-form-page">
+<div
+    class="checkin-form-page"
+    id="checkin-page-config"
+    data-stay-nights="{{ (int) $reservation->stayDays }}"
+    data-default-room-type="{{ $reservation->roomType->name ?? 'N/A' }}"
+    data-default-room-price="{{ (float) ($reservation->total_amount / max(1, $reservation->stayDays)) }}"
+>
     <div class="form-header">
         <h2><i class="bi bi-door-open"></i> Completar Check-in</h2>
         <p class="text-muted">Reserva: RES-{{ str_pad($reservation->id, 6, '0', STR_PAD_LEFT) }}</p>
@@ -93,11 +26,11 @@
         <div class="row g-3">
             <div class="col-md-3">
                 <strong>Habitación:</strong>
-                <p class="mb-0" id="reservation-room-display"></p>
+                <p class="mb-0" id="reservation-room-display">{{ $reservation->room_number ?? 'Sin reservar' }}</p>
             </div>
             <div class="col-md-3">
                 <strong>Tipo:</strong>
-                <p class="mb-0" id="reservation-room-type-display">{{ $reservation->room->roomtype->name ?? 'N/A' }}</p>
+                <p class="mb-0" id="reservation-room-type-display">{{ $reservation->roomType->name ?? 'N/A' }}</p>
             </div>
             <div class="col-md-3">
                 <strong>Check-in:</strong>
@@ -113,15 +46,21 @@
             </div>
             <div class="col-md-3">
                 <strong>Tarifa/noche:</strong>
-                <p class="mb-0" id="reservation-rate-display">${{ number_format($reservation->room->price ?? 0, 2) }}</p>
+                <p class="mb-0" id="reservation-rate-display">
+                    @php
+                        $nights = max(1, $reservation->stayDays);
+                        $rate = (float)($reservation->total_amount / $nights);
+                    @endphp
+                    ${{ number_format($rate, 0, ',', '.') }}
+                </p>
             </div>
             <div class="col-md-3">
                 <strong>Total:</strong>
-                <p class="mb-0 text-primary fw-bold" id="reservation-total-display">${{ number_format($reservation->stayDays * ($reservation->room->price ?? 0), 2) }}</p>
+                <p class="mb-0 fw-bold" style="color: #2196F3;" id="reservation-total-display">${{ number_format($reservation->total_amount, 0, ',', '.') }}</p>
             </div>
             <div class="col-md-3">
                 <strong>Usuario:</strong>
-                <p class="mb-0">{{ $reservation->user->name }}</p>
+                <p class="mb-0">{{ $reservation->user->name ?? 'Sin asignar' }}</p>
             </div>
         </div>
     </div>
@@ -141,7 +80,6 @@
                                 data-status="{{ $roomOption['status'] }}"
                                 data-room-type="{{ $roomOption['room_type'] }}"
                                 data-room-price="{{ $roomOption['price'] }}"
-                                @disabled($roomOption['status'] !== 'Disponible')
                                 @selected((string) old('room_number') === (string) $roomOption['number'])>
                                 Habitación {{ $roomOption['number'] }}
                             </option>
@@ -150,12 +88,12 @@
                     @error('room_number')
                         <div class="invalid-feedback" style="display: block;">{{ $message }}</div>
                     @enderror
-                    <small class="text-muted">Se listan las habitaciones activas del tipo reservado.</small>
+                    <small class="text-muted">Se listan todas las habitaciones activas.</small>
                 </div>
 
                 <div class="col-md-6">
                     <label class="form-label fw-bold">Estado de la habitación</label>
-                    <input type="text" id="room-status-display" class="form-control form-control-lg" value="Seleccione una habitación" readonly />
+                    <input type="text" id="room-status-display" class="form-control form-control-lg status-badge" value="Seleccione una habitación" readonly tabindex="-1" />
                 </div>
 
                 <div class="col-md-6">
@@ -195,14 +133,14 @@
                 </div>
                 <div class="col-md-6">
                     <label class="form-label fw-bold">Email <span class="text-danger">*</span></label>
-                    <input type="email" name="email" class="form-control form-control-lg @error('email') is-invalid @enderror" required value="{{ old('email') }}" />
+                    <input type="email" name="email" class="form-control form-control-lg @error('email') is-invalid @enderror" required value="{{ old('email') }}" pattern="^[^\s@]+@(gmail\.com|hotmail\.com)$" title="Solo se permiten correos @gmail.com o @hotmail.com" />
                     @error('email')
                         <div class="invalid-feedback" style="display: block;">{{ $message }}</div>
                     @enderror
                 </div>
                 <div class="col-md-6">
                     <label class="form-label fw-bold">Teléfono <span class="text-danger">*</span></label>
-                    <input type="tel" name="phone" class="form-control form-control-lg @error('phone') is-invalid @enderror" required value="{{ old('phone') }}" />
+                    <input type="tel" name="phone" class="form-control form-control-lg @error('phone') is-invalid @enderror" required value="{{ old('phone') }}" inputmode="tel" minlength="10" maxlength="16" data-phone-sanitize="true" pattern="^(3\d{9}|(?:\+57|57)3\d{9}|\+\d{8,15}|\d{8,15})$" title="Si inicia en 3 debe tener 10 dígitos (Colombia). También se acepta formato internacional válido." />
                     @error('phone')
                         <div class="invalid-feedback" style="display: block;">{{ $message }}</div>
                     @enderror
@@ -232,13 +170,6 @@
                     </a>
                 </div>
 
-                <script>
-                window.CheckInConfig = {
-                    stayNights:       {{ (int) $reservation->stayDays }},
-                    defaultRoomType:  @json($reservation->room->roomtype->name ?? 'N/A'),
-                    defaultRoomPrice: {{ (float) ($reservation->room->price ?? 0) }}
-                };
-                </script>
                 <script src="{{ asset('js/reception-checkin.js') }}"></script>
             </div>
         </form>
@@ -246,4 +177,6 @@
 </div>
 
 @endsection
+
+
 

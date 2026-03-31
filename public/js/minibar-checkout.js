@@ -24,6 +24,8 @@ function submitCheckout() {
     document.getElementById('checkout-form').submit();
 }
 
+window.submitCheckout = submitCheckout;
+
 // Limpiar error al seleccionar un método
 document.querySelectorAll('input[name="metodo_pago"]').forEach(r => {
     r.addEventListener('change', () => {

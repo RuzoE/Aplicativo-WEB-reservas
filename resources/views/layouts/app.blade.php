@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, viewport-fit=cover">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="icon" type="image/svg+xml" href="{{ asset('img/favicon-hotel.svg') }}">
+    <link rel="alternate icon" href="{{ asset('favicon.ico') }}">
     <!-- Google Web Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -24,110 +26,13 @@
 
     <!-- Template Stylesheet -->
     <link href="{{ asset('css/style.css') }}" rel="stylesheet">
-    <!-- Tu archivo app.css -->
-    <link href="/css/app.css" rel="stylesheet">
+    <!-- Tu archivo app.css y JS -->
+    @stack('styles')
+    @stack('head')
 
-    <style>
-        /* Sidebar fixed layout for all panels (admin, minibar, recepcion, habitaciones...) */
-        :root {
-            --sidebar-width: 18rem; /* default width */
-        }
+    <link rel="stylesheet" href="{{ asset('css/blade/layouts/app--style1.css') }}">
 
-        /* override width using variable and keep fixed positioning */
-        .admin-sidebar-fixed {
-            position: fixed !important;
-            top: 0;
-            left: 0;
-            bottom: 0;
-            /* slightly narrower so visual gap is reduced but layout doesn't overlap */
-            width: calc(var(--sidebar-width) - 0.25rem) !important;
-            z-index: 1030;
-            overflow-y: auto;
-            padding-top: 1rem;
-        }
-
-        /* also force width when Bootstrap column classes are present */
-        .admin-sidebar-fixed.col-auto,
-        .admin-sidebar-fixed.col-md-3,
-        .admin-sidebar-fixed.col-xl-2 {
-            flex: 0 0 auto;
-            width: var(--sidebar-width) !important;
-        }
-
-        .admin-content {
-            /* Use exact sidebar width for margin to prevent overlap */
-            margin-left: var(--sidebar-width);
-            padding-left: 1.5rem; /* add visual gap between sidebar and content */
-            padding-right: 1.5rem;
-        }
-
-        /* panel-specific variable overrides */
-        body.panel-habitaciones { --sidebar-width: 22rem; }
-        body.panel-minibar     { --sidebar-width: 22rem; }
-        body.panel-admin       { --sidebar-width: 22rem; }
-        body.panel-recepcion   { --sidebar-width: 22rem; }
-
-        /* container and row should not add extra padding when sidebar fixed */
-        .container-fluid { padding-left: 0; padding-right: 0; }
-        .row.flex-nowrap { margin-left: 0; margin-right: 0; }
-
-        /* Make inner .container sit left and use remaining width next to sidebar
-           so centered max-width containers don't create a visual gap. */
-        body.panel-habitaciones .admin-content .container,
-        body.panel-minibar .admin-content .container,
-        body.panel-admin .admin-content .container,
-        body.panel-recepcion .admin-content .container {
-            margin-left: 0 !important;
-            max-width: calc(100% - var(--sidebar-width));
-            padding-left: 1rem; /* small inner padding */
-            padding-right: 1rem;
-        }
-
-        /* Responsive reset on very small screens */
-        @media (max-width: 767.98px) {
-            .row.flex-nowrap {
-                flex-wrap: wrap !important;
-            }
-
-            .admin-sidebar-fixed,
-            .admin-sidebar-fixed.col-auto,
-            .admin-sidebar-fixed.col-md-3,
-            .admin-sidebar-fixed.col-xl-2 {
-                position: static !important;
-                width: 100% !important;
-                max-width: 100%;
-                transform: none !important;
-                z-index: 1040;
-                box-shadow: inset 0px -4px 6px -4px rgba(0,0,0,0.5) !important;
-
-                max-height: 0;
-                overflow: hidden !important;
-                transition: max-height 0.4s ease-in-out !important;
-                padding-top: 0 !important;
-                padding-bottom: 0 !important;
-            }
-
-            .admin-sidebar-fixed.show {
-                max-height: 800px; /* Suficiente para mostrar los enlaces */
-                overflow-y: auto !important;
-            }
-
-            /* Quitar el min-viewport height para que se acople al contenido o esconda en 0 */
-            .admin-sidebar-fixed .min-vh-100 {
-                min-height: 0 !important;
-                height: auto !important;
-            }
-
-            .admin-content {
-                margin-left: 0 !important;
-                padding-left: 1rem !important;
-                padding-right: 1rem !important;
-                width: 100%;
-            }
-        }
-    </style>
-
-    <title>Hotel Management System</title>
+    <title>Hotel Oasis Colina</title>
 </head>
 @php
     // determine panel-specific body class for sidebar width
@@ -165,7 +70,7 @@
             ">
                 <i class="fas fa-check-circle fs-4"></i>
                 <span>{{ session('success') ?? session('message') ?? session('status') }}</span>
-                <button type="button" class="btn-close btn-close-white ms-2" onclick="this.parentElement.remove()" style="font-size: 0.8rem;"></button>
+                <button type="button" class="btn-close btn-close-white ms-2" data-dismiss-parent="#global-notification" style="font-size: 0.8rem;"></button>
             </div>
             <script src="{{ asset('js/notificaciones.js') }}"></script>
         @endif
@@ -225,6 +130,10 @@
 
     <!-- Template Javascript -->
     <script src="{{ asset('js/main.js') }}"></script>
+    <script src="{{ asset('js/ui-events.js') }}"></script>
+    @stack('scripts')
 </body>
 </html>
+
+
 

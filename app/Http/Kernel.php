@@ -13,6 +13,7 @@ class Kernel extends HttpKernel
         // \App\Http\Middleware\TrustHosts::class,
         \App\Http\Middleware\TrustProxies::class,
         \Illuminate\Http\Middleware\HandleCors::class,
+        \App\Http\Middleware\SecurityHeaders::class,
         \App\Http\Middleware\PreventRequestsDuringMaintenance::class,
         \Illuminate\Foundation\Http\Middleware\ValidatePostSize::class,
         \App\Http\Middleware\TrimStrings::class,
@@ -53,6 +54,9 @@ class Kernel extends HttpKernel
         'can' => \Illuminate\Auth\Middleware\Authorize::class,
         'password.confirm' => \Illuminate\Auth\Middleware\RequirePassword::class,
         'cache.headers' => \Illuminate\Http\Middleware\SetCacheHeaders::class,
+          'abilities' => \Laravel\Sanctum\Http\Middleware\CheckAbilities::class,
+          'ability' => \Laravel\Sanctum\Http\Middleware\CheckForAnyAbility::class,
+          'audit.admin' => \App\Http\Middleware\AuditAdminAccess::class,
 
      // 👇 Spatie Permission (L10 va aquí)
         'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
