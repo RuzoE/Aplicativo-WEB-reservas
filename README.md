@@ -2,6 +2,28 @@
 
 Aplicación web de gestión hotelera desarrollada con Laravel 10. El sistema integra operación de reservas, recepción, minibar, mantenimiento y administración, con control de acceso por roles y trazabilidad de acciones.
 
+## Vista Rápida
+
+### Página de inicio
+
+![Página de inicio](public/img/inicio.png)
+
+### Crear usuario
+
+![Crear usuario](public/img/crear_usuario.png)
+
+### Categorías de minibar
+
+![Categorías de minibar](public/img/categorias_minibar.png)
+
+### Detalle de producto
+
+![Detalle de producto](public/img/detalle_producto.png)
+
+### Confirmación de compra
+
+![Compra](public/img/compra.png)
+
 ## Módulos Principales
 
 - Reservas de habitaciones (búsqueda, disponibilidad, órdenes y pagos).
@@ -76,6 +98,26 @@ Dependencias destacadas:
 - `npm run build` - Compila assets para producción.
 - `php artisan test` - Ejecuta pruebas automatizadas.
 - `npm run screenshot` - Captura de pantalla con Puppeteer (crea carpetas de salida automáticamente).
+
+## Diagrama del Sistema
+
+```mermaid
+flowchart LR
+  A[Cliente Web] --> B[Frontend Blade + Vue]
+  B --> C[Laravel 10]
+  C --> D[(MySQL/MariaDB)]
+
+  C --> E[Modulo Reservas]
+  C --> F[Modulo Recepcion]
+  C --> G[Modulo Minibar]
+  C --> H[Modulo Mantenimiento]
+  C --> I[Modulo Administracion]
+
+  I --> J[Auditoria]
+  I --> K[Reportes PDF]
+  F --> L[Folio / Check-in / Check-out]
+  G --> M[Carrito y Checkout]
+```
 
 ## Documentación Técnica
 
