@@ -9,10 +9,19 @@ document.addEventListener('DOMContentLoaded', function () {
         generateForm.addEventListener('submit', function (e) {
             e.preventDefault();
             
-            // Only start if not already disabled
             if (generateButton.classList.contains('disabled')) return;
 
-            setGenerateButtonState(true, 'Iniciando...');
+            // Bloqueo total con SweetAlert2 para evitar interrupciones
+            Swal.fire({
+                title: 'Generando Respaldo',
+                html: 'Estamos preparando el archivo SQL y subiéndolo a Google Drive.<br><br><b>Por favor, no cierres esta ventana.</b>',
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                showConfirmButton: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
 
             fetch(generateForm.action, {
                 method: 'POST',
@@ -24,17 +33,21 @@ document.addEventListener('DOMContentLoaded', function () {
             .then(response => response.json())
             .then(data => {
                 if (data.ok) {
-                    // Success initiating, start polling
-                    startStatusPolling();
+                    Swal.fire({
+                        icon: 'success',
+                        title: '¡Éxito!',
+                        text: data.message || 'Respaldo completado correctamente.',
+                        confirmButtonText: 'Genial'
+                    }).then(() => {
+                        window.location.reload(); // Recarga automática de la lista
+                    });
                 } else {
-                    setGenerateButtonState(false);
-                    Swal.fire('Error', data.message || 'No se pudo iniciar el backup.', 'error');
+                    Swal.fire('Error', data.message || 'No se pudo completar el backup.', 'error');
                 }
             })
             .catch(error => {
-                console.error('Error starting backup:', error);
-                setGenerateButtonState(false);
-                Swal.fire('Error', 'Fallo de conexión al iniciar el backup.', 'error');
+                console.error('Error in backup:', error);
+                Swal.fire('Error', 'El servidor tardó demasiado o hubo un fallo de conexión.', 'error');
             });
         });
     }

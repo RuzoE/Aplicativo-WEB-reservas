@@ -166,6 +166,44 @@ class BackupService
     }
 
     /**
+     * Versión sincrónica y rápida (solo DB) para respuesta inmediata al usuario.
+     */
+    public function runBackupSync(): array
+    {
+        $settings = BackupSetting::current();
+        
+        try {
+            $settings->update([
+                'last_status' => 'En proceso',
+                'last_run_at' => now(),
+            ]);
+
+            // Ejecutar de forma síncrona
+            $exitCode = Artisan::call('backup:run', [
+                '--only-db' => true,
+                '--disable-notifications' => true,
+            ]);
+
+            if ($exitCode === 0) {
+                $settings->update([
+                    'last_status' => 'Correcto',
+                    'last_run_at' => now(),
+                    'last_message' => 'Respaldo de base de datos generado con éxito y subido a Google Drive.',
+                ]);
+                return ['ok' => true, 'message' => '¡Backup completado exitosamente!'];
+            }
+
+            $settings->update(['last_status' => 'Error', 'last_message' => 'Fallo al ejecutar el comando síncrono.']);
+            return ['ok' => false, 'message' => 'Hubo un error al ejecutar el respaldo (Código ' . $exitCode . ').'];
+
+        } catch (\Throwable $e) {
+            Log::error('Error en backup síncrono: ' . $e->getMessage());
+            $settings->update(['last_status' => 'Error', 'last_message' => $e->getMessage()]);
+            return ['ok' => false, 'message' => 'Ocurrió un error inesperado.'];
+        }
+    }
+
+    /**
      * @return array{ok: bool, message: string, output: string}
      */
     public function runBackup(string $source = 'manual'): array

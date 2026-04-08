@@ -27,7 +27,10 @@ class BackupController extends Controller
 
     public function generate(Request $request): \Illuminate\Http\JsonResponse|\Illuminate\Http\RedirectResponse
     {
-        $result = $this->backupService->startManualBackup('manual');
+        // Forzar tiempo de ejecución alto para backups síncronos
+        set_time_limit(300); 
+
+        $result = $this->backupService->runBackupSync();
 
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json($result);
