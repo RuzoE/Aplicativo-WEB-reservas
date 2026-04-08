@@ -166,12 +166,13 @@ class BackupService
     }
 
     /**
-     * Versión sincrónica y rápida (solo DB) para respuesta inmediata al usuario.
+     * Versión sincrónica usando PHP CLI directo para evitar el error de socket
+     * de mysqldump cuando se ejecuta desde Apache/php-cgi.
      */
     public function runBackupSync(): array
     {
         $settings = BackupSetting::current();
-        
+
         try {
             $settings->update([
                 'last_status' => 'En proceso',
@@ -179,33 +180,86 @@ class BackupService
                 'last_message' => 'Generando respaldo de base de datos...',
             ]);
 
-            // Artisan::call con opciones correctas - --only-db es una opción, no flag de valor
-            $exitCode = \Artisan::call('backup:run --only-db --disable-notifications');
+            // Encontrar el PHP CLI (no php-cgi de Apache)
+            $phpBinary = $this->findPhpCli();
+            $artisan   = base_path('artisan');
 
-            $output = \Artisan::output();
-            Log::info('Backup síncrono terminó con código ' . $exitCode . ': ' . $output);
+            // Ejecutar como proceso CLI real — idéntico a correr desde la terminal
+            $process = new \Symfony\Component\Process\Process(
+                [$phpBinary, $artisan, 'backup:run', '--only-db', '--disable-notifications'],
+                base_path(),
+                null,   // heredar variables de entorno del sistema
+                null,
+                300     // timeout 5 minutos
+            );
 
-            if ($exitCode === 0) {
+            $process->run();
+
+            $output   = $process->getOutput() . $process->getErrorOutput();
+            $exitCode = $process->getExitCode();
+
+            Log::info("Backup CLI terminó (exit {$exitCode}): {$output}");
+
+            if ($process->isSuccessful()) {
                 $settings->update([
-                    'last_status' => 'Correcto',
-                    'last_run_at' => now(),
+                    'last_status'  => 'Correcto',
+                    'last_run_at'  => now(),
                     'last_message' => 'Respaldo de base de datos generado con éxito y subido a Google Drive.',
                 ]);
                 return ['ok' => true, 'message' => '¡Respaldo completado exitosamente! La lista se actualizará ahora.'];
             }
 
-            Log::error('Fallo en backup síncrono (Código ' . $exitCode . '): ' . $output);
+            Log::error("Fallo en backup CLI (código {$exitCode}): {$output}");
             $settings->update([
-                'last_status' => 'Error', 
-                'last_message' => mb_substr('Error al ejecutar backup. Detalles: ' . $output, 0, 500),
+                'last_status'  => 'Error',
+                'last_message' => mb_substr('Error al ejecutar backup: ' . $output, 0, 500),
             ]);
-            return ['ok' => false, 'message' => 'Hubo un error al ejecutar el respaldo (Código ' . $exitCode . '). Revisa los logs.'];
+            return ['ok' => false, 'message' => 'Error al ejecutar el respaldo (Código ' . $exitCode . ').'];
 
         } catch (\Throwable $e) {
-            Log::error('Excepción en backup síncrono: ' . $e->getMessage());
-            $settings->update(['last_status' => 'Error', 'last_message' => mb_substr($e->getMessage(), 0, 500)]);
+            Log::error('Excepción en backup CLI: ' . $e->getMessage());
+            $settings->update([
+                'last_status'  => 'Error',
+                'last_message' => mb_substr($e->getMessage(), 0, 500),
+            ]);
             return ['ok' => false, 'message' => 'Error inesperado: ' . mb_substr($e->getMessage(), 0, 150)];
         }
+    }
+
+    /** Detecta el ejecutable PHP CLI en Laragon (no el php-cgi de Apache). */
+    private function findPhpCli(): string
+    {
+        // 1. Si PHP_BINARY ya apunta al CLI real (no cgi), usarlo directamente
+        $binary = PHP_BINARY;
+        if (!str_contains(strtolower($binary), '-cgi')) {
+            return $binary;
+        }
+
+        // 2. Reemplazar php-cgi.exe → php.exe en la misma carpeta
+        $candidate = str_ireplace(['-cgi.exe', '-cgi'], ['.exe', ''], $binary);
+        if (file_exists($candidate)) {
+            return $candidate;
+        }
+
+        // 3. Buscar en carpetas versionadas de Laragon (más específico primero)
+        $phpDirs = glob('C:\\laragon\\bin\\php\\php-*\\php.exe') ?: [];
+        if (!empty($phpDirs)) {
+            // Ordenar para tomar la versión más reciente
+            rsort($phpDirs);
+            return $phpDirs[0];
+        }
+
+        // 4. Rutas estándar de Laragon y sistema
+        foreach ([
+            'C:\\laragon\\bin\\php\\php.exe',
+            'C:\\php\\php.exe',
+        ] as $path) {
+            if (file_exists($path)) {
+                return $path;
+            }
+        }
+
+        return 'php'; // fallback: confiar en el PATH del sistema
     }
 
     /**
