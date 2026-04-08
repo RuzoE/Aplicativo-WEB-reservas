@@ -438,6 +438,9 @@
         border: 1px solid #e2e8f0;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
         overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        height: 100%; /* Permite que la tarjeta se estire con el grid */
     }
 
     .audit-table-header {
@@ -482,8 +485,9 @@
     }
 
     .audit-table-scroll {
-        max-height: 620px;
+        flex: 1; /* Estira el área de la tabla para llenar el espacio disponible */
         overflow: auto;
+        min-height: 400px;
     }
 
     .audit-table {

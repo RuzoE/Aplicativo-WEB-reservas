@@ -4,6 +4,8 @@ namespace App\Console;
 
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class Kernel extends ConsoleKernel
 {
@@ -14,11 +16,7 @@ class Kernel extends ConsoleKernel
     {
         // $schedule->command('inspire')->hourly();
 
-        $schedule
-            ->command('backup:run --only-db')
-            ->dailyAt('02:00')
-            ->withoutOverlapping()
-            ->runInBackground();
+        $this->scheduleBackups($schedule);
 
         $schedule
             ->command('backup:clean')
@@ -38,6 +36,37 @@ class Kernel extends ConsoleKernel
                 ->dailyAt(config('auditoria.cleanup.schedule', '03:15'))
                 ->withoutOverlapping();
         }
+    }
+
+    private function scheduleBackups(Schedule $schedule): void
+    {
+        $backupEvent = $schedule
+            ->command('app:generate-system-backup --source=automatic')
+            ->withoutOverlapping()
+            ->runInBackground();
+
+        match ($this->resolveBackupFrequency()) {
+            'weekly' => $backupEvent->weeklyOn(1, '02:00'),
+            'monthly' => $backupEvent->monthlyOn(1, '02:00'),
+            default => $backupEvent->dailyAt('02:00'),
+        };
+    }
+
+    private function resolveBackupFrequency(): string
+    {
+        try {
+            if (Schema::hasTable('backup_settings')) {
+                $frequency = DB::table('backup_settings')->value('frequency');
+
+                if (is_string($frequency) && in_array($frequency, ['daily', 'weekly', 'monthly'], true)) {
+                    return $frequency;
+                }
+            }
+        } catch (\Throwable) {
+            // Si la base de datos aún no está disponible, se usa la configuración por defecto.
+        }
+
+        return (string) config('backup.default_frequency', 'daily');
     }
 
     /**

@@ -59,13 +59,35 @@ return [
             'strict' => true,
             'engine' => null,
             'dump' => [
-                'dump_binary_path' => env('MYSQLDUMP_PATH', ''),
+                'dump_binary_path' => (static function (): string {
+                    $configuredPath = (string) env('MYSQLDUMP_PATH', '');
+
+                    if ($configuredPath === '') {
+                        return '';
+                    }
+
+                    $normalizedPath = str_replace('\\', '/', strtolower($configuredPath));
+
+                    if (str_ends_with($normalizedPath, '/mysqldump.exe') || str_ends_with($normalizedPath, '/mysqldump')) {
+                        return dirname($configuredPath);
+                    }
+
+                    return $configuredPath;
+                })(),
                 'useSingleTransaction' => true,
                 'timeout' => 60,
                 'exclude_tables' => array_values(array_filter(array_map(
                     'trim',
                     explode(',', (string) env('BACKUP_DB_EXCLUDE_TABLES', 'jobs,failed_jobs'))
                 ))),
+                'add_extra_native_dump_parameters' => [
+                    '--host=' . env('DB_HOST', '127.0.0.1'),
+                    '--port=' . env('DB_PORT', '3306'),
+                    '--user=' . env('DB_USERNAME', 'root'),
+                    '--password=' . env('DB_PASSWORD', ''),
+                    '--single-transaction',
+                    '--skip-lock-tables',
+                ],
             ],
             'options' => extension_loaded('pdo_mysql') ? array_filter([
                 PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),

@@ -126,6 +126,7 @@ La documentación funcional y técnica del proyecto está en `docs/`.
 | Documento | Descripción |
 |-----------|-------------|
 | [MANUAL_TECNICO.md](docs/MANUAL_TECNICO.md) | Referencia técnica general del sistema |
+| [API_AUTH_REST.md](docs/API_AUTH_REST.md) | Pruebas manuales y ejemplos Postman para autenticación API |
 | [EJEMPLOS_CODIGO.md](docs/EJEMPLOS_CODIGO.md) | Patrones y ejemplos de implementación |
 | [RECEPCION_MODULE.md](docs/RECEPCION_MODULE.md) | Arquitectura y flujo del módulo de recepción |
 | [RECEPCION_INTEGRACIONES.md](docs/RECEPCION_INTEGRACIONES.md) | Integraciones y puntos de conexión de recepción |

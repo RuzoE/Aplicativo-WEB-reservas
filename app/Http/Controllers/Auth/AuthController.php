@@ -3,16 +3,14 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Auth\RegisterRequest;
 use App\Models\User;
 use App\Rules\AllowedEmailDomain;
-use App\Rules\AlphaSpace;
-use App\Rules\PhoneNumberByPrefix;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\Rules\Password;
 
 class AuthController extends Controller
 {
@@ -42,34 +40,17 @@ class AuthController extends Controller
 
     /**
      * Handle an incoming registration request.
-     *
-     * @throws \Illuminate\Validation\ValidationException
      */
-    public function register(Request $request): RedirectResponse
+    public function register(RegisterRequest $request): RedirectResponse
     {
-
-        $request->validate([
-            'name' => ['required', new AlphaSpace, 'max:255'],
-            'last_name' => ['required', new AlphaSpace, 'max:255'],
-            'phone' => ['required', new PhoneNumberByPrefix()],
-            'email' => ['required', 'string', 'email', 'max:255', new AllowedEmailDomain(), 'unique:users'],
-            'password' => ['required',
-                Password::min(12)
-                ->letters()
-                ->mixedCase()
-                ->numbers()
-                ->symbols()
-                ->uncompromised(),
-                'confirmed'],
-            'password_confirmation' => ['required']
-        ]);
+        $data = $request->validated();
 
         $user = User::create([
-            'name' => $request->name,
-            'last_name' => $request->last_name,
-            'phone' => $request->phone,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
+            'name' => $data['name'],
+            'last_name' => $data['last_name'],
+            'phone' => $data['phone'],
+            'email' => $data['email'],
+            'password' => Hash::make($data['password']),
         ]);
 
         /* Auth::login($user); */

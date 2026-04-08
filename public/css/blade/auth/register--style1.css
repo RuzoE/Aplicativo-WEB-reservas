@@ -1,0 +1,48 @@
+.auth-container .card {
+    border: 0;
+    border-radius: 18px;
+    overflow: hidden;
+}
+
+.auth-container .card-body {
+    padding: 2rem 1.5rem;
+}
+
+.auth-phone-label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: #0f172a;
+}
+
+.auth-phone-wrapper .iti {
+    width: 100%;
+}
+
+.auth-phone-wrapper .iti__tel-input,
+.auth-phone-wrapper .iti input {
+    width: 100%;
+    min-height: 48px;
+    border-radius: 0.5rem;
+}
+
+.auth-phone-wrapper .iti__selected-country {
+    padding-left: 0.75rem;
+}
+
+.auth-phone-wrapper .iti__country-list {
+    max-width: 320px;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    border-radius: 0.75rem;
+    box-shadow: 0 12px 30px rgba(15, 23, 42, 0.16);
+}
+
+#phoneFeedback.d-block {
+    margin-top: 0.5rem;
+}
+
+@media (max-width: 576px) {
+    .auth-container .card-body {
+        padding: 1.25rem;
+    }
+}

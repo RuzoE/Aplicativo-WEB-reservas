@@ -17,6 +17,12 @@ class EventServiceProvider extends ServiceProvider
         Login::class => [
             \App\Listeners\RegistrarLoginAuditoria::class,
         ],
+        \Spatie\Backup\Events\BackupWasSuccessful::class => [
+            \App\Listeners\UpdateBackupStatus::class,
+        ],
+        \Spatie\Backup\Events\BackupHasFailed::class => [
+            \App\Listeners\UpdateBackupStatus::class,
+        ],
     ];
 
     /**

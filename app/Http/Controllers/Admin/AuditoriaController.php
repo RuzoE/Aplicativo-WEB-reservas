@@ -19,10 +19,10 @@ class AuditoriaController extends Controller
             'accion' => ['nullable', 'string', 'max:20'],
             'desde' => ['nullable', 'date'],
             'hasta' => ['nullable', 'date'],
-            'per_page' => ['nullable', 'integer', 'in:10,20,50'],
+            'per_page' => ['nullable', 'integer', 'in:9,10,20,50,100'],
         ]);
 
-        $perPage = (int) ($validated['per_page'] ?? 20);
+        $perPage = (int) ($validated['per_page'] ?? 9);
 
         $filteredBaseQuery = Auditoria::query()
             ->when(!empty($validated['usuario_id']), function ($query) use ($validated) {

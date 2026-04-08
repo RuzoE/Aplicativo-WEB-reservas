@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Order;
 use App\Models\RoomType;
 use App\Rules\AllowedEmailDomain;
+use App\Services\ReservationAvailabilityService;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -139,5 +141,71 @@ class OrderController extends Controller
 
         return redirect()->route('orders.index')
             ->with('success', '¡Pago de anticipo confirmado! Tu reserva ahora está CONFIRMADA.');
+    }
+
+    /**
+     * Show the form for editing the order dates.
+     */
+    public function edit(Order $user_order)
+    {
+        $order = $user_order; // Alias for the rest of the code
+        // Security check: must be the owner
+        if (Auth::id() !== $order->user_id) {
+            return redirect()->route('orders.index')->with('error', 'No tienes permiso para modificar esta reserva.');
+        }
+
+        // Only allow editing if not finalized/cancelled
+        if (in_array($order->status, ['finalizada', 'cancelada'])) {
+            return redirect()->route('orders.index')->with('error', 'Esta reserva no puede ser modificada en su estado actual.');
+        }
+
+        $duration = $order->check_in->diffInDays($order->check_out);
+
+        return view('pages.edit-order', compact('order', 'duration'));
+    }
+
+    /**
+     * Update the order dates.
+     */
+    public function update(Request $request, Order $user_order, ReservationAvailabilityService $availabilityService)
+    {
+        $order = $user_order; // Alias
+        // Security check: must be the owner
+        if (Auth::id() !== $order->user_id) {
+            return redirect()->route('orders.index')->with('error', 'No tienes permiso para modificar esta reserva.');
+        }
+
+        $request->validate([
+            'check_in' => 'required|date|after_or_equal:today',
+        ]);
+
+        $newCheckIn = Carbon::parse($request->input('check_in'))->startOfDay();
+        $originalDuration = $order->check_in->diffInDays($order->check_out);
+        $newCheckOut = $newCheckIn->copy()->addDays($originalDuration);
+
+        // Availability check
+        if (!$availabilityService->isAvailable($order->room_type_id, $newCheckIn, $newCheckOut, $order->id)) {
+            return back()->with('error', 'No hay disponibilidad para las nuevas fechas seleccionadas.')
+                         ->withInput();
+        }
+
+        $oldCheckIn = $order->check_in->format('Y-m-d');
+        $oldCheckOut = $order->check_out->format('Y-m-d');
+
+        $order->update([
+            'check_in' => $newCheckIn,
+            'check_out' => $newCheckOut,
+        ]);
+
+        registrarAuditoria(
+            'UPDATE',
+            'reservas',
+            $order->id,
+            "Reserva modificada por el usuario. Check-in: $oldCheckIn -> {$newCheckIn->format('Y-m-d')}, Check-out: $oldCheckOut -> {$newCheckOut->format('Y-m-d')}",
+            Auth::id()
+        );
+
+        return redirect()->route('orders.index')
+            ->with('success', 'La fecha de tu reserva ha sido actualizada correctamente.');
     }
 }

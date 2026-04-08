@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Services\GoogleDrive\GoogleDriveClientFactory;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
@@ -16,6 +17,10 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->app->singleton(\App\Services\AuditoriaService::class, function () {
             return new \App\Services\AuditoriaService();
+        });
+
+        $this->app->singleton(GoogleDriveClientFactory::class, function () {
+            return new GoogleDriveClientFactory();
         });
     }
 
@@ -92,21 +97,8 @@ class AppServiceProvider extends ServiceProvider
                 $options['teamDriveId'] = $config['teamDriveId'];
             }
 
-            $client = new \Google\Client;
-            $client->setClientId($config['clientId']);
-            $client->setClientSecret($config['clientSecret']);
-
-            if ($certificateBundle) {
-                $client->setHttpClient(new \GuzzleHttp\Client([
-                    'verify' => $certificateBundle,
-                ]));
-            }
-
-            $client->refreshToken($config['refreshToken']);
-
-            if (! empty($config['accessToken'])) {
-                $client->setAccessToken($config['accessToken']);
-            }
+            $client = $app->make(GoogleDriveClientFactory::class)
+                ->getGoogleClient($config, $certificateBundle);
 
             $service = new \Google\Service\Drive($client);
             $adapter = new \Masbug\Flysystem\GoogleDriveAdapter($service, $config['folder'] ?? '/', $options);

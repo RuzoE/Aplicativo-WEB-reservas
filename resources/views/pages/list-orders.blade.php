@@ -35,6 +35,7 @@
                     <th scope="col">Total</th>
                     <th scope="col">Reservado</th>
                     <th scope="col">Estado</th>
+                    <th scope="col">Acciones</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -52,6 +53,15 @@
                                 <span class="badge bg-success">Confirmada</span>
                             @else
                                 <span class="badge bg-secondary">{{ ucfirst($order->status) }}</span>
+                            @endif
+                        </td>
+                        <td>
+                            @if(!in_array($order->status, ['finalizada', 'cancelada']))
+                                <a href="{{ route('orders.edit', ['user_order' => $order->id]) }}" class="btn btn-sm btn-outline-primary rounded-pill">
+                                    <i class="fas fa-edit me-1"></i> Modificar
+                                </a>
+                            @else
+                                <span class="text-muted small">Sin acciones</span>
                             @endif
                         </td>
                     </tr>

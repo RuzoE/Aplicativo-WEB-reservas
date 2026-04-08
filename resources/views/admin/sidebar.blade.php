@@ -126,6 +126,11 @@
           <i class="fs-4 bi-shield-check"></i> <span class="ms-1">Auditoria</span>
         </a>
       </li>
+      <li>
+        <a href="{{ route('admin.backups.index') }}" class="nav-link px-0 align-middle fs-5 pb-2 {{ request()->routeIs('admin.backups.*') ? 'active' : '' }}">
+          <i class="fs-4 bi-cloud-arrow-up"></i> <span class="ms-1">Backups</span>
+        </a>
+      </li>
       @endif
 
       @if(auth()->user()->hasRole('administrador') && !request()->routeIs('admin.index'))

@@ -25,6 +25,7 @@ return [
         'minibar',
         'usuarios',
         'recepcion',
+        'backups',
     ],
 
     'max_description_length' => env('AUDITORIA_MAX_DESCRIPTION_LENGTH', 255),

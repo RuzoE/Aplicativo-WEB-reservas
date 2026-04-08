@@ -1,0 +1,381 @@
+.backup-wrapper {
+    min-height: 100vh;
+    background: #f1f5f9;
+    padding: 24px 16px;
+    font-family: 'Inter', 'Segoe UI', sans-serif;
+}
+
+.backup-container {
+    max-width: 1280px;
+    margin: 0 auto;
+}
+
+.backup-alert {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-radius: 14px;
+    padding: 14px 16px;
+    margin-bottom: 16px;
+    font-weight: 600;
+}
+
+.backup-alert-success {
+    background: #ecfdf5;
+    color: #047857;
+    border: 1px solid #a7f3d0;
+}
+
+.backup-alert-danger {
+    background: #fef2f2;
+    color: #b91c1c;
+    border: 1px solid #fecaca;
+}
+
+.backup-hero {
+    background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%);
+    color: #fff;
+    border-radius: 22px;
+    padding: 28px;
+    box-shadow: 0 12px 30px rgba(15, 23, 42, 0.18);
+    margin-bottom: 20px;
+}
+
+.backup-hero-content {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.backup-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    font-size: 12px;
+    margin-bottom: 12px;
+}
+
+.backup-hero h1 {
+    margin: 0;
+    font-size: 2rem;
+    font-weight: 700;
+    color: #ffffff;
+}
+
+.backup-hero p {
+    margin: 10px 0 0;
+    color: #dbeafe;
+    max-width: 760px;
+}
+
+.backup-generate-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: flex-start;
+}
+
+.backup-generate-form small {
+    color: #dbeafe;
+}
+
+.backup-btn-primary,
+.backup-btn-secondary,
+.backup-link-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border: none;
+    border-radius: 12px;
+    padding: 11px 16px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.backup-btn-primary {
+    background: #22c55e;
+    color: #052e16;
+}
+
+.backup-btn-primary:hover {
+    background: #16a34a;
+    color: #fff;
+}
+
+.backup-btn-secondary {
+    background: #0f172a;
+    color: #fff;
+}
+
+.backup-btn-secondary:hover {
+    background: #1e293b;
+}
+
+.backup-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.backup-stat-card,
+.backup-card {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 18px;
+    padding: 20px;
+    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.05);
+}
+
+.backup-stat-top,
+.backup-card-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.backup-stat-top span,
+.backup-card-header p {
+    color: #64748b;
+    font-size: 0.92rem;
+}
+
+.backup-stat-top i {
+    color: #2563eb;
+    font-size: 1.1rem;
+}
+
+.backup-stat-card strong {
+    display: block;
+    margin-top: 12px;
+    font-size: 1.35rem;
+    color: #0f172a;
+}
+
+.backup-stat-card small {
+    display: block;
+    margin-top: 6px;
+    color: #64748b;
+}
+
+.backup-grid {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.backup-card-header h2 {
+    margin: 0;
+    font-size: 1.1rem;
+    color: #0f172a;
+}
+
+.backup-card-header p {
+    margin: 6px 0 0;
+}
+
+.backup-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: #eff6ff;
+    color: #1d4ed8;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.backup-label {
+    display: block;
+    margin: 14px 0 8px;
+    font-weight: 600;
+    color: #0f172a;
+}
+
+.backup-inline-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.backup-select {
+    min-width: 220px;
+    border-radius: 12px;
+    border: 1px solid #cbd5e1;
+    padding: 10px 12px;
+    background: #fff;
+}
+
+.backup-help-text {
+    margin-top: 10px;
+    color: #64748b;
+}
+
+.backup-checklist {
+    list-style: none;
+    padding: 0;
+    margin: 16px 0 0;
+    display: grid;
+    gap: 10px;
+}
+
+.backup-checklist li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #0f172a;
+}
+
+.backup-checklist i {
+    color: #16a34a;
+}
+
+.backup-table-card {
+    overflow: hidden;
+}
+
+.backup-table-wrap {
+    overflow-x: auto;
+    margin-top: 14px;
+}
+
+.backup-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.backup-table th,
+.backup-table td {
+    padding: 14px 12px;
+    border-top: 1px solid #e2e8f0;
+    text-align: left;
+    vertical-align: middle;
+}
+
+.backup-table th {
+    color: #475569;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.backup-file-name {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #0f172a;
+    font-weight: 600;
+}
+
+.backup-file-name i {
+    color: #7c3aed;
+}
+
+.backup-table td small {
+    color: #64748b;
+}
+
+.backup-status {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.backup-status-success {
+    background: #ecfdf5;
+    color: #047857;
+}
+
+.backup-status-warning {
+    background: #fffbeb;
+    color: #b45309;
+}
+
+.backup-status-danger {
+    background: #fef2f2;
+    color: #b91c1c;
+}
+
+.backup-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.backup-link-action {
+    background: #eff6ff;
+    color: #1d4ed8;
+    padding: 8px 12px;
+}
+
+.backup-link-action:hover {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.backup-link-danger {
+    background: #fef2f2;
+    color: #b91c1c;
+}
+
+.backup-link-danger:hover {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.backup-empty-state {
+    text-align: center;
+    padding: 32px 16px;
+    color: #64748b;
+}
+
+.backup-empty-state i {
+    font-size: 2rem;
+    color: #94a3b8;
+}
+
+.backup-empty-state h3 {
+    margin: 12px 0 8px;
+    color: #0f172a;
+}
+
+@media (min-width: 992px) {
+    .backup-hero-content {
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: flex-end;
+    }
+}
+
+@media (max-width: 991.98px) {
+    .backup-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .backup-wrapper {
+        padding: 18px 10px;
+    }
+
+    .backup-hero,
+    .backup-stat-card,
+    .backup-card {
+        padding: 16px;
+    }
+
+    .backup-hero h1 {
+        font-size: 1.5rem;
+    }
+}

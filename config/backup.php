@@ -8,7 +8,7 @@ return [
         'source' => [
             'files' => [
                 'include' => array_values(array_filter([
-                    env('BACKUP_INCLUDE_FILES', false) ? base_path() : null,
+                    env('BACKUP_INCLUDE_FILES', true) ? base_path() : null,
                 ])),
 
                 'exclude' => [
@@ -110,6 +110,12 @@ return [
         'max_backups' => 40,
         'tries' => 3,
         'retry_delay' => 10,
+    ],
+
+    'default_frequency' => env('BACKUP_FREQUENCY', 'daily'),
+    'ui_path' => env('BACKUP_UI_PATH', ''),
+    'runtime' => [
+        'memory_limit' => env('BACKUP_MEMORY_LIMIT', '512M'),
     ],
 
 ];

@@ -209,9 +209,10 @@
                     <label for="per_page" class="audit-filter-label">Registros</label>
                     <div class="audit-field-no-icon">
                         <select name="per_page" id="per_page">
-                            <option value="10" @selected((string) $perPage === '10')>10</option>
-                            <option value="20" @selected((string) $perPage === '20')>20</option>
-                            <option value="50" @selected((string) $perPage === '50')>50</option>
+                            <option value="9" @selected((string) $perPage === '9')>9 resultados</option>
+                            <option value="20" @selected((string) $perPage === '20')>20 resultados</option>
+                            <option value="50" @selected((string) $perPage === '50')>50 resultados</option>
+                            <option value="100" @selected((string) $perPage === '100')>100 resultados</option>
                         </select>
                     </div>
                 </div>

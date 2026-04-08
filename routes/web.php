@@ -44,6 +44,7 @@ use App\Http\Controllers\Reception\CheckOutController as ReceptionCheckOutContro
 use App\Http\Controllers\Admin\Mantenimiento\MaintenanceController;
 use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\AuditoriaController;
+use App\Http\Controllers\Admin\BackupController;
 
 /* |-------------------------------------------------------------------------- | Rutas públicas |-------------------------------------------------------------------------- */
 Route::get('/', [PageController::class , 'index'])->name('home');
@@ -72,6 +73,9 @@ Route::middleware('auth')->group(function () {
 
     Route::post('/orders', [OrderController::class , 'store'])->name('orders.store');
     Route::get('/orders', [OrderController::class , 'index'])->name('orders.index');
+
+    Route::get('/orders/{user_order}/edit', [OrderController::class, 'edit'])->name('orders.edit');
+    Route::put('/orders/{user_order}', [OrderController::class, 'update'])->name('orders.update');
 
     // Rutas de Pago (con token)
     Route::get('/orders/payment/{token}', [OrderController::class, 'paymentPage'])->name('orders.payment');
@@ -117,6 +121,17 @@ Route::prefix('admin')
 
         // Auditoria del sistema
         Route::get('auditorias', [AuditoriaController::class, 'index'])->name('auditorias.index');
+
+        // Backups del sistema
+        Route::get('backups', [BackupController::class, 'index'])->name('backups.index');
+        Route::get('backups/status', [BackupController::class, 'status'])->name('backups.status');
+        Route::post('backups/generate', [BackupController::class, 'generate'])->name('backups.generate');
+        Route::get('backups/download', [BackupController::class, 'download'])->name('backups.download');
+        Route::delete('backups', [BackupController::class, 'destroy'])->name('backups.destroy');
+        Route::put('backups/schedule', [BackupController::class, 'updateSchedule'])->name('backups.schedule');
+        Route::post('backups/restore', [BackupController::class, 'restore'])->name('backups.restore');
+        Route::post('backups/reset', [BackupController::class, 'resetStatus'])->name('backups.reset');
+
         // Aliases sin prefijo para compatibilidad legacy
         // Las rutas anteriores generan: admin.report.preview / admin.report.download
     });
