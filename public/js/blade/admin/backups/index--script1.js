@@ -1,6 +1,18 @@
 document.addEventListener('DOMContentLoaded', function () {
     const generateForm = document.getElementById('backup-generate-form');
     const generateButton = document.getElementById('generate-backup-btn');
+    const loginUrl = '/login';
+
+    function handleAuthError(message, redirectUrl = loginUrl) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Sesión expirada',
+            text: message || 'Tu sesión ya no es válida. Debes iniciar sesión nuevamente.',
+            confirmButtonText: 'Ir al login'
+        }).then(() => {
+            window.location.href = redirectUrl;
+        });
+    }
 
     // -------- MANUAL BACKUP GENERATION (POLLING) --------
     let pollingInterval = null;
@@ -29,13 +41,20 @@ document.addEventListener('DOMContentLoaded', function () {
 
             fetch(generateForm.action, {
                 method: 'POST',
+                credentials: 'same-origin',
                 headers: {
+                    'Accept': 'application/json',
                     'X-Requested-With': 'XMLHttpRequest',
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
                 }
             })
             .then(async response => {
                 const data = await response.json().catch(() => null);
+
+                if (response.status === 401 || response.status === 419) {
+                    handleAuthError(data?.message || 'Tu sesión expiró mientras intentabas generar el backup.');
+                    return null;
+                }
 
                 if (!response.ok) {
                     throw new Error(data?.message || 'No se pudo completar el backup.');
@@ -44,6 +63,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 return data;
             })
             .then(data => {
+                if (!data) {
+                    return;
+                }
+
                 if (data?.ok) {
                     Swal.fire({
                         icon: 'success',
@@ -226,14 +249,23 @@ document.addEventListener('DOMContentLoaded', function () {
 
             fetch('/admin/backups/restore', {
                 method: 'POST',
+                credentials: 'same-origin',
                 headers: {
+                    'Accept': 'application/json',
                     'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || document.querySelector('input[name="_token"]')?.value
                 },
                 body: JSON.stringify({ path: currentRestorePath })
             })
             .then(async response => {
                 const data = await response.json().catch(() => null);
+
+                if (response.status === 401 || response.status === 419) {
+                    handleAuthError(data?.message || 'Tu sesión cambió durante la restauración. Debes iniciar sesión nuevamente.', data?.redirect || loginUrl);
+                    return null;
+                }
+
                 if (!response.ok) {
                     throw new Error(data?.message || 'Error del servidor. (timeout o fallo)');
                 }
@@ -241,6 +273,11 @@ document.addEventListener('DOMContentLoaded', function () {
             })
             .then(data => {
                 if (overlay) overlay.style.display = 'none';
+
+                if (!data) {
+                    return;
+                }
+
                 if (data && data.ok) {
                     Swal.fire({
                         icon: 'success',

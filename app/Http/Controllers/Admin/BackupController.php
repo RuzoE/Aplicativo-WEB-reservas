@@ -83,17 +83,10 @@ class BackupController extends Controller
         if ($result['ok']) {
             app(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
 
-            if ($request->user()) {
-                auth()->guard('web')->logout();
-            }
-
-            $request->session()->invalidate();
-            $request->session()->regenerateToken();
-
             $result['requires_relogin'] = true;
-            $result['redirect'] = route('login');
+            $result['redirect'] = route('login', [], false);
             $result['message'] = ($result['message'] ?? 'Restauración completada.')
-                .' Por seguridad, debes iniciar sesión nuevamente porque la base restaurada puede traer otros usuarios y roles.';
+                .' Por seguridad, vuelve a iniciar sesión para recargar usuarios, roles y permisos de la base restaurada.';
         }
 
         return response()->json($result, $result['ok'] ? 200 : 400);
