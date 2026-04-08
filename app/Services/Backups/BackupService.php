@@ -197,14 +197,14 @@ class BackupService
             Log::error('Fallo en backup síncrono (Código ' . $exitCode . '): ' . $output);
             $settings->update([
                 'last_status' => 'Error', 
-                'last_message' => 'Error ' . $exitCode . ': ' . mb_substr($output, 0, 200),
+                'last_message' => mb_substr('Error al ejecutar backup. Detalles: ' . $output, 0, 500),
             ]);
             return ['ok' => false, 'message' => 'Hubo un error al ejecutar el respaldo (Código ' . $exitCode . '). Revisa los logs.'];
 
         } catch (\Throwable $e) {
-            Log::error('Excepción en backup síncrono: ' . $e->getMessage() . "\n" . $e->getTraceAsString());
-            $settings->update(['last_status' => 'Error', 'last_message' => mb_substr($e->getMessage(), 0, 200)]);
-            return ['ok' => false, 'message' => 'Error inesperado: ' . $e->getMessage()];
+            Log::error('Excepción en backup síncrono: ' . $e->getMessage());
+            $settings->update(['last_status' => 'Error', 'last_message' => mb_substr($e->getMessage(), 0, 500)]);
+            return ['ok' => false, 'message' => 'Error inesperado: ' . mb_substr($e->getMessage(), 0, 150)];
         }
     }
 
