@@ -594,7 +594,8 @@ class BackupService
         }
 
         // Crear primero un backup de seguridad automático (before-restore) obligatorio
-        $safetyResult = $this->runBackup('before-restore');
+        // Usar el mismo método CLI que el backup manual para evitar el error de socket de Apache
+        $safetyResult = $this->runBackupSync();
         
         if (!$safetyResult['ok']) {
             return [
