@@ -50,11 +50,12 @@
                                         type="tel"
                                         name="phone"
                                         value="{{ old('phone') }}"
-                                        placeholder="Ej: 3000000000"
+                                        placeholder="Ej: 3001234567"
                                         required
                                         inputmode="numeric"
                                         autocomplete="tel"
                                         data-phone-input="true"
+                                        data-phone-config='{!! json_encode(config('phone.country_lengths') ?? []) !!}'
                                         class="form-control auth-phone-input @error('phone') is-invalid @enderror"
                                     >
                                 </div>

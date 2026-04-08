@@ -8,7 +8,15 @@
 
     const countryInput = document.getElementById('phone_country');
     const feedback = document.getElementById('phoneFeedback');
-    const countryConfig = window.phoneCountryConfig || {};
+
+    // Read config directly from the HTML attribute — no timing issues, always available
+    let countryConfig = {};
+    try {
+        const raw = phoneInput.getAttribute('data-phone-config');
+        if (raw) countryConfig = JSON.parse(raw);
+    } catch (e) {
+        countryConfig = {};
+    }
 
     const iti = window.intlTelInput(phoneInput, {
         initialCountry: countryInput?.value || 'co',
@@ -20,16 +28,10 @@
     });
 
     if (phoneInput.value) {
-        // If it starts with +, it's probably from a previous failed submit
-        // intl-tel-input with separateDialCode handles this when setNumber is called
         iti.setNumber(phoneInput.value);
-        
-        // Ensure the visible input only has digits (national number)
-        // after intl-tel-input has done its processing
         setTimeout(() => {
             const national = iti.getNumber(window.intlTelInputUtils?.numberFormat?.NATIONAL || 2);
             if (national) {
-                // Strip non-digits just in case
                 phoneInput.value = national.replace(/\D/g, '');
             }
         }, 100);
@@ -38,25 +40,7 @@
     const getSelectedRule = () => {
         const data = iti.getSelectedCountryData();
         const iso2 = (data && data.iso2) ? data.iso2.toLowerCase() : '';
-        const config = window.phoneCountryConfig || {};
-        
-        // Final fallback for common countries if config is not available yet
-        const fallbacks = {
-            'co': { example: '3001234567' },
-            'ar': { example: '1123456789' },
-            'es': { example: '612345678' },
-            'mx': { example: '5512345678' },
-            'pe': { example: '912345678' },
-            'cl': { example: '912345678' },
-            'bo': { example: '71234567' },
-            've': { example: '4121234567' },
-            'us': { example: '2025550123' },
-            'id': { example: '8123456789' },
-            'pl': { example: '123456789' },
-            'pt': { example: '912345678' }
-        };
-        
-        return config[iso2] || fallbacks[iso2] || null;
+        return countryConfig[iso2] || null;
     };
 
     const getDigits = () => phoneInput.value.replace(/\D/g, '');
@@ -107,19 +91,18 @@
         if (rule && rule.example) {
             newPlaceholder = rule.example;
         } else {
-            // Fallback to library's placeholder if available
-            // intl-tel-input provides a generic example based on the country
+            // Fallback to library's placeholder if available (requires utilsScript to be loaded)
             const itiPlaceholder = (typeof iti.getPlaceholder === 'function') ? iti.getPlaceholder() : '';
             if (itiPlaceholder) {
-                // Strip non-digits to show only the number part as requested
-                newPlaceholder = itiPlaceholder.replace(/\D/g, '');
+                // Strip non-digits and leading zeros for national placeholder
+                newPlaceholder = itiPlaceholder.replace(/\D/g, '').replace(/^0+/, '');
             } else {
-                // If it is not ready yet, try to wait or use a broad default
+                // If it is not ready yet, it will be updated by the utilsChecker loop
                 newPlaceholder = '3000000000';
             }
         }
         
-        phoneInput.placeholder = `Ej: ${newPlaceholder}`;
+        phoneInput.placeholder = 'Ej: ' + newPlaceholder;
     };
 
     const enforceMaxLength = () => {
@@ -145,7 +128,7 @@
         }
 
         if (rule?.lengths?.length && !rule.lengths.includes(nationalDigits.length)) {
-            setErrorMessage(`Para ${rule.name || selectedCountry?.name || 'este país'} debes ingresar ${rule.lengths.join(' o ')} dígitos.`);
+            setErrorMessage('Para ' + (rule.name || selectedCountry?.name || 'este país') + ' debes ingresar ' + rule.lengths.join(' o ') + ' dígitos.');
             return false;
         }
 
@@ -154,7 +137,7 @@
             const validPrefix = startsWith.some(p => nationalDigits.startsWith(p));
             if (!validPrefix) {
                 const prefixes = startsWith.join(' o ');
-                setErrorMessage(`Para ${rule.name || selectedCountry?.name || 'este país'} el número debe comenzar por ${prefixes}.`);
+                setErrorMessage('Para ' + (rule.name || selectedCountry?.name || 'este país') + ' el número debe comenzar por ' + prefixes + '.');
                 return false;
             }
         }
@@ -169,19 +152,15 @@
         setErrorMessage('');
 
         if (normalizeOnSuccess) {
-            // Only normalize to full international format for the hidden field or final submission
-            // But we must NOT leave the + prefix in the visible input if it reloads
-            phoneInput.value = fullNumber || `+${selectedCountry?.dialCode || ''}${nationalDigits}`;
+            phoneInput.value = fullNumber || ('+' + (selectedCountry?.dialCode || '') + nationalDigits);
         }
 
         return true;
     };
 
     const sanitizeInput = () => {
-        let value = phoneInput.value;
-        // Allow digit only for national input when using separateDialCode
-        let digits = value.replace(/\D/g, '');
-        
+        const value = phoneInput.value;
+        const digits = value.replace(/\D/g, '');
         if (value !== digits) {
             phoneInput.value = digits;
         }
@@ -195,38 +174,34 @@
     syncCountryDetails();
     setErrorMessage('', true);
 
-    // If utilsScript (utils.js) is still loading from CDN, the built-in placeholder
-    // might not be available yet. We check every 200ms for a brief period.
+    // Re-sync placeholders once the library's utility script is loaded (to get real examples for all countries)
     let utilsCheckCount = 0;
     const utilsChecker = setInterval(() => {
         if (window.intlTelInputUtils) {
             syncCountryDetails();
             clearInterval(utilsChecker);
         }
-        if (++utilsCheckCount > 25) clearInterval(utilsChecker); // Stop after 5s
+        if (++utilsCheckCount > 25) clearInterval(utilsChecker); // Stop after 5 seconds
     }, 200);
 
-    phoneInput.addEventListener('input', (e) => {
+    phoneInput.addEventListener('input', () => {
         if (feedback) {
             feedback.dataset.serverMessage = '';
         }
-
         sanitizeInput();
         enforceMaxLength();
-
         if (phoneInput.classList.contains('is-invalid')) {
             validatePhone();
         }
     });
 
-    // Special handling for paste to remove any potential leading + or country codes
-    phoneInput.addEventListener('paste', (e) => {
+    phoneInput.addEventListener('paste', () => {
         setTimeout(() => {
             const val = phoneInput.value;
             if (val.startsWith('+')) {
                 iti.setNumber(val);
                 setTimeout(() => {
-                   phoneInput.value = phoneInput.value.replace(/\D/g, '');
+                    phoneInput.value = phoneInput.value.replace(/\D/g, '');
                 }, 1);
             } else {
                 sanitizeInput();
@@ -242,10 +217,8 @@
         if (feedback) {
             feedback.dataset.serverMessage = '';
         }
-
         syncCountryDetails();
         enforceMaxLength();
-
         if (getDigits()) {
             validatePhone();
         } else {
@@ -257,10 +230,8 @@
         if (feedback) {
             feedback.dataset.serverMessage = '';
         }
-
         syncCountryDetails();
         enforceMaxLength();
-
         if (!validatePhone(true)) {
             event.preventDefault();
             phoneInput.focus();
