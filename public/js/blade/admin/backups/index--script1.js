@@ -4,12 +4,16 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // -------- MANUAL BACKUP GENERATION (POLLING) --------
     let pollingInterval = null;
+    let backupRequestInFlight = false;
 
     if (generateForm && generateButton) {
         generateForm.addEventListener('submit', function (e) {
             e.preventDefault();
-            
-            if (generateButton.classList.contains('disabled')) return;
+
+            if (generateButton.classList.contains('disabled') || backupRequestInFlight) return;
+
+            backupRequestInFlight = true;
+            setGenerateButtonState(true, 'Generando respaldo...');
 
             // Bloqueo total con SweetAlert2 para evitar interrupciones
             Swal.fire({
@@ -30,24 +34,36 @@ document.addEventListener('DOMContentLoaded', function () {
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
                 }
             })
-            .then(response => response.json())
+            .then(async response => {
+                const data = await response.json().catch(() => null);
+
+                if (!response.ok) {
+                    throw new Error(data?.message || 'No se pudo completar el backup.');
+                }
+
+                return data;
+            })
             .then(data => {
-                if (data.ok) {
+                if (data?.ok) {
                     Swal.fire({
                         icon: 'success',
                         title: '¡Éxito!',
                         text: data.message || 'Respaldo completado correctamente.',
                         confirmButtonText: 'Genial'
                     }).then(() => {
-                        window.location.reload(); // Recarga automática de la lista
+                        window.location.reload();
                     });
                 } else {
-                    Swal.fire('Error', data.message || 'No se pudo completar el backup.', 'error');
+                    throw new Error(data?.message || 'No se pudo completar el backup.');
                 }
             })
             .catch(error => {
                 console.error('Error in backup:', error);
-                Swal.fire('Error', 'El servidor tardó demasiado o hubo un fallo de conexión.', 'error');
+                setGenerateButtonState(false);
+                Swal.fire('Error', error.message || 'El servidor tardó demasiado o hubo un fallo de conexión.', 'error');
+            })
+            .finally(() => {
+                backupRequestInFlight = false;
             });
         });
     }
@@ -69,7 +85,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function startStatusPolling() {
         if (pollingInterval) clearInterval(pollingInterval);
-        
+
         let attempts = 0;
         const maxAttempts = 120; // 6 minutes max (3s * 120)
 
@@ -139,7 +155,7 @@ document.addEventListener('DOMContentLoaded', function () {
         form.addEventListener('submit', function (event) {
             event.preventDefault();
             const backupName = form.getAttribute('data-backup-name') || 'este backup';
-            
+
             Swal.fire({
                 title: '¿Estás seguro?',
                 text: `Vas a eliminar el backup: ${backupName}. Esta acción no se puede deshacer.`,
@@ -164,8 +180,9 @@ document.addEventListener('DOMContentLoaded', function () {
     const confirmBtn = document.getElementById('confirm-restore-btn');
     const confirmInput = document.getElementById('restore-confirmation');
     const overlay = document.getElementById('restore-overlay');
-    
+
     let currentRestorePath = null;
+    let restoreInProgress = false;
 
     restoreBtns.forEach(btn => {
         btn.addEventListener('click', function() {
@@ -173,10 +190,10 @@ document.addEventListener('DOMContentLoaded', function () {
             document.getElementById('modal-backup-name').textContent = this.getAttribute('data-name');
             document.getElementById('modal-backup-date').textContent = this.getAttribute('data-date');
             document.getElementById('modal-backup-size').textContent = this.getAttribute('data-size');
-            
+
             if (confirmInput) confirmInput.value = '';
             if (confirmBtn) confirmBtn.classList.add('disabled');
-            
+
             if (modalRestore) {
                 modalRestore.hide();
                 setTimeout(() => modalRestore.show(), 150);
@@ -197,7 +214,12 @@ document.addEventListener('DOMContentLoaded', function () {
     if (confirmBtn) {
         confirmBtn.addEventListener('click', function() {
             if (confirmInput.value.trim() !== 'CONFIRMAR') return;
-            if (!currentRestorePath) return;
+            if (!currentRestorePath || restoreInProgress) return;
+
+            restoreInProgress = true;
+            confirmBtn.classList.add('disabled');
+            confirmBtn.setAttribute('disabled', 'disabled');
+            restoreBtns.forEach(btn => btn.classList.add('disabled'));
 
             if (modalRestore) modalRestore.hide();
             if (overlay) overlay.style.display = 'flex';
@@ -224,7 +246,15 @@ document.addEventListener('DOMContentLoaded', function () {
                         icon: 'success',
                         title: 'Restaurado',
                         text: data.message || 'La base de datos ha sido restaurada con éxito.',
-                    }).then(() => location.reload());
+                        confirmButtonText: data?.redirect ? 'Ir a iniciar sesión' : 'OK'
+                    }).then(() => {
+                        if (data?.redirect) {
+                            window.location.href = data.redirect;
+                            return;
+                        }
+
+                        location.reload();
+                    });
                 } else {
                     Swal.fire({
                         icon: 'error',
@@ -235,6 +265,11 @@ document.addEventListener('DOMContentLoaded', function () {
             })
             .catch(error => {
                 if (overlay) overlay.style.display = 'none';
+                restoreInProgress = false;
+                confirmBtn.classList.remove('disabled');
+                confirmBtn.removeAttribute('disabled');
+                restoreBtns.forEach(btn => btn.classList.remove('disabled'));
+
                 Swal.fire({
                     icon: 'error',
                     title: 'Error de servidor',

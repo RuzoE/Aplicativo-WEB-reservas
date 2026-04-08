@@ -28,7 +28,7 @@ class BackupController extends Controller
     public function generate(Request $request): \Illuminate\Http\JsonResponse|\Illuminate\Http\RedirectResponse
     {
         // Forzar tiempo de ejecución alto para backups síncronos
-        set_time_limit(300); 
+        set_time_limit(300);
 
         $result = $this->backupService->runBackupSync();
 
@@ -72,17 +72,29 @@ class BackupController extends Controller
             ->with('success', 'Frecuencia automática de backups actualizada correctamente.');
     }
 
-    public function restore(Request $request): \Illuminate\Http\JsonResponse 
+    public function restore(Request $request): \Illuminate\Http\JsonResponse
     {
-        // El script index--script1.js manda fetch JSON u form POST?
-        // Ah, si, no verifiqué pero si es de Blade, podemos devolver JSON si es fetch.
-        // Wait, voy a usar JSON normal para fetch.
-        
         $validated = $request->validate([
             'path' => ['required', 'string'],
         ]);
 
         $result = $this->backupService->restoreBackup($validated['path']);
+
+        if ($result['ok']) {
+            app(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
+
+            if ($request->user()) {
+                auth()->guard('web')->logout();
+            }
+
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            $result['requires_relogin'] = true;
+            $result['redirect'] = route('login');
+            $result['message'] = ($result['message'] ?? 'Restauración completada.')
+                .' Por seguridad, debes iniciar sesión nuevamente porque la base restaurada puede traer otros usuarios y roles.';
+        }
 
         return response()->json($result, $result['ok'] ? 200 : 400);
     }

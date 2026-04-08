@@ -3,8 +3,9 @@
 namespace Tests\Feature\Admin;
 
 use App\Models\BackupSetting;
+use App\Services\Backups\BackupService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Artisan;
+use Mockery;
 use RuntimeException;
 use Tests\TestCase;
 
@@ -17,19 +18,12 @@ class BackupRunErrorMessageTest extends TestCase
     {
         BackupSetting::current();
 
-        Artisan::shouldReceive('call')
-            ->twice()
-            ->with('backup:run', ['--disable-notifications' => true])
-            ->andReturn(1, 1);
+        $service = $this->mockBackupServiceWithResponses([
+            [1, "mysqldump: Got error: 2004: Can't create TCP/IP socket (10106) when trying to connect"],
+            [1, "mysqldump: Got error: 2004: Can't create TCP/IP socket (10106) when trying to connect"],
+        ]);
 
-        Artisan::shouldReceive('output')
-            ->twice()
-            ->andReturn(
-                "mysqldump: Got error: 2004: Can't create TCP/IP socket (10106) when trying to connect",
-                "mysqldump: Got error: 2004: Can't create TCP/IP socket (10106) when trying to connect"
-            );
-
-        $result = app(\App\Services\Backups\BackupService::class)->runBackup('manual');
+        $result = $service->runBackup('manual');
 
         $this->assertFalse($result['ok']);
         $this->assertStringContainsString('MySQL', $result['message']);
@@ -41,19 +35,12 @@ class BackupRunErrorMessageTest extends TestCase
     {
         BackupSetting::current();
 
-        Artisan::shouldReceive('call')
-            ->twice()
-            ->with('backup:run', ['--disable-notifications' => true])
-            ->andReturn(1, 0);
+        $service = $this->mockBackupServiceWithResponses([
+            [1, "mysqldump: Got error: 2004: Can't create TCP/IP socket (10106) when trying to connect"],
+            [0, 'Backup completed!'],
+        ]);
 
-        Artisan::shouldReceive('output')
-            ->twice()
-            ->andReturn(
-                "mysqldump: Got error: 2004: Can't create TCP/IP socket (10106) when trying to connect",
-                'Backup completed!'
-            );
-
-        $result = app(\App\Services\Backups\BackupService::class)->runBackup('manual');
+        $result = $service->runBackup('manual');
 
         $this->assertTrue($result['ok']);
         $this->assertSame('Backup subido correctamente a Google Drive.', $result['message']);
@@ -64,12 +51,13 @@ class BackupRunErrorMessageTest extends TestCase
     {
         BackupSetting::current();
 
-        Artisan::shouldReceive('call')
+        $service = Mockery::mock(BackupService::class, [app(\Illuminate\Filesystem\Filesystem::class)])->makePartial()->shouldAllowMockingProtectedMethods();
+        $service->shouldReceive('prepareWritableTempDirectory')->zeroOrMoreTimes()->andReturn(storage_path('app/backup-temp/system-tmp'));
+        $service->shouldReceive('executeBackupProcess')
             ->once()
-            ->with('backup:run', ['--disable-notifications' => true])
             ->andThrow(new RuntimeException('Allowed memory size of 134217728 bytes exhausted'));
 
-        $result = app(\App\Services\Backups\BackupService::class)->runBackup('manual');
+        $result = $service->runBackup('manual');
 
         $this->assertFalse($result['ok']);
         $this->assertStringContainsString('memoria', mb_strtolower($result['message']));
@@ -84,9 +72,21 @@ class BackupRunErrorMessageTest extends TestCase
             'last_message' => 'La generación del backup se inició en segundo plano.',
         ]);
 
-        $result = app(\App\Services\Backups\BackupService::class)->startManualBackup('manual');
+        $result = app(BackupService::class)->startManualBackup('manual');
 
         $this->assertFalse($result['ok']);
         $this->assertStringContainsString('Ya hay un backup en proceso', $result['message']);
+    }
+
+    /**
+     * @param array<int, array{0:int,1:string}> $responses
+     */
+    private function mockBackupServiceWithResponses(array $responses): BackupService
+    {
+        $service = Mockery::mock(BackupService::class, [app(\Illuminate\Filesystem\Filesystem::class)])->makePartial()->shouldAllowMockingProtectedMethods();
+        $service->shouldReceive('prepareWritableTempDirectory')->zeroOrMoreTimes()->andReturn(storage_path('app/backup-temp/system-tmp'));
+        $service->shouldReceive('executeBackupProcess')->times(count($responses))->andReturn(...$responses);
+
+        return $service;
     }
 }

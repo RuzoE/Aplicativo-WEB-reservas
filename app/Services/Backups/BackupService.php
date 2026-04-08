@@ -3,18 +3,23 @@
 namespace App\Services\Backups;
 
 use App\Models\BackupSetting;
-use Illuminate\Filesystem\FilesystemAdapter;
+use Illuminate\Contracts\Filesystem\Filesystem;
+use Illuminate\Filesystem\Filesystem as LocalFilesystem;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\StreamedResponse;
+use ZipArchive;
 
 class BackupService
 {
     private ?string $lastInspectionError = null;
+
+    public function __construct(private readonly LocalFilesystem $files)
+    {
+    }
 
     /**
      * @return array<string, mixed>
@@ -125,6 +130,11 @@ class BackupService
         }
 
         $settings = $this->refreshStaleProcessingState($settings);
+        $this->cleanupBackupTemporaryArtifacts();
+        $tempDir = $this->prepareWritableTempDirectory();
+        $php = $this->findPhpCli();
+        $artisan = base_path('artisan');
+        $memoryLimit = $this->cliMemoryLimit();
 
         $settings->fill([
             'last_run_at' => now(),
@@ -139,23 +149,36 @@ class BackupService
             sprintf('Se inició un backup %s en segundo plano.', $source === 'manual' ? 'manual' : 'automatico')
         );
 
-        // --- BACKGROUND EXECUTION (Windows Detached) ---
-        $artisan = base_path('artisan');
-        
-        // Intentar obtener el ejecutable CLI de PHP (no el CGI de Apache)
-        $php = str_ireplace('-cgi.exe', '.exe', PHP_BINARY);
-        if (!str_ends_with(strtolower($php), 'php.exe')) {
-             $php = 'C:\php\php.exe'; // Fallback común en Laragon
-        }
-        
-        // Usar cmd /c con redirección total para asegurar desvinculación en Windows
-        // Añadida bandera --only-db para que sea rápido y solo base de datos
-        $cmd = sprintf('cmd /c "start /B "" "%s" "%s" backup:run --only-db --disable-notifications > NUL 2>&1"', $php, $artisan);
-        
+        Log::info('Inicio de backup manual en segundo plano.', [
+            'source' => $source,
+            'disk' => $this->diskName(),
+            'temp_dir' => $tempDir,
+            'memory_limit' => $memoryLimit,
+        ]);
+
+        $cmd = sprintf(
+            'cmd /c "set TEMP=%s&& set TMP=%s&& set TMPDIR=%s&& start /B "" %s -d memory_limit=%s %s backup:run --only-db --disable-notifications > NUL 2>&1"',
+            $this->escapeWindowsSetValue($tempDir),
+            $this->escapeWindowsSetValue($tempDir),
+            $this->escapeWindowsSetValue($tempDir),
+            $this->quoteWindowsPath($php),
+            $memoryLimit,
+            $this->quoteWindowsPath($artisan)
+        );
+
         try {
-            pclose(popen($cmd, "r"));
+            pclose(popen($cmd, 'r'));
         } catch (\Throwable $e) {
-            Log::error('Fallo al iniciar backup en segundo plano: ' . $e->getMessage());
+            Log::error('Fallo al iniciar backup en segundo plano.', [
+                'source' => $source,
+                'error' => $e->getMessage(),
+            ]);
+
+            return [
+                'ok' => false,
+                'message' => 'No se pudo iniciar el backup manual en segundo plano. Revisa `storage/logs/laravel.log` para más detalle.',
+                'output' => $e->getMessage(),
+            ];
         }
 
         return [
@@ -166,100 +189,57 @@ class BackupService
     }
 
     /**
-     * Versión sincrónica usando PHP CLI directo para evitar el error de socket
-     * de mysqldump cuando se ejecuta desde Apache/php-cgi.
+     * @return array{ok: bool, message: string, output?: string}
      */
     public function runBackupSync(): array
     {
-        $settings = BackupSetting::current();
-
-        try {
-            $settings->update([
-                'last_status' => 'En proceso',
-                'last_run_at' => now(),
-                'last_message' => 'Generando respaldo de base de datos...',
-            ]);
-
-            // Encontrar el PHP CLI (no php-cgi de Apache)
-            $phpBinary = $this->findPhpCli();
-            $artisan   = base_path('artisan');
-
-            // Ejecutar como proceso CLI real — idéntico a correr desde la terminal
-            $process = new \Symfony\Component\Process\Process(
-                [$phpBinary, $artisan, 'backup:run', '--only-db', '--disable-notifications'],
-                base_path(),
-                null,   // heredar variables de entorno del sistema
-                null,
-                300     // timeout 5 minutos
-            );
-
-            $process->run();
-
-            $output   = $process->getOutput() . $process->getErrorOutput();
-            $exitCode = $process->getExitCode();
-
-            Log::info("Backup CLI terminó (exit {$exitCode}): {$output}");
-
-            if ($process->isSuccessful()) {
-                $settings->update([
-                    'last_status'  => 'Correcto',
-                    'last_run_at'  => now(),
-                    'last_message' => 'Respaldo de base de datos generado con éxito y subido a Google Drive.',
-                ]);
-                return ['ok' => true, 'message' => '¡Respaldo completado exitosamente! La lista se actualizará ahora.'];
-            }
-
-            Log::error("Fallo en backup CLI (código {$exitCode}): {$output}");
-            $settings->update([
-                'last_status'  => 'Error',
-                'last_message' => mb_substr('Error al ejecutar backup: ' . $output, 0, 500),
-            ]);
-            return ['ok' => false, 'message' => 'Error al ejecutar el respaldo (Código ' . $exitCode . ').'];
-
-        } catch (\Throwable $e) {
-            Log::error('Excepción en backup CLI: ' . $e->getMessage());
-            $settings->update([
-                'last_status'  => 'Error',
-                'last_message' => mb_substr($e->getMessage(), 0, 500),
-            ]);
-            return ['ok' => false, 'message' => 'Error inesperado: ' . mb_substr($e->getMessage(), 0, 150)];
-        }
+        return $this->executeManagedBackup('manual', '¡Respaldo completado exitosamente! La lista se actualizará ahora.');
     }
 
     /** Detecta el ejecutable PHP CLI en Laragon (no el php-cgi de Apache). */
     private function findPhpCli(): string
     {
-        // 1. Si PHP_BINARY ya apunta al CLI real (no cgi), usarlo directamente
         $binary = PHP_BINARY;
-        if (!str_contains(strtolower($binary), '-cgi')) {
+        if (! str_contains(strtolower($binary), '-cgi')) {
             return $binary;
         }
 
-        // 2. Reemplazar php-cgi.exe → php.exe en la misma carpeta
         $candidate = str_ireplace(['-cgi.exe', '-cgi'], ['.exe', ''], $binary);
         if (file_exists($candidate)) {
             return $candidate;
         }
 
-        // 3. Buscar en carpetas versionadas de Laragon (más específico primero)
         $phpDirs = glob('C:\\laragon\\bin\\php\\php-*\\php.exe') ?: [];
-        if (!empty($phpDirs)) {
-            // Ordenar para tomar la versión más reciente
+        if (! empty($phpDirs)) {
             rsort($phpDirs);
+
             return $phpDirs[0];
         }
 
-        // 4. Rutas estándar de Laragon y sistema
-        foreach ([
-            'C:\\laragon\\bin\\php\\php.exe',
-            'C:\\php\\php.exe',
-        ] as $path) {
+        foreach (['C:\\laragon\\bin\\php\\php.exe', 'C:\\php\\php.exe'] as $path) {
             if (file_exists($path)) {
                 return $path;
             }
         }
 
-        return 'php'; // fallback: confiar en el PATH del sistema
+        return 'php';
+    }
+
+    /**
+     * @param array<int, string> $arguments
+     * @return array{0:int,1:string}
+     */
+    protected function executeBackupProcess(array $arguments, string $tempDir, int $timeout = 300): array
+    {
+        $phpBinary = $this->findPhpCli();
+        $artisan = base_path('artisan');
+        $memoryLimit = $this->cliMemoryLimit();
+        $commandParts = array_map(
+            fn (string $part): string => $this->quoteShellArgument($part),
+            array_merge([$phpBinary, '-d', 'memory_limit='.$memoryLimit, $artisan, 'backup:run'], $arguments)
+        );
+
+        return $this->executeShellCommand(implode(' ', $commandParts), $tempDir, $timeout, 'backup-cli');
     }
 
     /**
@@ -267,15 +247,42 @@ class BackupService
      */
     public function runBackup(string $source = 'manual'): array
     {
-        $settings = BackupSetting::current();
+        return $this->executeManagedBackup($source, 'Backup subido correctamente a Google Drive.');
+    }
 
+    /**
+     * @return array{ok: bool, message: string, output: string}
+     */
+    protected function executeManagedBackup(string $source, string $successMessage): array
+    {
+        $settings = BackupSetting::current();
+        $startedAt = microtime(true);
+        $operationSucceeded = false;
+
+        $this->cleanupBackupTemporaryArtifacts();
         $this->configureRuntimeForBackup();
+        $tempDir = $this->prepareWritableTempDirectory();
+
+        Log::info('Inicio de backup de base de datos.', [
+            'source' => $source,
+            'disk' => $this->diskName(),
+            'temp_dir' => $tempDir,
+            'memory_limit' => $this->cliMemoryLimit(),
+            'queue_ready' => true,
+        ]);
 
         try {
-            [$exitCode, $output] = $this->runBackupCommandWithRetry($source);
-            $isSuccessful = $exitCode === 0;
+            $settings->fill([
+                'last_status' => 'En proceso',
+                'last_run_at' => now(),
+                'last_message' => $this->limitStatusMessage('Generando respaldo de base de datos...'),
+            ])->save();
 
-            if (! $isSuccessful) {
+            [$exitCode, $output] = $this->runBackupCommandWithRetry($source, $tempDir);
+            $operationSucceeded = $exitCode === 0;
+            $message = $operationSucceeded ? $successMessage : $this->messageFromBackupResult(false, $output);
+
+            if (! $operationSucceeded) {
                 Log::error('El comando backup:run terminó con error.', [
                     'source' => $source,
                     'disk' => $this->diskName(),
@@ -284,23 +291,21 @@ class BackupService
                 ]);
             }
 
-            $message = $this->messageFromBackupResult($isSuccessful, $output);
-
             $settings->fill([
                 'last_run_at' => now(),
-                'last_status' => $isSuccessful ? 'Correcto' : 'Error',
+                'last_status' => $operationSucceeded ? 'Correcto' : 'Error',
                 'last_message' => $this->limitStatusMessage($message),
             ])->save();
 
             registrarAuditoria(
-                $isSuccessful ? 'CREATE' : 'UPDATE',
+                $operationSucceeded ? 'CREATE' : 'UPDATE',
                 'backups',
                 null,
-                sprintf('Se ejecutó un backup %s con estado %s.', $source === 'manual' ? 'manual' : 'automatico', $isSuccessful ? 'correcto' : 'error')
+                sprintf('Se ejecutó un backup %s con estado %s.', $source === 'manual' ? 'manual' : 'automatico', $operationSucceeded ? 'correcto' : 'error')
             );
 
             return [
-                'ok' => $isSuccessful,
+                'ok' => $operationSucceeded,
                 'message' => $message,
                 'output' => $output,
             ];
@@ -331,6 +336,15 @@ class BackupService
                 'message' => $message,
                 'output' => $exception->getMessage(),
             ];
+        } finally {
+            $this->cleanupBackupTemporaryArtifacts();
+
+            Log::info('Fin de backup de base de datos.', [
+                'source' => $source,
+                'disk' => $this->diskName(),
+                'success' => $operationSucceeded,
+                'duration_seconds' => $this->elapsedSeconds($startedAt),
+            ]);
         }
     }
 
@@ -426,11 +440,195 @@ class BackupService
 
         @set_time_limit(0);
 
-        $memoryLimit = (string) config('backup.runtime.memory_limit', '512M');
-
+        $memoryLimit = $this->cliMemoryLimit();
         if ($memoryLimit !== '') {
             @ini_set('memory_limit', $memoryLimit);
         }
+
+        $this->prepareWritableTempDirectory();
+    }
+
+    private function cliMemoryLimit(): string
+    {
+        return (string) config('backup.runtime.memory_limit', '1024M');
+    }
+
+    private function processTimeout(): int
+    {
+        return (int) config('backup.runtime.process_timeout', 600);
+    }
+
+    protected function prepareWritableTempDirectory(): string
+    {
+        $candidates = [
+            storage_path('app/backup-temp/system-tmp'),
+            storage_path('app/backup-temp'),
+            storage_path('framework/cache'),
+            storage_path('app'),
+            sys_get_temp_dir(),
+        ];
+
+        foreach ($candidates as $candidate) {
+            if (! is_string($candidate) || trim($candidate) === '') {
+                continue;
+            }
+
+            if (! is_dir($candidate)) {
+                @mkdir($candidate, 0755, true);
+            }
+
+            if (! is_dir($candidate) || ! is_writable($candidate)) {
+                continue;
+            }
+
+            foreach (['TMP', 'TEMP', 'TMPDIR'] as $variable) {
+                putenv($variable.'='.$candidate);
+                $_ENV[$variable] = $candidate;
+                $_SERVER[$variable] = $candidate;
+            }
+
+            @ini_set('sys_temp_dir', $candidate);
+
+            return $candidate;
+        }
+
+        return storage_path('app');
+    }
+
+    /**
+     * @return array{0:int,1:string}
+     */
+    protected function executeShellCommand(string $baseCommand, string $tempDir, int $timeout = 300, string $logPrefix = 'command'): array
+    {
+        $outputDir = storage_path('app/backup-temp/process-output');
+
+        if (! is_dir($outputDir)) {
+            @mkdir($outputDir, 0755, true);
+        }
+
+        $outputFile = $outputDir.DIRECTORY_SEPARATOR.$logPrefix.'-'.now()->format('Ymd-His-u').'.log';
+
+        if (DIRECTORY_SEPARATOR === '\\') {
+            $shellCommand = sprintf(
+                'cmd /V:ON /C "set TEMP=%s&& set TMP=%s&& set TMPDIR=%s&& %s > %s 2>&1"',
+                $this->escapeWindowsSetValue($tempDir),
+                $this->escapeWindowsSetValue($tempDir),
+                $this->escapeWindowsSetValue($tempDir),
+                $baseCommand,
+                $this->quoteWindowsPath($outputFile)
+            );
+        } else {
+            $shellCommand = sprintf(
+                'export TEMP=%s TMP=%s TMPDIR=%s; %s > %s 2>&1',
+                $this->quoteShellArgument($tempDir),
+                $this->quoteShellArgument($tempDir),
+                $this->quoteShellArgument($tempDir),
+                $baseCommand,
+                $this->quoteShellArgument($outputFile)
+            );
+        }
+
+        $output = [];
+        $exitCode = 1;
+
+        @set_time_limit(max($timeout + 30, 330));
+        exec($shellCommand, $output, $exitCode);
+
+        $capturedOutput = is_file($outputFile)
+            ? trim((string) file_get_contents($outputFile))
+            : trim(implode(PHP_EOL, $output));
+
+        if (is_file($outputFile)) {
+            @unlink($outputFile);
+        }
+
+        return [$exitCode, $capturedOutput];
+    }
+
+    protected function cleanupBackupTemporaryArtifacts(): void
+    {
+        $paths = array_merge(
+            [
+                storage_path('app/backup-temp/temp'),
+                storage_path('app/backup-temp/process-output'),
+                storage_path('app/temp_restore'),
+            ],
+            glob(storage_path('app/backup-temp/restore-*')) ?: [],
+            glob(storage_path('app/temp_restore_*')) ?: [],
+            glob(storage_path('app/temp_restore_dir_*')) ?: []
+        );
+
+        foreach (array_unique($paths) as $path) {
+            $this->removeTemporaryPath($path);
+        }
+
+        $systemTempDir = storage_path('app/backup-temp/system-tmp');
+        $this->cleanupDirectoryContents($systemTempDir);
+
+        $backupRoot = storage_path('app/backup-temp');
+        if (is_dir($backupRoot)) {
+            $remainingItems = array_values(array_diff(scandir($backupRoot) ?: [], ['.', '..']));
+
+            if ($remainingItems === ['system-tmp']) {
+                $this->cleanupDirectoryContents($systemTempDir);
+                $remainingItems = array_values(array_diff(scandir($backupRoot) ?: [], ['.', '..']));
+            }
+
+            if ($remainingItems === []) {
+                @rmdir($backupRoot);
+            }
+        }
+    }
+
+    private function cleanupDirectoryContents(string $directory): void
+    {
+        if (! is_dir($directory)) {
+            return;
+        }
+
+        $items = array_diff(scandir($directory) ?: [], ['.', '..']);
+        foreach ($items as $item) {
+            $this->removeTemporaryPath($directory.DIRECTORY_SEPARATOR.$item);
+        }
+    }
+
+    private function removeTemporaryPath(string $path): void
+    {
+        if ($path === '' || ! file_exists($path)) {
+            return;
+        }
+
+        try {
+            if (is_dir($path)) {
+                $this->files->deleteDirectory($path);
+            } else {
+                @unlink($path);
+            }
+        } catch (\Throwable $exception) {
+            Log::warning('No se pudo limpiar un recurso temporal de backup.', [
+                'path' => $path,
+                'error' => $exception->getMessage(),
+            ]);
+        }
+    }
+
+    private function quoteShellArgument(string $value): string
+    {
+        return escapeshellarg($value);
+    }
+
+    private function quoteWindowsPath(string $value): string
+    {
+        return '"'.str_replace('"', '""', $value).'"';
+    }
+
+    private function escapeWindowsSetValue(string $value): string
+    {
+        return str_replace(
+            ['^', '&', '|', '<', '>'],
+            ['^^', '^&', '^|', '^<', '^>'],
+            $value
+        );
     }
 
     private function refreshStaleProcessingState(BackupSetting $settings): BackupSetting
@@ -488,34 +686,40 @@ class BackupService
             return true;
         }
 
-        return $settings->last_run_at->greaterThan(now()->subMinutes(5)); // Timeout de 5 min para evitar que el botón se quede bloqueado
+        return $settings->last_run_at->greaterThan(now()->subMinutes(5));
     }
 
     /**
      * @return array{0:int,1:string}
      */
-    private function runBackupCommandWithRetry(string $source): array
+    protected function runBackupCommandWithRetry(string $source, ?string $tempDir = null): array
     {
         $attempt = 0;
+        $tempDir ??= $this->prepareWritableTempDirectory();
+        $timeout = $this->processTimeout();
 
         do {
             $attempt++;
-
-            $exitCode = Artisan::call('backup:run', [
-                '--disable-notifications' => true,
-            ]);
-
-            $output = trim(Artisan::output());
+            [$exitCode, $output] = $this->executeBackupProcess([
+                '--only-db',
+                '--disable-notifications',
+            ], $tempDir, $timeout);
 
             if ($exitCode === 0) {
                 return [$exitCode, $output];
             }
 
-            if ($attempt < 2 && $this->shouldRetryAfterSocketFailure($output)) {
-                Log::warning('El backup falló por un problema transitorio de socket con MySQL; se reintentará automáticamente.', [
+            $retryDueToSocket = $this->shouldRetryAfterSocketFailure($output);
+            $retryDueToTempCollision = $this->shouldRetryAfterTemporaryPathFailure($output);
+
+            if ($attempt < 2 && ($retryDueToSocket || $retryDueToTempCollision)) {
+                $this->cleanupBackupTemporaryArtifacts();
+
+                Log::warning('El backup falló por una condición transitoria y se reintentará automáticamente.', [
                     'source' => $source,
                     'attempt' => $attempt,
                     'disk' => $this->diskName(),
+                    'reason' => $retryDueToSocket ? 'mysql-socket' : 'temp-collision',
                     'output' => $output,
                 ]);
 
@@ -536,6 +740,15 @@ class BackupService
         ]);
     }
 
+    private function shouldRetryAfterTemporaryPathFailure(string $output): bool
+    {
+        return Str::contains($output, [
+            'already exists',
+            'A temporary file could not be opened to write the process output',
+            'Path `',
+        ]);
+    }
+
     private function frequencyLabel(string $frequency): string
     {
         return match ($frequency) {
@@ -549,6 +762,14 @@ class BackupService
     {
         if ($isSuccessful) {
             return 'Backup subido correctamente a Google Drive.';
+        }
+
+        if (Str::contains($output, ['fwrite(): Argument #1 ($stream) must be of type resource, bool given', 'getTempFileHandle', 'A temporary file could not be opened to write the process output'])) {
+            return 'No se pudo generar el backup porque PHP no tenía un directorio temporal válido para crear archivos de trabajo. El sistema ya limpia y fuerza un TEMP/TMP seguro dentro de `storage/app/backup-temp`; vuelve a intentarlo.';
+        }
+
+        if (Str::contains($output, ['Path `', 'already exists'])) {
+            return 'No se pudo generar el backup porque quedó una carpeta temporal anterior bloqueando el proceso. El sistema la limpia automáticamente antes de reintentar.';
         }
 
         if (Str::contains($output, ['mysqldump: Got error: 2004', 'TCP/IP socket (10106)'])) {
@@ -570,6 +791,14 @@ class BackupService
     {
         $rawMessage = $exception->getMessage();
 
+        if (Str::contains($rawMessage, ['fwrite(): Argument #1 ($stream) must be of type resource, bool given', 'getTempFileHandle', 'A temporary file could not be opened to write the process output'])) {
+            return $prefix.': PHP no tenía un directorio temporal válido para crear los archivos auxiliares del backup o restore. El sistema ahora usa un TEMP/TMP interno dentro de `storage/app/backup-temp` para evitar este bloqueo.';
+        }
+
+        if (Str::contains($rawMessage, ['Path `', 'already exists'])) {
+            return $prefix.': quedó un directorio temporal viejo bloqueando el proceso. El sistema ya limpia estos residuos antes y después de cada operación.';
+        }
+
         if (Str::contains($rawMessage, ['invalid_grant', 'Token has been expired or revoked'])) {
             return $prefix.': la conexión con Google Drive falló porque el refresh token expiró o fue revocado. Actualiza `GOOGLE_DRIVE_REFRESH_TOKEN`, `GOOGLE_DRIVE_CLIENT_ID` y `GOOGLE_DRIVE_CLIENT_SECRET` en el entorno.';
         }
@@ -581,138 +810,530 @@ class BackupService
         return $prefix.': '.$rawMessage;
     }
 
+    private function elapsedSeconds(float $startedAt): float
+    {
+        return round(max(microtime(true) - $startedAt, 0), 2);
+    }
+
     /**
-     * Extrae un backup ZIP protegido por contraseña y restaura la BD.
+     * Restaura un backup ZIP protegido por contraseña y revierte automáticamente
+     * al estado anterior si la importación principal falla.
      */
     public function restoreBackup(string $encodedPath): array
     {
         $path = $this->decodePath($encodedPath);
-        $disk = $this->disk();
 
-        if ($path === '' || !$disk->exists($path)) {
-            return ['ok' => false, 'message' => 'El backup solicitado no existe en Google Drive.'];
+        if ($path === '') {
+            return ['ok' => false, 'message' => 'La ruta del backup proporcionada no es válida.'];
         }
 
-        // Crear primero un backup de seguridad automático (before-restore) obligatorio
-        // Usar el mismo método CLI que el backup manual para evitar el error de socket de Apache
-        $safetyResult = $this->runBackupSync();
-        
-        if (!$safetyResult['ok']) {
+        return $this->restoreBackupFromPath($path, true, false);
+    }
+
+    /**
+     * @return array{ok: bool, message: string}
+     */
+    protected function restoreBackupFromPath(string $path, bool $createSafetyBackup = true, bool $isRollback = false): array
+    {
+        $startedAt = microtime(true);
+        $disk = $this->disk();
+        $tempZipPath = '';
+        $extractPath = '';
+        $safetyBackupPath = null;
+        $rollbackAllowed = $createSafetyBackup && ! $isRollback;
+        $importStarted = false;
+
+        Log::info('Inicio de restauración de backup.', [
+            'path' => $path,
+            'disk' => $this->diskName(),
+            'mode' => $isRollback ? 'rollback' : 'restore',
+            'queue_ready' => true,
+        ]);
+
+        try {
+            $sourceValidation = $this->validateRestoreSource($disk, $path);
+            if (! $sourceValidation['ok']) {
+                return $sourceValidation;
+            }
+
+            $this->cleanupBackupTemporaryArtifacts();
+            $this->configureRuntimeForBackup();
+
+            if ($createSafetyBackup) {
+                $safetyResult = $this->createSafetyBackupSnapshot();
+                if (! ($safetyResult['ok'] ?? false)) {
+                    return [
+                        'ok' => false,
+                        'message' => 'No se pudo realizar el backup de seguridad previo. Abortando restauración por seguridad. Error: '.($safetyResult['message'] ?? 'Sin detalle.'),
+                    ];
+                }
+
+                $safetyBackupPath = $safetyResult['backup_path'] ?? null;
+            }
+
+            ['zip' => $tempZipPath, 'extract' => $extractPath] = $this->createRestoreWorkspace();
+
+            $downloadResult = $this->downloadBackupToTempPath($disk, $path, $tempZipPath);
+            if (! $downloadResult['ok']) {
+                return $downloadResult;
+            }
+
+            $sqlFile = $this->extractSqlDumpFromArchive($tempZipPath, $extractPath);
+            $importStarted = true;
+
+            $importResult = $this->importSqlDump($sqlFile);
+            if (! ($importResult['ok'] ?? false)) {
+                if ($rollbackAllowed && $safetyBackupPath) {
+                    $rollbackResult = $this->attemptRollbackRestore($safetyBackupPath);
+
+                    return $this->formatRestoreFailureWithRollback(
+                        (string) ($importResult['message'] ?? 'La restauración principal falló.'),
+                        $rollbackResult
+                    );
+                }
+
+                return [
+                    'ok' => false,
+                    'message' => (string) ($importResult['message'] ?? 'No se pudo completar la restauración.'),
+                ];
+            }
+
+            registrarAuditoria('UPDATE', 'backups', null, ($isRollback ? 'Se ejecutó rollback automático usando el backup: ' : 'Se restauró el backup: ').basename($path));
+
+            Log::info('Restauración de backup completada correctamente.', [
+                'path' => $path,
+                'mode' => $isRollback ? 'rollback' : 'restore',
+                'duration_seconds' => $this->elapsedSeconds($startedAt),
+            ]);
+
             return [
-                'ok' => false, 
-                'message' => 'No se pudo realizar el backup de seguridad previo. Abortando restauración por seguridad. Error: ' . $safetyResult['message']
+                'ok' => true,
+                'message' => $isRollback
+                    ? 'Rollback completado correctamente. Se restauró el estado anterior de la base de datos.'
+                    : 'Restauración completada. Base de datos actualizada con éxito.',
+            ];
+        } catch (\Throwable $exception) {
+            Log::error('Error crítico al restaurar backup.', [
+                'path' => $path,
+                'mode' => $isRollback ? 'rollback' : 'restore',
+                'error' => $exception->getMessage(),
+            ]);
+
+            $message = $this->formatFailureMessage(
+                $exception,
+                $isRollback ? 'No se pudo completar el rollback automático' : 'Ocurrió un error en el servidor durante la restauración'
+            );
+
+            if ($rollbackAllowed && $importStarted && $safetyBackupPath) {
+                $rollbackResult = $this->attemptRollbackRestore($safetyBackupPath);
+
+                return $this->formatRestoreFailureWithRollback($message, $rollbackResult);
+            }
+
+            return ['ok' => false, 'message' => $message];
+        } finally {
+            $this->cleanupRestoreFiles($tempZipPath, $extractPath);
+            $this->cleanupBackupTemporaryArtifacts();
+
+            Log::info('Fin del proceso de restauración.', [
+                'path' => $path,
+                'mode' => $isRollback ? 'rollback' : 'restore',
+                'duration_seconds' => $this->elapsedSeconds($startedAt),
+            ]);
+        }
+    }
+
+    /**
+     * @return array{ok: bool, message: string, backup_path?: string}
+     */
+    protected function createSafetyBackupSnapshot(): array
+    {
+        $existingPaths = $this->listBackups()->pluck('path')->all();
+        $result = $this->runBackupSync();
+
+        if (! ($result['ok'] ?? false)) {
+            return [
+                'ok' => false,
+                'message' => (string) ($result['message'] ?? 'No se pudo generar el backup de seguridad previo.'),
             ];
         }
 
-        $tempZipPath = storage_path('app/temp_restore_' . time() . '.zip');
-        $extractPath = storage_path('app/temp_restore_dir_' . time());
+        $backup = $this->listBackups()->first(function (array $backup) use ($existingPaths) {
+            return ! in_array($backup['path'], $existingPaths, true);
+        }) ?? $this->listBackups()->first();
+
+        if (! $backup || empty($backup['path'])) {
+            return [
+                'ok' => false,
+                'message' => 'El backup de seguridad previo se generó, pero no fue posible localizar el archivo resultante para un eventual rollback.',
+            ];
+        }
+
+        return [
+            'ok' => true,
+            'message' => (string) ($result['message'] ?? 'Backup de seguridad previo generado correctamente.'),
+            'backup_path' => $backup['path'],
+        ];
+    }
+
+    /**
+     * @return array{ok: bool, message: string}
+     */
+    protected function attemptRollbackRestore(string $safetyBackupPath): array
+    {
+        Log::warning('Iniciando rollback automático posterior a una restauración fallida.', [
+            'safety_backup_path' => $safetyBackupPath,
+            'disk' => $this->diskName(),
+        ]);
+
+        $result = $this->restoreBackupFromPath($safetyBackupPath, false, true);
+
+        Log::warning('Resultado del rollback automático.', [
+            'safety_backup_path' => $safetyBackupPath,
+            'success' => $result['ok'] ?? false,
+            'message' => $result['message'] ?? null,
+        ]);
+
+        return $result;
+    }
+
+    /**
+     * @return array{ok: bool, message?: string, size_bytes?: int|null}
+     */
+    protected function validateRestoreSource(Filesystem $disk, string $path): array
+    {
+        if (! $disk->exists($path)) {
+            return ['ok' => false, 'message' => 'El backup solicitado no existe en Google Drive.'];
+        }
 
         try {
-            // 1. Descargar Zip de GDrive
-            file_put_contents($tempZipPath, $disk->get($path));
-
-            if (!is_dir($extractPath)) {
-                mkdir($extractPath, 0755, true);
+            $size = null;
+            try {
+                $size = (int) $disk->size($path);
+            } catch (\Throwable) {
+                $size = null;
             }
 
-            // 2. Extraer usando ZipArchive nativo (con soporte de contraseña)
-            $zip = new \ZipArchive();
-            if ($zip->open($tempZipPath) === true) {
-                // Leer la contraseña del entorno (ej. Oasis0102)
-                $password = env('BACKUP_ARCHIVE_PASSWORD') ?: config('backup.backup.password');
-                
-                if ($password) {
-                    $zip->setPassword($password);
-                }
-
-                // Extrayendo archivo por archivo (ZipArchive extractTo a veces falla con contraseñas en PHP puro si no se itera)
-                for ($i = 0; $i < $zip->numFiles; $i++) {
-                    $entry = $zip->getNameIndex($i);
-                    // Solo nos interesa extraer el archivo SQL (normalmente db-dumps/mysql-laravel.sql)
-                    if (str_ends_with(strtolower($entry), '.sql')) {
-                        $content = $zip->getFromIndex($i);
-                        if ($content !== false) {
-                            $sqlDestPath = $extractPath . '/' . basename($entry);
-                            file_put_contents($sqlDestPath, $content);
-                        }
-                    }
-                }
-                $zip->close();
-            } else {
-                return ['ok' => false, 'message' => 'No se pudo abrir o leer el archivo ZIP del backup.'];
+            if ($size !== null && $size <= 0) {
+                return ['ok' => false, 'message' => 'El archivo ZIP del backup está vacío o incompleto.'];
             }
 
-            // 3. Buscar el archivo SQL extraído
-            $sqlFile = null;
-            $files = scandir($extractPath);
-            foreach ($files as $file) {
-                if (str_ends_with(strtolower($file), '.sql')) {
-                    $sqlFile = $extractPath . '/' . $file;
-                    break;
-                }
+            $stream = method_exists($disk, 'readStream') ? $disk->readStream($path) : false;
+            if ($stream !== false && is_resource($stream)) {
+                fclose($stream);
             }
 
-            if (!$sqlFile) {
-                $this->cleanupRestoreFiles($tempZipPath, $extractPath);
-                return ['ok' => false, 'message' => 'Contraseña incorrecta o no se encontró un script .sql en el backup.'];
-            }
-
-            // 4. Importar base de datos
-            $dbName = config('database.connections.mysql.database');
-            $dbUser = config('database.connections.mysql.username');
-            $dbPass = config('database.connections.mysql.password');
-            $dbHost = config('database.connections.mysql.host', '127.0.0.1');
-            $dbPort = config('database.connections.mysql.port', '3306');
-
-            // Usar ejecutable mysql asumiendo misma ruta que mysqldump
-            $mysqlPath = env('MYSQL_CLIENT_PATH', '');
-            if ($mysqlPath === '') {
-                $dumpPath = (string) env('MYSQLDUMP_PATH', '');
-                $mysqlPath = $dumpPath ? str_replace('mysqldump.exe', 'mysql.exe', $dumpPath) : 'mysql';
-            }
-
-            $command = sprintf(
-                '"%s" -h "%s" -P %s -u "%s" %s "%s" < "%s"',
-                $mysqlPath,
-                $dbHost,
-                $dbPort,
-                $dbUser,
-                $dbPass ? '-p"' . $dbPass . '"' : '',
-                $dbName,
-                $sqlFile
-            );
-
-            exec($command . ' 2>&1', $output, $exitCode);
-
-            // Cleanup
-            $this->cleanupRestoreFiles($tempZipPath, $extractPath);
-
-            if ($exitCode !== 0) {
-                Log::error('Restauración de DB fallida:', ['command' => $command, 'output' => implode("\n", $output)]);
-                return ['ok' => false, 'message' => 'No se pudo importar la base de datos (Error ' . $exitCode . ').'];
-            }
-
-            registrarAuditoria('UPDATE', 'backups', null, 'Se restauró el backup: ' . basename($path));
-            return ['ok' => true, 'message' => 'Restauración completada. Base de datos actualizada con éxito.'];
-
-        } catch (\Throwable $e) {
-            $this->cleanupRestoreFiles($tempZipPath ?? '', $extractPath ?? '');
-            Log::error('Error crítico al restaurar backup: ' . $e->getMessage());
-            return ['ok' => false, 'message' => 'Ocurrió un error en el servidor durante la restauración.'];
+            return ['ok' => true, 'size_bytes' => $size];
+        } catch (\Throwable $exception) {
+            return [
+                'ok' => false,
+                'message' => $this->formatFailureMessage($exception, 'No se pudo leer el archivo ZIP del backup'),
+            ];
         }
+    }
+
+    /**
+     * @return array{zip: string, extract: string}
+     */
+    protected function createRestoreWorkspace(): array
+    {
+        $workspace = storage_path('app/backup-temp/restore-'.now()->format('Ymd-His-').Str::lower(Str::random(6)));
+        $extractPath = $workspace.DIRECTORY_SEPARATOR.'extracted';
+        $tempZipPath = $workspace.DIRECTORY_SEPARATOR.'archive.zip';
+
+        if (is_dir($workspace)) {
+            $this->files->deleteDirectory($workspace);
+        }
+
+        $this->files->ensureDirectoryExists($extractPath);
+
+        return [
+            'zip' => $tempZipPath,
+            'extract' => $extractPath,
+        ];
+    }
+
+    /**
+     * @return array{ok: bool, message?: string}
+     */
+    protected function downloadBackupToTempPath(Filesystem $disk, string $path, string $tempZipPath): array
+    {
+        try {
+            $this->files->ensureDirectoryExists(dirname($tempZipPath));
+
+            $inputStream = method_exists($disk, 'readStream') ? $disk->readStream($path) : false;
+            if ($inputStream !== false && is_resource($inputStream)) {
+                $outputStream = fopen($tempZipPath, 'wb');
+                if ($outputStream === false) {
+                    fclose($inputStream);
+
+                    return ['ok' => false, 'message' => 'No se pudo crear el archivo temporal local para la restauración.'];
+                }
+
+                stream_copy_to_stream($inputStream, $outputStream);
+                fclose($inputStream);
+                fclose($outputStream);
+            } else {
+                $contents = $disk->get($path);
+                file_put_contents($tempZipPath, $contents);
+            }
+
+            if (! file_exists($tempZipPath) || filesize($tempZipPath) <= 0) {
+                return ['ok' => false, 'message' => 'El ZIP del backup no pudo descargarse correctamente o llegó vacío.'];
+            }
+
+            return ['ok' => true];
+        } catch (\Throwable $exception) {
+            return [
+                'ok' => false,
+                'message' => $this->formatFailureMessage($exception, 'No se pudo descargar el ZIP del backup'),
+            ];
+        }
+    }
+
+    protected function extractSqlDumpFromArchive(string $tempZipPath, string $extractPath): string
+    {
+        $zip = new ZipArchive();
+        $status = $zip->open($tempZipPath);
+
+        if ($status !== true) {
+            throw new \RuntimeException($this->zipOpenErrorMessage($status));
+        }
+
+        try {
+            if ($zip->numFiles < 1) {
+                throw new \RuntimeException('El archivo ZIP del backup no contiene archivos utilizables.');
+            }
+
+            $password = (string) (env('BACKUP_ARCHIVE_PASSWORD') ?: config('backup.backup.password', ''));
+            if ($password !== '') {
+                $zip->setPassword($password);
+            }
+
+            for ($index = 0; $index < $zip->numFiles; $index++) {
+                $entryName = $zip->getNameIndex($index);
+                if (! is_string($entryName) || ! str_ends_with(strtolower($entryName), '.sql')) {
+                    continue;
+                }
+
+                $entryStats = $zip->statIndex($index) ?: [];
+                $entrySize = (int) ($entryStats['size'] ?? 0);
+                if ($entrySize <= 0) {
+                    throw new \RuntimeException('El archivo .sql contenido en el backup está vacío y no se puede restaurar.');
+                }
+
+                $content = $zip->getFromIndex($index);
+                if ($content === false) {
+                    $zipRequiresPassword = $this->zipEntryAppearsEncrypted($zip, $index);
+
+                    if ($zipRequiresPassword && $password === '') {
+                        throw new \RuntimeException('El backup requiere contraseña y `BACKUP_ARCHIVE_PASSWORD` no está configurado en el entorno.');
+                    }
+
+                    if ($zipRequiresPassword) {
+                        throw new \RuntimeException('La contraseña configurada para `BACKUP_ARCHIVE_PASSWORD` es incorrecta o el ZIP no pudo descifrarse.');
+                    }
+
+                    throw new \RuntimeException('No se pudo leer el archivo .sql dentro del ZIP. El backup podría estar corrupto.');
+                }
+
+                $sqlFile = $extractPath.DIRECTORY_SEPARATOR.basename($entryName);
+                file_put_contents($sqlFile, $content);
+
+                if (! file_exists($sqlFile) || filesize($sqlFile) <= 0) {
+                    throw new \RuntimeException('El archivo .sql extraído del backup está vacío y la restauración fue cancelada.');
+                }
+
+                return $sqlFile;
+            }
+        } finally {
+            $zip->close();
+        }
+
+        throw new \RuntimeException('El backup no contiene ningún archivo .sql válido para restaurar la base de datos.');
+    }
+
+    private function zipOpenErrorMessage(int|bool $status): string
+    {
+        return match ($status) {
+            ZipArchive::ER_NOZIP => 'El archivo ZIP del backup está corrupto o no tiene un formato válido.',
+            ZipArchive::ER_INCONS => 'El archivo ZIP del backup está inconsistente o dañado.',
+            ZipArchive::ER_CRC => 'El archivo ZIP del backup está corrupto (CRC inválido).',
+            ZipArchive::ER_MEMORY => 'No hay memoria suficiente para abrir el ZIP del backup.',
+            default => 'No se pudo abrir o leer el archivo ZIP del backup.',
+        };
+    }
+
+    private function zipEntryAppearsEncrypted(ZipArchive $zip, int $index): bool
+    {
+        $stats = $zip->statIndex($index) ?: [];
+        $method = $stats['encryption_method'] ?? ZipArchive::EM_NONE;
+
+        return (int) $method !== ZipArchive::EM_NONE;
+    }
+
+    /**
+     * @return array{ok: bool, message: string, output?: string}
+     */
+    protected function importSqlDump(string $sqlFile): array
+    {
+        if (! file_exists($sqlFile)) {
+            return ['ok' => false, 'message' => 'No se encontró el archivo .sql extraído del backup para iniciar la restauración.'];
+        }
+
+        if (filesize($sqlFile) <= 0) {
+            return ['ok' => false, 'message' => 'El archivo .sql del backup está vacío y la restauración fue cancelada.'];
+        }
+
+        $dbName = trim((string) config('database.connections.mysql.database', ''));
+        $dbUser = (string) config('database.connections.mysql.username', '');
+        $dbPass = (string) config('database.connections.mysql.password', '');
+        $dbHost = (string) config('database.connections.mysql.host', '127.0.0.1');
+        $dbPort = (int) config('database.connections.mysql.port', 3306);
+        $mysqlPath = $this->resolveMysqlClientPath();
+        $tempDir = $this->prepareWritableTempDirectory();
+
+        if ($dbName === '') {
+            return ['ok' => false, 'message' => 'No hay una base de datos MySQL configurada en la conexión `mysql`.'];
+        }
+
+        if (DIRECTORY_SEPARATOR === '\\' && $mysqlPath !== 'mysql' && ! file_exists($mysqlPath)) {
+            return ['ok' => false, 'message' => 'No se encontró el ejecutable `mysql.exe` configurado en `MYSQL_CLIENT_PATH`.'];
+        }
+
+        if (DIRECTORY_SEPARATOR === '\\') {
+            $passwordParam = trim($dbPass) !== ''
+                ? ' --password='.$this->quoteWindowsPath($dbPass)
+                : '';
+
+            $baseCommand = sprintf(
+                '%s --protocol=tcp --host=%s --port=%d --user=%s%s %s < %s',
+                $this->quoteWindowsPath($mysqlPath),
+                $this->quoteWindowsPath($dbHost),
+                $dbPort,
+                $this->quoteWindowsPath($dbUser),
+                $passwordParam,
+                $this->quoteWindowsPath($dbName),
+                $this->quoteWindowsPath($sqlFile)
+            );
+        } else {
+            $passwordParam = trim($dbPass) !== ''
+                ? ' --password='.$this->quoteShellArgument($dbPass)
+                : '';
+
+            $baseCommand = sprintf(
+                '%s --protocol=tcp --host=%s --port=%d --user=%s%s %s < %s',
+                $this->quoteShellArgument($mysqlPath),
+                $this->quoteShellArgument($dbHost),
+                $dbPort,
+                $this->quoteShellArgument($dbUser),
+                $passwordParam,
+                $this->quoteShellArgument($dbName),
+                $this->quoteShellArgument($sqlFile)
+            );
+        }
+
+        [$exitCode, $output] = $this->executeShellCommand($baseCommand, $tempDir, $this->processTimeout(), 'mysql-import');
+
+        if ($exitCode !== 0) {
+            Log::error('Restauración de DB fallida.', [
+                'command' => $baseCommand,
+                'output' => $output,
+                'exit_code' => $exitCode,
+                'mysql_path' => $mysqlPath,
+                'db_name' => $dbName,
+                'db_user' => $dbUser,
+                'db_host' => $dbHost,
+                'db_port' => $dbPort,
+            ]);
+
+            return [
+                'ok' => false,
+                'message' => $this->messageFromRestoreCommandFailure($exitCode, $output),
+                'output' => $output,
+            ];
+        }
+
+        return [
+            'ok' => true,
+            'message' => 'Base de datos importada correctamente.',
+            'output' => $output,
+        ];
+    }
+
+    private function resolveMysqlClientPath(): string
+    {
+        $mysqlPath = (string) env('MYSQL_CLIENT_PATH', '');
+        if ($mysqlPath !== '') {
+            return $mysqlPath;
+        }
+
+        $dumpPath = (string) env('MYSQLDUMP_PATH', '');
+        if ($dumpPath !== '') {
+            return str_ireplace(['mysqldump.exe', 'mysqldump'], ['mysql.exe', 'mysql'], $dumpPath);
+        }
+
+        return 'mysql';
+    }
+
+    private function messageFromRestoreCommandFailure(int $exitCode, string $output): string
+    {
+        if (Str::contains($output, ['ERROR 1045', 'Access denied'])) {
+            return 'No se pudo importar la base de datos porque MySQL rechazó las credenciales configuradas. Verifica `DB_USERNAME` y `DB_PASSWORD` en `.env`.';
+        }
+
+        if (Str::contains($output, ['ERROR 1049', 'Unknown database'])) {
+            return 'No se pudo importar la base de datos porque la base configurada en `DB_DATABASE` no existe en MySQL.';
+        }
+
+        if (Str::contains($output, ['ERROR 1064', 'You have an error in your SQL syntax'])) {
+            return 'El archivo SQL del backup contiene un error de sintaxis o está dañado, por lo que la restauración fue cancelada.';
+        }
+
+        if (Str::contains($output, ['is not recognized as an internal or external command', 'No such file or directory', 'The system cannot find the file specified'])) {
+            return 'No se pudo ejecutar el cliente `mysql`. Verifica la ruta configurada en `MYSQL_CLIENT_PATH` o `MYSQLDUMP_PATH`.';
+        }
+
+        if (Str::contains($output, ['ERROR at line', 'Lost connection', 'Can\'t create/write to file'])) {
+            return 'La importación SQL falló durante la restauración. Revisa el archivo del backup y el log para más detalle técnico.';
+        }
+
+        return 'No se pudo importar la base de datos (Error '.$exitCode.'). Revisa `storage/logs/laravel.log` para más detalles.';
+    }
+
+    /**
+     * @param array{ok?: bool, message?: string} $rollbackResult
+     * @return array{ok: bool, message: string}
+     */
+    private function formatRestoreFailureWithRollback(string $primaryMessage, array $rollbackResult): array
+    {
+        if (($rollbackResult['ok'] ?? false) === true) {
+            return [
+                'ok' => false,
+                'message' => trim($primaryMessage).' Se ejecutó un rollback automático y el estado anterior fue recuperado correctamente.',
+            ];
+        }
+
+        return [
+            'ok' => false,
+            'message' => trim($primaryMessage).' Además, el rollback automático también falló: '.($rollbackResult['message'] ?? 'sin detalle adicional').'.',
+        ];
     }
 
     private function cleanupRestoreFiles(string $zipPath, string $dirPath): void
     {
-        if (file_exists($zipPath)) {
+        $workspace = $zipPath !== '' ? dirname($zipPath) : '';
+
+        if ($zipPath !== '' && file_exists($zipPath)) {
             @unlink($zipPath);
         }
-        if (is_dir($dirPath)) {
-            $files = array_diff(scandir($dirPath), ['.', '..']);
-            foreach ($files as $file) {
-                @unlink("$dirPath/$file");
-            }
-            @rmdir($dirPath);
+
+        if ($dirPath !== '' && is_dir($dirPath)) {
+            $this->files->deleteDirectory($dirPath);
+        }
+
+        if ($workspace !== '' && is_dir($workspace)) {
+            $this->files->deleteDirectory($workspace);
         }
     }
 }

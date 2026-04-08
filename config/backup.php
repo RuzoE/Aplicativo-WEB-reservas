@@ -115,7 +115,8 @@ return [
     'default_frequency' => env('BACKUP_FREQUENCY', 'daily'),
     'ui_path' => env('BACKUP_UI_PATH', ''),
     'runtime' => [
-        'memory_limit' => env('BACKUP_MEMORY_LIMIT', '512M'),
+        'memory_limit' => env('BACKUP_MEMORY_LIMIT', '1024M'),
+        'process_timeout' => (int) env('BACKUP_PROCESS_TIMEOUT', 600),
     ],
 
 ];
