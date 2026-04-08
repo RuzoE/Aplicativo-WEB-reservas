@@ -176,13 +176,14 @@ class BackupService
             $settings->update([
                 'last_status' => 'En proceso',
                 'last_run_at' => now(),
+                'last_message' => 'Generando respaldo de base de datos...',
             ]);
 
-            // Ejecutar de forma síncrona
-            $exitCode = Artisan::call('backup:run', [
-                '--only-db' => true,
-                '--disable-notifications' => true,
-            ]);
+            // Artisan::call con opciones correctas - --only-db es una opción, no flag de valor
+            $exitCode = \Artisan::call('backup:run --only-db --disable-notifications');
+
+            $output = \Artisan::output();
+            Log::info('Backup síncrono terminó con código ' . $exitCode . ': ' . $output);
 
             if ($exitCode === 0) {
                 $settings->update([
@@ -190,16 +191,20 @@ class BackupService
                     'last_run_at' => now(),
                     'last_message' => 'Respaldo de base de datos generado con éxito y subido a Google Drive.',
                 ]);
-                return ['ok' => true, 'message' => '¡Backup completado exitosamente!'];
+                return ['ok' => true, 'message' => '¡Respaldo completado exitosamente! La lista se actualizará ahora.'];
             }
 
-            $settings->update(['last_status' => 'Error', 'last_message' => 'Fallo al ejecutar el comando síncrono.']);
-            return ['ok' => false, 'message' => 'Hubo un error al ejecutar el respaldo (Código ' . $exitCode . ').'];
+            Log::error('Fallo en backup síncrono (Código ' . $exitCode . '): ' . $output);
+            $settings->update([
+                'last_status' => 'Error', 
+                'last_message' => 'Error ' . $exitCode . ': ' . mb_substr($output, 0, 200),
+            ]);
+            return ['ok' => false, 'message' => 'Hubo un error al ejecutar el respaldo (Código ' . $exitCode . '). Revisa los logs.'];
 
         } catch (\Throwable $e) {
-            Log::error('Error en backup síncrono: ' . $e->getMessage());
-            $settings->update(['last_status' => 'Error', 'last_message' => $e->getMessage()]);
-            return ['ok' => false, 'message' => 'Ocurrió un error inesperado.'];
+            Log::error('Excepción en backup síncrono: ' . $e->getMessage() . "\n" . $e->getTraceAsString());
+            $settings->update(['last_status' => 'Error', 'last_message' => mb_substr($e->getMessage(), 0, 200)]);
+            return ['ok' => false, 'message' => 'Error inesperado: ' . $e->getMessage()];
         }
     }
 

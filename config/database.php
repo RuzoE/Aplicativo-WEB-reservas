@@ -81,10 +81,9 @@ return [
                     explode(',', (string) env('BACKUP_DB_EXCLUDE_TABLES', 'jobs,failed_jobs'))
                 ))),
                 'add_extra_native_dump_parameters' => [
+                    '--protocol=tcp',
                     '--host=' . env('DB_HOST', '127.0.0.1'),
                     '--port=' . env('DB_PORT', '3306'),
-                    '--user=' . env('DB_USERNAME', 'root'),
-                    '--password=' . env('DB_PASSWORD', ''),
                     '--single-transaction',
                     '--skip-lock-tables',
                 ],
