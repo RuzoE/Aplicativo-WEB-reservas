@@ -51,7 +51,7 @@ class RoomController extends Controller {
         $request->file('image')->move(public_path('img'), $imageName);
         $imagePath = 'img/' . $imageName;
 
-        Room::create([
+        $room = Room::create([
             'room_type_id' => $request->room_type_id,
             'total_room' => $request->total_room,
             'no_beds' => $request->no_beds,
@@ -62,6 +62,14 @@ class RoomController extends Controller {
             // Usamos disponible/no disponible para evitar mezclar semánticas.
             'status' => $request->has('status') ? Room::STATUS_DISPONIBLE : Room::STATUS_OCUPADA
         ]);
+
+        registrarAuditoria(
+            'CREATE',
+            'habitaciones',
+            $room->id,
+            'Habitación creada: tipo ' . $request->room_type_id . ', total ' . $request->total_room . ' unidades',
+            auth()->id()
+        );
 
         return redirect()->route('admin.habitaciones.habitaciones.index')
             ->with('message', 'La habitación ha sido creada!');
@@ -123,6 +131,14 @@ class RoomController extends Controller {
         }
         $room->save();
 
+        registrarAuditoria(
+            'UPDATE',
+            'habitaciones',
+            $room->id,
+            'Habitación actualizada: tipo ' . $request->room_type_id . ', precio ' . $parsedPrice,
+            auth()->id()
+        );
+
         return redirect()->route('admin.habitaciones.habitaciones.index')
             ->with('message', 'La habitación ha sido actualizada!');
     }
@@ -131,9 +147,20 @@ class RoomController extends Controller {
      * Remove the specified resource from storage.
      */
     public function destroy(int $id) {
+        abort_unless(auth()->user()->hasRole('administrador'), 403, 'No autorizado para eliminar.');
+
         $room = Room::findOrFail($id);
-        $this->authorize('delete', $room);
+        $roomTypeId = $room->room_type_id;
         $room->delete();
+
+        registrarAuditoria(
+            'DELETE',
+            'habitaciones',
+            $id,
+            'Habitación eliminada: ID ' . $id . ', tipo ' . $roomTypeId,
+            auth()->id()
+        );
+
         return redirect()->route('admin.habitaciones.habitaciones.index')
             ->with('message', 'La habitación ha sido eliminada!');
     }

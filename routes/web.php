@@ -263,6 +263,7 @@ Route::prefix('reception')
         Route::get('invoices/{invoice}/download', [ReceptionCheckOutController::class , 'download'])->name('invoices.download');
 
         // Walk-In Registrations
+        Route::get('walk-in/api/availability', [\App\Http\Controllers\Reception\WalkInController::class, 'checkAvailability'])->name('walkin.availability');
         Route::get('walk-in', [\App\Http\Controllers\Reception\WalkInController::class , 'create'])->name('walkin.create');
         Route::post('walk-in', [\App\Http\Controllers\Reception\WalkInController::class , 'store'])
             ->middleware('throttle:reception-sensitive')
@@ -278,6 +279,7 @@ Route::prefix('reception')
 
         // Advance Payments & Room Assignment
         Route::get('anticipos', [\App\Http\Controllers\Reception\AdvanceController::class, 'index'])->name('anticipos.index');
+        Route::get('asignacion/api/rooms-by-date', [\App\Http\Controllers\Reception\AssignmentController::class, 'roomsByDate'])->name('asignacion.rooms_by_date');
         Route::get('asignacion/{reserva?}', [\App\Http\Controllers\Reception\AssignmentController::class, 'index'])->name('asignacion.index');
         Route::post('asignacion/{reserva}/confirm/{room}', [\App\Http\Controllers\Reception\AssignmentController::class, 'assign'])
             ->middleware('throttle:reception-sensitive')

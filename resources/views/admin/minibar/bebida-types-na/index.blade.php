@@ -44,6 +44,7 @@
                    title="Editar">
                   <i class="bi bi-pencil"></i>
                 </a>
+                @if(auth()->user()->hasRole('administrador'))
                 <form action="{{ route('admin.minibar.bebida-types-na.destroy', $type) }}"
                       method="POST"
                       style="display: inline;"
@@ -54,6 +55,7 @@
                     <i class="bi bi-trash"></i>
                   </button>
                 </form>
+                @endif
               </div>
             </td>
           </tr>

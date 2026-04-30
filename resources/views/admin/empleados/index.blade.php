@@ -183,7 +183,7 @@
                 </form>
               </td>
               <td class="text-center">
-                @if($u->id !== auth()->id())
+                @if(auth()->user()->hasRole('administrador') && $u->id !== auth()->id())
                   <form action="{{ route('admin.empleados.destroy', $u) }}" method="POST"
                     data-confirm-message="¿Estás seguro de eliminar a {{ $u->name }}?">
                     @csrf

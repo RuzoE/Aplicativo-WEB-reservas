@@ -2,17 +2,23 @@
 
 @section('content')
 @php
+    use App\Support\AuditoriaHelper;
+
     $adminView = true;
     $sidebarView = 'admin.sidebar';
 
     $badgeClassByAction = [
+        'ACCESS' => 'badge-login',
         'CREATE' => 'badge-create',
         'UPDATE' => 'badge-update',
         'DELETE' => 'badge-delete',
         'LOGIN' => 'badge-login',
+        'LOGIN_FAILED' => 'badge-delete',
         'CHECK_IN' => 'badge-checkin',
         'CHECK_OUT' => 'badge-checkout',
         'CANCEL' => 'badge-cancel',
+        'ROLE_CHANGE' => 'badge-update',
+        'PASSWORD_CHANGE' => 'badge-update',
     ];
 
     $badgeClassByModulo = [
@@ -175,8 +181,8 @@
                         </span>
                         <select name="accion" id="accion">
                             <option value="">Todas</option>
-                            @foreach($acciones as $accion)
-                                <option value="{{ $accion }}" @selected(request('accion') === $accion)>{{ $accion }}</option>
+                            @foreach($acciones as $accionFiltro)
+                                <option value="{{ $accionFiltro }}" @selected(request('accion') === $accionFiltro)>{{ AuditoriaHelper::traducirAccion($accionFiltro) }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -266,6 +272,8 @@
                                     $badgeModulo = $badgeClassByModulo[$modulo] ?? 'badge-default';
                                     $nombreUsuario = trim((($item->usuario->name ?? '') . ' ' . ($item->usuario->last_name ?? '')));
                                     $nombreUsuario = $nombreUsuario !== '' ? $nombreUsuario : ($item->usuario->email ?? 'Sistema/Automatico');
+                                    $accionTraducida = AuditoriaHelper::traducirAccion($accion);
+                                    $descripcionHumana = AuditoriaHelper::humanizarDescripcion($item);
                                 @endphp
                                 <tr>
                                     <td>
@@ -273,14 +281,14 @@
                                         <p class="user-id">ID {{ $item->usuario_id ?? 'N/A' }}</p>
                                     </td>
                                     <td>
-                                        <span class="audit-badge {{ $badgeAccion }}" title="Accion del evento">{{ $accion }}</span>
+                                        <span class="audit-badge {{ $badgeAccion }}" title="{{ $accion }}">{{ $accionTraducida }}</span>
                                     </td>
                                     <td>
                                         <span class="audit-badge {{ $badgeModulo }}" title="Modulo de origen">{{ ucfirst($modulo) }}</span>
                                     </td>
                                     <td>
                                         <div class="desc-text">
-                                            {{ $item->descripcion }}
+                                            {{ $descripcionHumana }}
                                             @if(!is_null($item->registro_id))
                                                 <p class="registro-id">Registro ID: {{ $item->registro_id }}</p>
                                             @endif
@@ -328,17 +336,19 @@
                                 $evtBadgeModulo = $badgeClassByModulo[$evtModulo] ?? 'badge-default';
                                 $evtUsuario = trim((($evento->usuario->name ?? '') . ' ' . ($evento->usuario->last_name ?? '')));
                                 $evtUsuario = $evtUsuario !== '' ? $evtUsuario : ($evento->usuario->email ?? 'Sistema/Automatico');
+                                $evtAccionTraducida = AuditoriaHelper::traducirAccion($evtAccion);
+                                $evtDescHumana = AuditoriaHelper::humanizarDescripcion($evento);
                             @endphp
                             <li class="audit-event-item">
                                 <div class="audit-event-top">
                                     <div class="audit-event-badges">
-                                        <span class="audit-badge {{ $evtBadgeAccion }}">{{ $evtAccion }}</span>
+                                        <span class="audit-badge {{ $evtBadgeAccion }}">{{ $evtAccionTraducida }}</span>
                                         <span class="audit-badge {{ $evtBadgeModulo }}">{{ ucfirst($evtModulo) }}</span>
                                     </div>
                                     <span class="audit-event-time">{{ optional($evento->created_at)->format('h:i A') }}</span>
                                 </div>
                                 <p class="audit-event-user">{{ $evtUsuario }}</p>
-                                <p class="audit-event-desc">{{ \Illuminate\Support\Str::limit($evento->descripcion, 110) }}</p>
+                                <p class="audit-event-desc">{{ \Illuminate\Support\Str::limit($evtDescHumana, 110) }}</p>
                                 <p class="audit-event-ago">{{ optional($evento->created_at)->diffForHumans() }}</p>
                             </li>
                         @empty

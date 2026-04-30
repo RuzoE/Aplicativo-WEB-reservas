@@ -51,7 +51,15 @@ class MinibarProductController extends Controller
             $data['imagen'] = $request->file('imagen')->store('minibar', 'public');
         }
 
-        MinibarProduct::create($data);
+        $bebida = MinibarProduct::create($data);
+
+        registrarAuditoria(
+            'CREATE',
+            'minibar',
+            $bebida->id,
+            'Bebida creada: ' . $data['nombre'] . ', precio ' . $data['precio'],
+            auth()->id()
+        );
 
         return redirect()
             ->route('admin.minibar.bebidas.index')
@@ -100,6 +108,14 @@ class MinibarProductController extends Controller
 
         $bebida->update($data);
 
+        registrarAuditoria(
+            'UPDATE',
+            'minibar',
+            $bebida->id,
+            'Bebida actualizada: ' . $data['nombre'],
+            auth()->id()
+        );
+
         return redirect()
             ->route('admin.minibar.bebidas.index')
             ->with('success', 'La bebida "' . $data['nombre'] . '" ha sido actualizada.');
@@ -110,11 +126,24 @@ class MinibarProductController extends Controller
      */
     public function destroy(MinibarProduct $bebida)
     {
+        abort_unless(auth()->user()->hasRole('administrador'), 403, 'No autorizado para eliminar.');
+
+        $bebidaNombre = $bebida->nombre;
+        $bebidaId = $bebida->id;
+
         if ($bebida->imagen) {
             Storage::disk('public')->delete($bebida->imagen);
         }
 
         $bebida->delete();
+
+        registrarAuditoria(
+            'DELETE',
+            'minibar',
+            $bebidaId,
+            'Bebida eliminada: ' . $bebidaNombre . ' (ID ' . $bebidaId . ')',
+            auth()->id()
+        );
 
         return redirect()
             ->route('admin.minibar.bebidas.index')

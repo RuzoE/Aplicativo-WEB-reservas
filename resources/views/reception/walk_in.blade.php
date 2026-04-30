@@ -34,7 +34,7 @@
                 <div class="row g-3">
                     <div class="col-md-6">
                         <label class="form-label fw-bold">Días de estadía <span class="text-danger">*</span></label>
-                        <input type="number" name="stay_days" id="stay_days" class="form-control form-control-lg @error('stay_days') is-invalid @enderror" required value="{{ old('stay_days', 1) }}" min="1">
+                        <input type="number" name="stay_days" id="stay_days" class="form-control form-control-lg @error('stay_days') is-invalid @enderror" required value="{{ old('stay_days', 1) }}" min="1" data-availability-url="{{ route('reception.walkin.availability') }}">
                         <small class="text-muted">Cantidad de noches que el huésped planea quedarse.</small>
                     </div>
                     <div class="col-md-3">
@@ -47,6 +47,9 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Availability Results Area -->
+            <div id="availability-results" class="mt-4 mb-4" style="display: none;"></div>
 
             <div class="row g-3">
                 <div class="col-md-6">

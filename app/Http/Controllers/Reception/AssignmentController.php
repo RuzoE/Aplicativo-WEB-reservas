@@ -7,6 +7,7 @@ use App\Models\Order;
 use App\Models\Room;
 use App\Models\MaintenanceOrder;
 use App\Models\Stay;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 class AssignmentController extends Controller
@@ -17,18 +18,12 @@ class AssignmentController extends Controller
      */
     public function index($reservaId = null)
     {
-        $roomsCount = Room::all();
         $roomTypes = Room::with(['roomtype'])->get();
-
-        // Unroll rooms sequentially like in Maintenance
         $rooms = $this->buildIndividualRooms($roomTypes);
 
-        // Attach active orders, active stays and maintenance status
-        $activeOrders = Order::whereIn('status', [Order::STATUS_RESERVA_PREVIA, Order::STATUS_OCUPADA])->get();
-        $activeStays = Stay::where('status', 'InHouse')->get();
-        $maintenanceOrders = MaintenanceOrder::active()->get();
-
-        $rooms = $this->attachStatus($rooms, $activeOrders, $activeStays, $maintenanceOrders);
+        // Estado para la fecha de hoy
+        $today = Carbon::today();
+        $rooms = $this->attachStatusByDate($rooms, $today);
 
         $selectedOrder = null;
         if ($reservaId) {
@@ -36,6 +31,27 @@ class AssignmentController extends Controller
         }
 
         return view('reception.asignacion', compact('rooms', 'selectedOrder'));
+    }
+
+    /**
+     * API AJAX: devuelve el estado de habitaciones para una fecha específica.
+     */
+    public function roomsByDate(Request $request)
+    {
+        $request->validate([
+            'date' => 'required|date|date_format:Y-m-d',
+        ]);
+
+        $date = Carbon::parse($request->input('date'));
+
+        $roomTypes = Room::with(['roomtype'])->get();
+        $rooms = $this->buildIndividualRooms($roomTypes);
+        $rooms = $this->attachStatusByDate($rooms, $date);
+
+        return response()->json([
+            'rooms' => $rooms->values()->toArray(),
+            'date' => $date->toDateString(),
+        ]);
     }
 
     /**
@@ -64,6 +80,9 @@ class AssignmentController extends Controller
             ->with('success', "Habitación {$request->room_number} asignada correctamente a {$reserva->nombre_cliente}");
     }
 
+    /**
+     * Construye la lista de habitaciones individuales a partir de los bloques de Room.
+     */
     private function buildIndividualRooms($roomTypes)
     {
         $individualRooms = collect();
@@ -76,6 +95,8 @@ class AssignmentController extends Controller
                     'number' => (string)$counter,
                     'type_name' => $room->roomtype->name ?? 'Estándar',
                     'status' => 'disponible',
+                    'guest_name' => null,
+                    'order_info' => null,
                 ]);
                 $counter++;
             }
@@ -84,34 +105,92 @@ class AssignmentController extends Controller
         return $individualRooms;
     }
 
-    private function attachStatus($rooms, $activeOrders, $activeStays, $maintenanceOrders)
+    /**
+     * Determina el estado de cada habitación para una fecha específica.
+     *
+     * Prioridad:
+     *   1. Mantenimiento activo (no depende de fecha)
+     *   2. Stay con status='InHouse' cuyo rango cubre la fecha → ROJO (ocupada)
+     *   3. Order con check_in == fecha y room_number asignado → AZUL (pre-reserva)
+     *   4. De lo contrario → VERDE (disponible)
+     */
+    private function attachStatusByDate($rooms, Carbon $date)
     {
-        return $rooms->map(function ($room) use ($activeOrders, $activeStays, $maintenanceOrders) {
-            // Check occupancy (Order)
-            $order = $activeOrders->firstWhere('room_number', $room['number']);
-            if ($order) {
-                if ($order->status === Order::STATUS_RESERVA_PREVIA) {
-                    $room['status'] = 'pre-reserva';
-                } else {
-                    $room['status'] = 'ocupada';
-                }
-                return $room;
-            }
+        // 1. Mantenimiento activo (no depende de fecha)
+        $maintenanceOrders = MaintenanceOrder::active()->get();
 
-            // Check occupancy (Stay - for walk-ins)
-            $stay = $activeStays->firstWhere('assigned_room_number', $room['number']);
-            if ($stay) {
-                $room['status'] = 'ocupada';
-                return $room;
-            }
+        // 2. Stays activos cuyo rango de fechas incluye la fecha seleccionada
+        $activeStays = Stay::where('status', 'InHouse')
+            ->whereDate('actual_check_in_at', '<=', $date)
+            ->whereDate('departure_at', '>=', $date)
+            ->get();
 
-            // Check maintenance
-            $maint = $maintenanceOrders->firstWhere('room_number', $room['number']);
+        // 3. Pre-reservas: Órdenes con room_number asignado cuya check_in es EXACTAMENTE esa fecha
+        //    Incluye status pendiente, anticipo_pagado y reserva_previa
+        $preReservas = Order::whereIn('status', [
+                Order::STATUS_PENDIENTE,
+                Order::STATUS_ANTICIPO_PAGADO,
+                Order::STATUS_RESERVA_PREVIA,
+            ])
+            ->whereDate('check_in', $date)
+            ->whereNotNull('room_number')
+            ->get();
+
+        return $rooms->map(function ($room) use ($maintenanceOrders, $activeStays, $preReservas) {
+            $roomNumber = $room['number'];
+
+            // 1. Mantenimiento activo
+            $maint = $maintenanceOrders->firstWhere('room_number', $roomNumber);
             if ($maint) {
                 $room['status'] = 'mantenimiento';
                 return $room;
             }
 
+            // 2. Ocupada (Stay InHouse que cubre la fecha)
+            $stay = $activeStays->first(function ($s) use ($roomNumber) {
+                // Extraer room number desde notas
+                $assignedNumber = null;
+                if ($s->notes && preg_match('/\[ROOM_NUM:(\d+)\]/', $s->notes, $matches)) {
+                    $assignedNumber = $matches[1];
+                }
+                return (string) $assignedNumber === (string) $roomNumber;
+            });
+
+            if ($stay) {
+                $room['status'] = 'ocupada';
+                $guestName = null;
+                if ($stay->guest) {
+                    $guestName = trim(($stay->guest->first_name ?? '') . ' ' . ($stay->guest->last_name ?? ''));
+                }
+                $room['guest_name'] = $guestName ?: null;
+                $room['order_info'] = [
+                    'stay_id' => $stay->id,
+                    'check_in' => optional($stay->actual_check_in_at)->format('d/m/Y'),
+                    'check_out' => optional($stay->departure_at)->format('d/m/Y'),
+                    'guest_name' => $guestName,
+                ];
+                return $room;
+            }
+
+            // 3. Pre-reserva (check_in exactamente en la fecha seleccionada)
+            $order = $preReservas->firstWhere('room_number', $roomNumber);
+            if ($order) {
+                $room['status'] = 'pre-reserva';
+                $room['guest_name'] = $order->nombre_cliente ?? $order->user?->name ?? null;
+                $room['order_info'] = [
+                    'order_id' => $order->id,
+                    'guest_name' => $room['guest_name'],
+                    'check_in' => optional($order->check_in)->format('d/m/Y'),
+                    'check_out' => optional($order->check_out)->format('d/m/Y'),
+                    'room_type' => $order->roomType?->name ?? 'N/A',
+                    'status' => $order->status,
+                    'total' => $order->total_amount,
+                ];
+                return $room;
+            }
+
+            // 4. Disponible
+            $room['status'] = 'disponible';
             return $room;
         });
     }

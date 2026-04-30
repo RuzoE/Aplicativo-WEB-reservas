@@ -51,6 +51,7 @@
         data-selected-order='@json($selectedOrder)'
         data-assign-url="{{ route('reception.asignacion.confirm', ['reserva' => $selectedOrder->id ?? 0, 'room' => '__ROOM_ID__']) }}"
         data-csrf-token="{{ csrf_token() }}"
+        data-rooms-by-date-url="{{ route('reception.asignacion.rooms_by_date') }}"
     ></div>
 
 </div>

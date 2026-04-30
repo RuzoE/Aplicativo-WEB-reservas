@@ -26,7 +26,8 @@ function mountRoomAssignmentBoard() {
         rooms: parseJsonAttribute(mountElement.dataset.rooms, []),
         selectedOrder: parseJsonAttribute(mountElement.dataset.selectedOrder, null),
         assignUrl: mountElement.dataset.assignUrl ?? '',
-        csrfToken: mountElement.dataset.csrfToken ?? ''
+        csrfToken: mountElement.dataset.csrfToken ?? '',
+        roomsByDateUrl: mountElement.dataset.roomsByDateUrl ?? ''
     }).mount(mountElement);
 }
 

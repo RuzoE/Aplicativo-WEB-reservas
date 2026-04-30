@@ -9,6 +9,7 @@ use App\Rules\AllowedEmailDomain;
 use App\Rules\PhoneNumberByPrefix;
 use App\Models\Stay;
 use App\Services\Reception\WalkInService;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
@@ -24,9 +25,11 @@ class WalkInController extends Controller
         $this->authorize('create', Stay::class);
 
         // Fetch all room number options without a specific type filter
-        $roomNumberOptions = $this->buildRoomNumberOptions();
+        $availability = $this->buildRoomNumberOptions(1);
+        $roomNumberOptions = $availability['available'];
+        $unavailableOptions = $availability['unavailable'];
 
-        return view('reception.walk_in', compact('roomNumberOptions'));
+        return view('reception.walk_in', compact('roomNumberOptions', 'unavailableOptions'));
     }
 
     public function store(Request $request)
@@ -48,19 +51,21 @@ class WalkInController extends Controller
             'notes' => 'nullable|string|max:500',
         ]);
 
-        $roomNumberOptions = $this->buildRoomNumberOptions();
+        $stayDays = (int) $data['stay_days'];
+        $availability = $this->buildRoomNumberOptions($stayDays);
         $selectedNumber = (int) $data['room_number'];
-        $selectedOption = $roomNumberOptions->firstWhere('number', $selectedNumber);
+        
+        $selectedOption = null;
+        foreach ($availability['available'] as $opt) {
+            if ($opt->number === $selectedNumber) {
+                $selectedOption = $opt;
+                break;
+            }
+        }
 
         if (!$selectedOption) {
             return back()->withErrors([
-                'room_number' => 'El número de habitación seleccionado no existe entre las habitaciones activas.',
-            ])->withInput();
-        }
-
-        if ($selectedOption->status !== 'Disponible') {
-            return back()->withErrors([
-                'room_number' => 'La habitación seleccionada no está disponible. Estado actual: ' . $selectedOption->status . '.',
+                'room_number' => 'La habitación seleccionada no está disponible para los días de estadía ingresados.',
             ])->withInput();
         }
 
@@ -68,7 +73,7 @@ class WalkInController extends Controller
             $data['assigned_room_number'] = $selectedNumber;
             $data['room_id'] = $selectedOption->room_id;
 
-            $stay = $this->walkInService->processWalkIn($data, (int) $data['stay_days']);
+            $stay = $this->walkInService->processWalkIn($data, $stayDays);
             StayStarted::dispatch($stay);
 
             return redirect()->route('reception.dashboard')
@@ -93,8 +98,20 @@ class WalkInController extends Controller
         }
     }
 
-    private function buildRoomNumberOptions(?int $roomTypeId = null): Collection
+    public function checkAvailability(Request $request)
     {
+        $days = (int) $request->input('stay_days', 1);
+        if ($days < 1) $days = 1;
+
+        $availability = $this->buildRoomNumberOptions($days);
+        return response()->json($availability);
+    }
+
+    private function buildRoomNumberOptions(int $stayDays = 1, ?int $roomTypeId = null): array
+    {
+        $startDate = Carbon::today();
+        $endDate = Carbon::today()->addDays($stayDays);
+
         // La numeración debe ser global (1..N) según todos los bloques activos,
         // y luego se filtra por tipo para conservar el mismo orden que mantenimiento.
         $roomBlocks = Room::with('roomtype')
@@ -130,32 +147,46 @@ class WalkInController extends Controller
             $cursor += $capacity;
         }
 
-        $inHouseStays = Stay::where('status', 'InHouse')->get();
         $activeMaintenance = \App\Models\MaintenanceOrder::active()->get();
-        $occupiedNumbers = [];
-        $maintenanceNumbers = [];
+        
+        // Stays que terminan DESPUÉS de hoy (la estadía actual se solapa)
+        $inHouseStays = Stay::where('status', 'InHouse')
+            ->whereDate('departure_at', '>', $startDate)
+            ->get();
+            
+        // Órdenes que inician ANTES del fin del walk-in y no están canceladas
+        // Solo futuras o presentes (check_in >= startDate)
+        $preReservas = \App\Models\Order::whereIn('status', [
+                \App\Models\Order::STATUS_PENDIENTE,
+                \App\Models\Order::STATUS_ANTICIPO_PAGADO,
+                \App\Models\Order::STATUS_RESERVA_PREVIA
+            ])
+            ->whereDate('check_in', '<', $endDate)
+            ->whereDate('check_in', '>=', $startDate)
+            ->whereNotNull('room_number')
+            ->get();
 
-        // 1) Ocupar números explícitamente guardados en notas.
-        foreach ($inHouseStays as $stay) {
-            $number = $this->extractAssignedRoomNumber($stay->notes);
-            if ($number !== null && isset($numberToRoomId[$number])) {
-                $occupiedNumbers[$number] = true;
-            }
-        }
+        $unavailableRooms = []; // number => message
 
         // Marcar números en mantenimiento
         foreach ($activeMaintenance as $order) {
             if ($order->room_number && isset($numberToRoomId[$order->room_number])) {
-                $maintenanceNumbers[$order->room_number] = true;
+                $unavailableRooms[$order->room_number] = 'En mantenimiento';
+            }
+        }
+
+        // Marcar números ocupados (Stays)
+        foreach ($inHouseStays as $stay) {
+            $number = $this->extractAssignedRoomNumber($stay->notes);
+            if ($number !== null && isset($numberToRoomId[$number])) {
+                $unavailableRooms[$number] = 'Ocupada hasta ' . optional($stay->departure_at)->translatedFormat('d M');
             }
         }
 
         // Marcar números en pre-reserva
-        $preReservas = \App\Models\Order::where('status', \App\Models\Order::STATUS_RESERVA_PREVIA)->get();
-        $preReservaNumbers = [];
         foreach ($preReservas as $order) {
             if ($order->room_number && isset($numberToRoomId[$order->room_number])) {
-                $preReservaNumbers[$order->room_number] = true;
+                $unavailableRooms[$order->room_number] = 'Reserva el ' . optional($order->check_in)->translatedFormat('d M');
             }
         }
 
@@ -168,39 +199,41 @@ class WalkInController extends Controller
 
             $range = $roomRanges[$stay->room_id];
             for ($number = $range['start']; $number <= $range['end']; $number++) {
-                if (!isset($occupiedNumbers[$number])) {
-                    $occupiedNumbers[$number] = true;
+                if (!isset($unavailableRooms[$number])) {
+                    $unavailableRooms[$number] = 'Ocupada hasta ' . optional($stay->departure_at)->translatedFormat('d M');
                     break;
                 }
             }
         }
 
-        $options = collect();
+        $available = [];
+        $unavailable = [];
+
         foreach ($numberToRoomId as $number => $roomId) {
             if ($roomTypeId !== null && ($numberToTypeId[$number] ?? null) !== $roomTypeId) {
                 continue;
             }
 
-            $status = 'Disponible';
-            if (isset($occupiedNumbers[$number])) {
-                $status = 'Ocupada';
-            } elseif (isset($maintenanceNumbers[$number])) {
-                $status = 'Mantenimiento';
-            } elseif (isset($preReservaNumbers[$number])) {
-                $status = 'Pre-Reserva';
-            }
-
-            // Include all rooms
-            $options->push((object)[
+            $roomData = (object)[
                 'number' => $number,
                 'room_id' => $roomId,
                 'room_type' => $numberToType[$number] ?? 'N/A',
                 'price' => $roomPricesById[$roomId] ?? 0,
-                'status' => $status,
-            ]);
+                'status' => 'Disponible'
+            ];
+
+            if (isset($unavailableRooms[$number])) {
+                $roomData->reason = $unavailableRooms[$number];
+                $unavailable[] = $roomData;
+            } else {
+                $available[] = $roomData;
+            }
         }
 
-        return $options;
+        return [
+            'available' => $available,
+            'unavailable' => $unavailable
+        ];
     }
 
     private function extractAssignedRoomNumber(?string $notes): ?int

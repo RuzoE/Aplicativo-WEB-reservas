@@ -24,10 +24,18 @@ class BebidaTypeController extends Controller
             'nombre' => 'required|string|max:255|unique:bebida_types,nombre',
         ]);
 
-        BebidaType::create([
+        $type = BebidaType::create([
             'nombre' => $request->nombre,
             'es_alcoholica' => true,
         ]);
+
+        registrarAuditoria(
+            'CREATE',
+            'minibar',
+            $type->id,
+            'Tipo de bebida creado: ' . $request->nombre,
+            auth()->id()
+        );
 
         return redirect()
             ->route('admin.minibar.bebida-types.index')
@@ -50,6 +58,14 @@ class BebidaTypeController extends Controller
 
         $bebida_type->update($request->only('nombre'));
 
+        registrarAuditoria(
+            'UPDATE',
+            'minibar',
+            $bebida_type->id,
+            'Tipo de bebida actualizado: ' . $request->nombre,
+            auth()->id()
+        );
+
         return redirect()
             ->route('admin.minibar.bebida-types.index')
             ->with('success', 'El tipo de bebida "' . $request->nombre . '" ha sido actualizado.');
@@ -57,8 +73,20 @@ class BebidaTypeController extends Controller
 
     public function destroy(BebidaType $bebida_type)
     {
+        abort_unless(auth()->user()->hasRole('administrador'), 403, 'No autorizado para eliminar.');
         abort_unless($bebida_type->es_alcoholica, 404);
+
+        $typeName = $bebida_type->nombre;
+        $typeId = $bebida_type->id;
         $bebida_type->delete();
+
+        registrarAuditoria(
+            'DELETE',
+            'minibar',
+            $typeId,
+            'Tipo de bebida eliminado: ' . $typeName . ' (ID ' . $typeId . ')',
+            auth()->id()
+        );
 
         return back()->with('success', 'El tipo de bebida ha sido eliminado correctamente.');
     }
@@ -80,10 +108,18 @@ class BebidaTypeController extends Controller
             'nombre' => 'required|string|max:255|unique:bebida_types,nombre',
         ]);
 
-        BebidaType::create([
+        $type = BebidaType::create([
             'nombre' => $request->nombre,
             'es_alcoholica' => false,
         ]);
+
+        registrarAuditoria(
+            'CREATE',
+            'minibar',
+            $type->id,
+            'Tipo de bebida no alcohólica creado: ' . $request->nombre,
+            auth()->id()
+        );
 
         return redirect()
             ->route('admin.minibar.bebida-types-na.index')
@@ -106,6 +142,14 @@ class BebidaTypeController extends Controller
 
         $bebida_type->update($request->only('nombre'));
 
+        registrarAuditoria(
+            'UPDATE',
+            'minibar',
+            $bebida_type->id,
+            'Tipo de bebida no alcohólica actualizado: ' . $request->nombre,
+            auth()->id()
+        );
+
         return redirect()
             ->route('admin.minibar.bebida-types-na.index')
             ->with('success', 'El tipo de bebida no alcohólica "' . $request->nombre . '" ha sido actualizado.');
@@ -113,8 +157,20 @@ class BebidaTypeController extends Controller
 
     public function destroyNonAlcoholic(BebidaType $bebida_type)
     {
+        abort_unless(auth()->user()->hasRole('administrador'), 403, 'No autorizado para eliminar.');
         abort_if($bebida_type->es_alcoholica, 404);
+
+        $typeName = $bebida_type->nombre;
+        $typeId = $bebida_type->id;
         $bebida_type->delete();
+
+        registrarAuditoria(
+            'DELETE',
+            'minibar',
+            $typeId,
+            'Tipo de bebida no alcohólica eliminado: ' . $typeName . ' (ID ' . $typeId . ')',
+            auth()->id()
+        );
 
         return back()->with('success', 'El tipo de bebida no alcohólica ha sido eliminado correctamente.');
     }

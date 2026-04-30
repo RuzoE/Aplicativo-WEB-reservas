@@ -55,7 +55,7 @@ class AuditoriaController extends Controller
             ->get();
 
         $modulos = ['reservas', 'habitaciones', 'mantenimiento', 'minibar', 'usuarios', 'recepcion'];
-        $acciones = ['CREATE', 'UPDATE', 'DELETE', 'LOGIN', 'CHECK_IN', 'CHECK_OUT', 'CANCEL'];
+        $acciones = ['ACCESS', 'CREATE', 'UPDATE', 'DELETE', 'LOGIN', 'LOGIN_FAILED', 'CHECK_IN', 'CHECK_OUT', 'CANCEL', 'ROLE_CHANGE', 'PASSWORD_CHANGE'];
 
         $eventosDestacados = (clone $filteredBaseQuery)
             ->with(['usuario:id,name,last_name,email'])

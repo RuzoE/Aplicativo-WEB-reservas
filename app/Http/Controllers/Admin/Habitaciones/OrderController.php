@@ -62,6 +62,20 @@ class OrderController extends Controller
      */
     public function destroy(Order $order)
     {
-    //
+        abort_unless(auth()->user()->hasRole('administrador'), 403, 'No autorizado para eliminar.');
+
+        $orderId = $order->id;
+        $order->delete();
+
+        registrarAuditoria(
+            'DELETE',
+            'reservas',
+            $orderId,
+            'Reserva eliminada: ID ' . $orderId,
+            auth()->id()
+        );
+
+        return redirect()->route('admin.habitaciones.reservas.index')
+            ->with('message', 'La reserva ha sido eliminada.');
     }
 }

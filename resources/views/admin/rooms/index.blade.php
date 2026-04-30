@@ -69,6 +69,7 @@
                   <a href="{{ route('admin.habitaciones.habitaciones.edit', ['habitacione' => $room->id]) }}" class="btn-edit-room">
                     <i class="bi bi-pencil"></i>
                   </a>
+                  @if(auth()->user()->hasRole('administrador'))
                   <form method="post" action="{{ route('admin.habitaciones.habitaciones.destroy', ['habitacione' => $room->id]) }}" style="display: inline; margin: 0;" data-confirm-message="¿Estás seguro de que quieres eliminar esta habitación?">
                     @csrf
                     @method('delete')
@@ -76,6 +77,7 @@
                       <i class="bi bi-trash"></i>
                     </button>
                   </form>
+                  @endif
                 </div>
               </td>
             </tr>

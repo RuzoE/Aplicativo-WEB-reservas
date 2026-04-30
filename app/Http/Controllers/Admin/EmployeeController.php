@@ -65,6 +65,15 @@ class EmployeeController extends Controller
         $user->assignRole($roleName);
 
         registrarAuditoria(
+            'CREATE',
+            'usuarios',
+            $user->id,
+            'Empleado creado: ' . $user->name . ' ' . ($user->last_name ?? '') . ' con rol ' . $roleName,
+            auth()->id() ?? $user->id,
+            ['skip_duplicate' => false]
+        );
+
+        registrarAuditoria(
             'ROLE_CHANGE',
             'usuarios',
             $user->id,
@@ -103,6 +112,15 @@ class EmployeeController extends Controller
         }
         $empleado->save();
 
+        registrarAuditoria(
+            'UPDATE',
+            'usuarios',
+            $empleado->id,
+            'Empleado actualizado: ' . $empleado->name . ' ' . ($empleado->last_name ?? ''),
+            auth()->id() ?? $empleado->id,
+            ['skip_duplicate' => false]
+        );
+
         if (!empty($data['role_id'])) {
             $roleName = Role::find($data['role_id'])->name;
             $empleado->syncRoles([$roleName]); // reemplaza rol actual por el nuevo
@@ -124,7 +142,20 @@ class EmployeeController extends Controller
 
     public function destroy(User $empleado)
     {
+        abort_unless(auth()->user()->hasRole('administrador'), 403, 'No autorizado para eliminar.');
+
+        $empleadoName = $empleado->name . ' ' . ($empleado->last_name ?? '');
+        $empleadoId = $empleado->id;
         $empleado->delete();
+
+        registrarAuditoria(
+            'DELETE',
+            'usuarios',
+            $empleadoId,
+            'Empleado eliminado: ' . trim($empleadoName) . ' (ID ' . $empleadoId . ')',
+            auth()->id(),
+            ['skip_duplicate' => false]
+        );
 
         return redirect()
             ->route('admin.empleados.index')
