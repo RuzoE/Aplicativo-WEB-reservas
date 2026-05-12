@@ -49,7 +49,7 @@ class BackupService
                 'last_backup_human' => $lastBackup['human_diff'] ?? 'Aún no se ha generado ningún respaldo.',
                 'last_status' => $lastStatus,
                 'last_status_color' => $lastStatusColor,
-                'storage' => 'Google Drive',
+                'storage' => 'AWS S3 / Drive',
                 'frequency' => $settings->frequency,
                 'last_message' => $this->resolveSummaryMessage($settings, $lastStatus, $lastBackup !== null),
             ],
@@ -104,7 +104,7 @@ class BackupService
                     'human_diff' => $date?->diffForHumans() ?? 'Sin información temporal',
                     'size_bytes' => $size,
                     'size_human' => $this->humanFileSize($size),
-                    'location' => 'Google Drive',
+                    'location' => 'AWS S3 / Drive',
                     'status' => $status,
                     'status_color' => $status === 'Correcto' ? 'success' : 'danger',
                     'timestamp' => $timestamp ?? 0,
@@ -247,7 +247,7 @@ class BackupService
      */
     public function runBackup(string $source = 'manual'): array
     {
-        return $this->executeManagedBackup($source, 'Backup subido correctamente a Google Drive.');
+        return $this->executeManagedBackup($source, 'Backup subido correctamente a S3 y Drive.');
     }
 
     /**
@@ -661,7 +661,7 @@ class BackupService
         }
 
         if ($hasBackups && $lastStatus === 'Correcto') {
-            return 'Los backups están disponibles en Google Drive y el módulo está operativo.';
+            return 'Los backups están disponibles en S3 / Drive y el módulo está operativo.';
         }
 
         return $message !== '' ? $message : 'Los archivos se administran desde el disco "google" de Laravel Storage.';
@@ -761,7 +761,7 @@ class BackupService
     private function messageFromBackupResult(bool $isSuccessful, string $output): string
     {
         if ($isSuccessful) {
-            return 'Backup subido correctamente a Google Drive.';
+            return 'Backup subido correctamente a S3 y Drive.';
         }
 
         if (Str::contains($output, ['fwrite(): Argument #1 ($stream) must be of type resource, bool given', 'getTempFileHandle', 'A temporary file could not be opened to write the process output'])) {
@@ -781,7 +781,7 @@ class BackupService
         }
 
         if (Str::contains($output, ['Allowed memory size', 'Out of memory'])) {
-            return 'No se pudo subir el backup a Google Drive porque PHP agotó la memoria disponible durante el proceso. Aumenta `BACKUP_MEMORY_LIMIT` (por ejemplo `512M` o `1024M`) y vuelve a intentarlo.';
+            return 'No se pudo subir el backup a S3 / Drive porque PHP agotó la memoria disponible durante el proceso. Aumenta `BACKUP_MEMORY_LIMIT` (por ejemplo `512M` o `1024M`) y vuelve a intentarlo.';
         }
 
         return 'El proceso de backup terminó con errores. Revisa `storage/logs/laravel.log` para más detalle.';

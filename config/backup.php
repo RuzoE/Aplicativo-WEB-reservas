@@ -38,6 +38,7 @@ return [
             'compression_level' => 9,
             'filename_prefix' => 'backup-',
             'disks' => [
+                's3',
                 'google',
             ],
         ],
@@ -87,7 +88,7 @@ return [
     'monitor_backups' => [
         [
             'name' => env('BACKUP_NAME', env('APP_NAME', 'hotel-piloto-sam')),
-            'disks' => ['google'],
+            'disks' => ['s3', 'google'],
             'health_checks' => [
                 Spatie\Backup\Tasks\Monitor\HealthChecks\MaximumAgeInDays::class => 2,
                 Spatie\Backup\Tasks\Monitor\HealthChecks\MaximumStorageInMegabytes::class => 12000,

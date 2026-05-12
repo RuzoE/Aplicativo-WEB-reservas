@@ -19,14 +19,20 @@
         <section class="backup-hero">
             <div class="backup-hero-content">
                 <div>
-                    <span class="backup-pill">
-                        <i class="bi bi-cloud-check"></i>
-                        Backups + Google Drive
-                    </span>
-                    <h1>Gestión de Backups</h1>
+                    <div class="d-flex flex-wrap gap-2 mb-3">
+                        <span class="backup-pill" style="background: rgba(245, 158, 11, 0.1); color: #d97706; border: 1px solid rgba(245, 158, 11, 0.2);">
+                            <i class="bi bi-database-fill-up"></i> AWS S3 Principal
+                        </span>
+                        <span class="backup-pill" style="background: rgba(16, 185, 129, 0.1); color: #059669; border: 1px solid rgba(16, 185, 129, 0.2);">
+                            <i class="bi bi-google"></i> Drive Redundante
+                        </span>
+                        <span class="backup-pill" style="background: rgba(59, 130, 246, 0.1); color: #2563eb; border: 1px solid rgba(59, 130, 246, 0.2);">
+                            <i class="bi bi-shield-check"></i> Backup Seguro
+                        </span>
+                    </div>
+                    <h1>Gestión de Backups Multinube</h1>
                     <p>
-                        Administra copias de seguridad del sistema almacenadas en la nube (Google Drive)
-                        con una vista centralizada, segura y lista para uso administrativo.
+                        Administra copias de seguridad del sistema con nuestra arquitectura híbrida. Almacenamiento de alta disponibilidad en <strong>AWS S3</strong> (Principal) y sincronización en <strong>Google Drive</strong> (Redundante).
                     </p>
                 </div>
 
@@ -40,7 +46,7 @@
                         <span>{{ $summary['last_status'] === 'En proceso' ? 'Backup en proceso...' : 'Respaldar Base de Datos' }}</span>
                     </button>
                     <div class="mt-2 text-muted">
-                        <small>Respaldo <strong>Rápido</strong>: solo incluye la base de datos (SQL) y subida a Google Drive.</small>
+                        <small>Respaldo <strong>Rápido</strong>: incluye base de datos (SQL) y sincronización activa <strong>S3 + Drive</strong>.</small>
                     </div>
                 </form>
 
@@ -72,21 +78,21 @@
                     <i class="bi bi-archive"></i>
                 </div>
                 <strong>{{ number_format($summary['total']) }}</strong>
-                <small>Archivos visibles en Google Drive</small>
+                <small>Disponibles en el clúster multinube</small>
             </article>
 
             <article class="backup-stat-card">
                 <div class="backup-stat-top">
-                    <span>Último backup realizado</span>
-                    <i class="bi bi-clock-history"></i>
+                    <span>Última Sincronización</span>
+                    <i class="bi bi-arrow-repeat"></i>
                 </div>
                 <strong>{{ $summary['last_backup_label'] }}</strong>
-                <small>{{ $summary['last_backup_human'] }}</small>
+                <small class="text-success"><i class="bi bi-check2-circle"></i> Sincronización Activa</small>
             </article>
 
             <article class="backup-stat-card">
                 <div class="backup-stat-top">
-                    <span>Estado del último backup</span>
+                    <span>Estado Multinube</span>
                     <i class="bi bi-shield-check"></i>
                 </div>
                 <strong>
@@ -99,11 +105,11 @@
 
             <article class="backup-stat-card">
                 <div class="backup-stat-top">
-                    <span>Almacenamiento</span>
-                    <i class="bi bi-google"></i>
+                    <span>Almacenamiento Activo</span>
+                    <i class="bi bi-cloud-arrow-up"></i>
                 </div>
-                <strong>{{ $summary['storage'] }}</strong>
-                <small>Carpeta de backups del disco configurado</small>
+                <strong>AWS S3 & Drive</strong>
+                <small>Arquitectura híbrida de alta disponibilidad</small>
             </article>
         </section>
 
@@ -136,7 +142,7 @@
                     </div>
 
                     <p class="backup-help-text">
-                        El scheduler de Laravel ejecutará el backup completo a las 02:00 AM con frecuencia
+                        El scheduler de Laravel ejecutará el respaldo automático multinube (S3 + Drive) a las 02:00 AM con frecuencia
                         <strong>{{ strtolower($frequencyLabels[$settings->frequency] ?? 'diaria') }}</strong>.
                     </p>
                 </form>
@@ -145,16 +151,16 @@
             <article class="backup-card">
                 <div class="backup-card-header">
                     <div>
-                        <h2>Integración activa</h2>
-                        <p>El módulo usa <code>Storage::disk('google')</code> y la configuración existente del proyecto.</p>
+                        <h2>Arquitectura Multinube</h2>
+                        <p>Infraestructura híbrida usando <code>AWS S3</code> y <code>Google Drive</code>.</p>
                     </div>
                 </div>
 
                 <ul class="backup-checklist">
-                    <li><i class="bi bi-check-circle-fill"></i> Solo accesible para administradores.</li>
-                    <li><i class="bi bi-check-circle-fill"></i> Descarga y eliminación con confirmación.</li>
-                    <li><i class="bi bi-check-circle-fill"></i> Respaldo completo de BD + archivos del sistema.</li>
-                    <li><i class="bi bi-check-circle-fill"></i> Subida automática a Google Drive.</li>
+                    <li><i class="bi bi-check-circle-fill" style="color: #d97706;"></i> <strong>Carga Primaria S3:</strong> Alta disponibilidad y acceso rápido.</li>
+                    <li><i class="bi bi-check-circle-fill" style="color: #059669;"></i> <strong>Sincronización Drive:</strong> Espejo de respaldo redundante.</li>
+                    <li><i class="bi bi-check-circle-fill" style="color: #2563eb;"></i> <strong>Tolerancia a fallos:</strong> Continuidad asegurada si falla una nube.</li>
+                    <li><i class="bi bi-check-circle-fill" style="color: #4f46e5;"></i> Subida automática 100% encriptada y segura.</li>
                 </ul>
             </article>
         </section>
@@ -236,7 +242,7 @@
                                     <div class="backup-empty-state">
                                         <i class="bi bi-inbox"></i>
                                         <h3>No hay backups disponibles</h3>
-                                        <p>Genera el primer respaldo o revisa la conexión del disco <code>google</code>.</p>
+                                        <p>Genera el primer respaldo o revisa la conexión hacia <code>AWS S3</code> y <code>Google Drive</code>.</p>
                                     </div>
                                 </td>
                             </tr>
