@@ -2,6 +2,7 @@ FROM dunglas/frankenphp:php8.2.31-bookworm
 
 RUN apt-get update && apt-get install -y \
     ca-certificates git unzip zip libzip-dev \
+    nodejs npm \
     && docker-php-ext-install zip pdo pdo_mysql \
     && rm -rf /var/lib/apt/lists/*
 
