@@ -48,7 +48,7 @@ class MinibarProductController extends Controller
         ]);
 
         if ($request->hasFile('imagen')) {
-            $data['imagen'] = $request->file('imagen')->store('minibar', 'public');
+            $data['imagen'] = $request->file('imagen')->store('minibar', 's3');
         }
 
         $bebida = MinibarProduct::create($data);
@@ -101,9 +101,9 @@ class MinibarProductController extends Controller
         if ($request->hasFile('imagen')) {
             // borra la anterior si existe
             if ($bebida->imagen) {
-                Storage::disk('public')->delete($bebida->imagen);
+                Storage::disk('s3')->delete($bebida->imagen);
             }
-            $data['imagen'] = $request->file('imagen')->store('minibar', 'public');
+            $data['imagen'] = $request->file('imagen')->store('minibar', 's3');
         }
 
         $bebida->update($data);
@@ -132,7 +132,7 @@ class MinibarProductController extends Controller
         $bebidaId = $bebida->id;
 
         if ($bebida->imagen) {
-            Storage::disk('public')->delete($bebida->imagen);
+            Storage::disk('s3')->delete($bebida->imagen);
         }
 
         $bebida->delete();

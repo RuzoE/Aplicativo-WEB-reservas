@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Room;
 use App\Models\RoomType;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class RoomController extends Controller {
 
@@ -45,11 +46,7 @@ class RoomController extends Controller {
         if (!is_numeric($parsedPrice)) {
             return back()->withErrors(['price' => 'Formato de precio inválido. Usa valores como 143.500 o 143.900'])->withInput();
         }
-        $imageName = time() . '.' . $request->file('image')->extension();
-
-        // download image
-        $request->file('image')->move(public_path('img'), $imageName);
-        $imagePath = 'img/' . $imageName;
+        $imagePath = $request->file('image')->store('habitaciones', 's3');
 
         $room = Room::create([
             'room_type_id' => $request->room_type_id,
@@ -122,11 +119,10 @@ class RoomController extends Controller {
         $room->status = $request->has('status') ? Room::STATUS_DISPONIBLE : Room::STATUS_OCUPADA;
 
         if ($request->hasFile('image') && !empty($request->file('image'))) {
-            $imageName = time() . '.' . $request->file('image')->extension();
-
-            // download image
-            $request->file('image')->move(public_path('img'), $imageName);
-            $imagePath = 'img/' . $imageName;
+            if ($room->image) {
+                Storage::disk('s3')->delete($room->image);
+            }
+            $imagePath = $request->file('image')->store('habitaciones', 's3');
             $room->image = $imagePath;
         }
         $room->save();
