@@ -24,7 +24,13 @@ COPY . .
 
 RUN npm run build
 
-RUN COMPOSER_ALLOW_SUPERUSER=1 composer dump-autoload --optimize
+RUN mkdir -p storage/framework/cache \
+    storage/framework/sessions \
+    storage/framework/views \
+    storage/logs \
+    bootstrap/cache \
+    && chmod -R 775 storage bootstrap/cache \
+    && COMPOSER_ALLOW_SUPERUSER=1 composer dump-autoload --optimize
 
 EXPOSE 8000
 
