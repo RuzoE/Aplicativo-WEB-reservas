@@ -1,7 +1,10 @@
 {
-    "steps": {
-        "extensions": {
-            "command": "install-php-extensions ctype curl dom fileinfo filter hash mbstring openssl pcre pdo session tokenizer xml pdo_mysql redis zip"
-        }
+  "steps": {
+    "extensions": {
+      "command": "install-php-extensions ctype curl dom fileinfo filter hash mbstring openssl pcre pdo session tokenizer xml pdo_mysql redis zip"
+    },
+    "build": {
+      "command": "composer install --no-dev --optimize-autoloader --ignore-platform-req=ext-zip --no-scripts && npm install && npm run build"
     }
+  }
 }
