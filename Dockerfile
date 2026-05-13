@@ -22,15 +22,14 @@ RUN npm ci
 
 COPY . .
 
-RUN npm run build
-
 RUN mkdir -p storage/framework/cache \
     storage/framework/sessions \
     storage/framework/views \
     storage/logs \
     bootstrap/cache \
-    && chmod -R 775 storage bootstrap/cache \
-    && COMPOSER_ALLOW_SUPERUSER=1 composer dump-autoload --optimize
+    && chmod -R 775 storage bootstrap/cache
+
+RUN npm run build
 
 EXPOSE 8000
 
