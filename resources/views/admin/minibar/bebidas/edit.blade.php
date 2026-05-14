@@ -100,7 +100,7 @@
         <div class="image-preview-section">
           <span class="image-preview-label">Imagen Actual</span>
           <div class="image-preview-container">
-            <img src="{{ asset('storage/' . $bebida->imagen) }}"
+            <img src="{{ $bebida->image_url }}"
                  alt="{{ $bebida->nombre }}"
                  class="image-preview">
           </div>

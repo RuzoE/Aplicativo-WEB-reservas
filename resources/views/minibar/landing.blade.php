@@ -57,7 +57,7 @@
         @foreach($featured as $p)
           <article class="featured-card">
             <div class="featured-img-wrap">
-              <img src="{{ asset('storage/'.$p->imagen) }}" alt="{{ $p->nombre }}" loading="lazy">
+              <img src="{{ $p->image_url }}" alt="{{ $p->nombre }}" loading="lazy">
               @if($p->stock > 0)
                 <span class="featured-badge">Disponible</span>
               @endif

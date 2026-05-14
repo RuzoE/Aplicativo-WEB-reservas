@@ -9,7 +9,7 @@
                 <div class="col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="{{ $loop->iteration/10 }}s">
                     <div class="room-item shadow rounded overflow-hidden">
                         <div class="position-relative image-container">
-                            <img src="{{ asset($room->image) }}" alt="">
+                            <img src="{{ $room->image_url }}" alt="">
                             <small class="position-absolute start-0 top-0 bg-primary text-white rounded py-1 px-3 ms-4">
                                 @cop($room->price)/Noche
                             </small>

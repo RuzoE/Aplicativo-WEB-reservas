@@ -50,7 +50,7 @@
               <td><strong>@cop($room->price)</strong></td>
               <td>
                 @if($room->image)
-                  <img src="{{ asset($room->image) }}" alt="{{ $room->roomtype->name }}" class="room-image">
+                  <img src="{{ $room->image_url }}" alt="{{ $room->roomtype->name }}" class="room-image">
                 @else
                   <span style="color: #999; font-size: 0.85rem;">Sin imagen</span>
                 @endif

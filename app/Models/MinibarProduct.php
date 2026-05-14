@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 
 class MinibarProduct extends Model
 {
@@ -23,11 +24,23 @@ class MinibarProduct extends Model
         'imagen',
     ];
 
-      // 👇 añade esto
+    protected $appends = ['image_url'];
+
     protected $casts = [
         'precio' => 'float',  // "3000.00"
         'stock'  => 'integer',
     ];
+
+    /**
+     * Obtiene la URL completa de la imagen desde S3.
+     */
+    public function getImageUrlAttribute(): string
+    {
+        if ($this->imagen) {
+            return Storage::disk('s3')->url($this->imagen);
+        }
+        return asset('images/no-image.png');
+    }
 
     public function type()
     {

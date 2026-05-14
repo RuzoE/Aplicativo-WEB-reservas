@@ -46,7 +46,7 @@
           @forelse($nonAlcoholicProducts as $p)
             <div class="product-card">
               <div class="product-image">
-                <img src="{{ asset('storage/'.$p->imagen) }}" alt="{{ $p->nombre }}">
+                <img src="{{ $p->image_url }}" alt="{{ $p->nombre }}">
               </div>
               <div class="product-body">
                 <div class="product-category">{{ $p->type->nombre ?? 'Bebida' }}</div>
@@ -79,7 +79,7 @@
           @forelse($alcoholicProducts as $p)
             <div class="product-card">
               <div class="product-image">
-                <img src="{{ asset('storage/'.$p->imagen) }}" alt="{{ $p->nombre }}">
+                <img src="{{ $p->image_url }}" alt="{{ $p->nombre }}">
               </div>
               <div class="product-body">
                 <div class="product-category">{{ $p->type->nombre ?? 'Bebida' }}</div>

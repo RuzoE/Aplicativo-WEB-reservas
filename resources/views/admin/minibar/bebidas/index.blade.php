@@ -56,7 +56,7 @@
               </td>
               <td class="text-center">
                 @if($bebida->imagen)
-                  <img src="{{ asset('storage/' . $bebida->imagen) }}" alt="{{ $bebida->nombre }}" class="bebida-image">
+                  <img src="{{ $bebida->image_url }}" alt="{{ $bebida->nombre }}" class="bebida-image">
                 @else
                   <span class="text-muted">—</span>
                 @endif

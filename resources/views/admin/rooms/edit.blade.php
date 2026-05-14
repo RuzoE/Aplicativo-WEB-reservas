@@ -74,7 +74,7 @@
         <label class="form-label">Imagen actual</label>
         @if($room->image)
           <div class="image-preview-container">
-            <img src="{{ asset($room->image) }}" alt="{{ $room->roomtype->name ?? 'Habitación' }}" class="image-preview">
+            <img src="{{ $room->image_url }}" alt="{{ $room->roomtype->name ?? 'Habitación' }}" class="image-preview">
             <div class="image-info">
               <span class="image-info-text">
                 <i class="bi bi-image"></i> Imagen actual

@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Support\Facades\Storage;
 
 class Room extends Model {
 
@@ -30,11 +31,22 @@ class Room extends Model {
         // 'status' => 'boolean' // Ya no es booleano
     ];
 
-    protected $appends = ['room_number'];
+    protected $appends = ['room_number', 'image_url'];
 
     public function getRoomNumberAttribute()
     {
         return $this->total_room;
+    }
+
+    /**
+     * Obtiene la URL completa de la imagen desde S3.
+     */
+    public function getImageUrlAttribute(): string
+    {
+        if ($this->image) {
+            return Storage::disk('s3')->url($this->image);
+        }
+        return asset('images/no-image.png');
     }
 
     public function roomtype(): BelongsTo {
