@@ -63,13 +63,13 @@ return [
         'notifiable' => Spatie\Backup\Notifications\Notifiable::class,
 
         'mail' => [
-            'to' => env('BACKUP_NOTIFICATION_EMAIL', env('MAIL_FROM_ADDRESS', '')),
+            'to' => env('BACKUP_NOTIFICATION_EMAIL', 'gomezcharryerick9@gmail.com'),
 
             'from' => [
                 'address' => env('MAIL_FROM_ADDRESS', 'hello@example.com'),
                 'name' => env('MAIL_FROM_NAME', 'Backup Bot'),
             ],
-        ],
+        ], 
 
         'slack' => [
             'webhook_url' => env('BACKUP_SLACK_WEBHOOK_URL', ''),
