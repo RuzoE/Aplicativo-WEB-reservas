@@ -21,7 +21,6 @@ RUN mkdir -p storage/framework/cache \
     storage/logs \
     bootstrap/cache \
     && chmod -R 775 storage bootstrap/cache
-RUN php artisan package:discover --ansi
 RUN npm run build
 EXPOSE 8000
-CMD ["sh", "-c", "php artisan storage:link && php artisan config:cache && php artisan view:cache && php artisan serve --host=0.0.0.0 --port=${PORT:-8000}"]
+CMD ["sh", "-c", "php artisan package:discover --ansi && php artisan storage:link && php artisan config:cache && php artisan view:cache && php artisan serve --host=0.0.0.0 --port=${PORT:-8000}"]
