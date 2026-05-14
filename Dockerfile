@@ -15,6 +15,7 @@ RUN COMPOSER_ALLOW_SUPERUSER=1 composer install \
 COPY package.json package-lock.json ./
 RUN npm ci
 COPY . .
+RUN php artisan package:discover --ansi
 RUN mkdir -p storage/framework/cache \
     storage/framework/sessions \
     storage/framework/views \
