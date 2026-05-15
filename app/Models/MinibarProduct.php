@@ -27,17 +27,20 @@ class MinibarProduct extends Model
     protected $appends = ['image_url'];
 
     protected $casts = [
-        'precio' => 'float',  // "3000.00"
+        'precio' => 'float',
         'stock'  => 'integer',
     ];
 
     /**
-     * Obtiene la URL completa de la imagen desde S3.
+     * Obtiene la URL firmada de la imagen desde S3 (válida 2 horas).
      */
     public function getImageUrlAttribute(): string
     {
         if ($this->imagen) {
-            return Storage::disk('s3')->url($this->imagen);
+            return Storage::disk('s3')->temporaryUrl(
+                $this->imagen,
+                now()->addHours(2)
+            );
         }
         return asset('images/no-image.png');
     }
