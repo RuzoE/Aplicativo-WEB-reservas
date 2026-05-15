@@ -17,7 +17,7 @@
   <div class="pd-grid">
     <div class="pd-gallery">
       <div id="pd-viewport" class="pd-viewport">
-        <img id=\"pd-image\" src=\"{{ $bebida->image_url }}\" alt=\"{{ $bebida->nombre }}\">
+        <img id="pd-image" src="{{ $bebida->image_url }}" alt="{{ $bebida->nombre }}">
       </div>
     </div>
 
