@@ -86,6 +86,8 @@ return [
                     '--port=' . env('DB_PORT', '3306'),
                     '--single-transaction',
                     '--skip-lock-tables',
+                    '--set-gtid-purged=OFF',
+                    '--column-statistics=0',
                 ],
             ],
             'options' => extension_loaded('pdo_mysql') ? array_filter([
