@@ -804,7 +804,7 @@ class BackupService
 
         $cleanOutput = strip_tags($output);
         $cleanOutput = preg_replace('/\s+/', ' ', $cleanOutput);
-        $snippet = Str::limit($cleanOutput, 250);
+        $snippet = Str::limit($cleanOutput, 2000);
 
         return 'El proceso de backup terminó con errores: ' . $snippet . ' (Revisa `storage/logs/laravel.log` para más detalle).';
     }
