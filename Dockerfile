@@ -7,6 +7,8 @@ RUN apt-get update && apt-get install -y \
     && docker-php-ext-install zip pdo pdo_mysql \
     && rm -rf /var/lib/apt/lists/*
 
+RUN cp $PHP_INI_DIR/php.ini-production $PHP_INI_DIR/php.ini \
+    && sed -i 's/memory_limit = 128M/memory_limit = 512M/g' $PHP_INI_DIR/php.ini
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 WORKDIR /app

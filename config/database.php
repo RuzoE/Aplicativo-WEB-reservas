@@ -62,7 +62,7 @@ return [
                 'dump_binary_path' => (static function (): string {
                     $configuredPath = (string) env('MYSQLDUMP_PATH', '');
 
-                    if ($configuredPath === '') {
+                    if ($configuredPath === '' || strtolower($configuredPath) === 'mysqldump') {
                         return '';
                     }
 
