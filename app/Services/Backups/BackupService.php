@@ -156,15 +156,31 @@ class BackupService
             'memory_limit' => $memoryLimit,
         ]);
 
-        $cmd = sprintf(
-            'cmd /c "set TEMP=%s&& set TMP=%s&& set TMPDIR=%s&& start /B "" %s -d memory_limit=%s %s backup:run --only-db --disable-notifications > NUL 2>&1"',
-            $this->escapeWindowsSetValue($tempDir),
-            $this->escapeWindowsSetValue($tempDir),
-            $this->escapeWindowsSetValue($tempDir),
-            $this->quoteWindowsPath($php),
-            $memoryLimit,
-            $this->quoteWindowsPath($artisan)
-        );
+        if (DIRECTORY_SEPARATOR === '\\') {
+            $cmd = sprintf(
+                'cmd /c "set TEMP=%s&& set TMP=%s&& set TMPDIR=%s&& start /B "" %s -d memory_limit=%s %s backup:run --only-db --disable-notifications > NUL 2>&1"',
+                $this->escapeWindowsSetValue($tempDir),
+                $this->escapeWindowsSetValue($tempDir),
+                $this->escapeWindowsSetValue($tempDir),
+                $this->quoteWindowsPath($php),
+                $memoryLimit,
+                $this->quoteWindowsPath($artisan)
+            );
+        } else {
+            $cmd = sprintf(
+                'nohup %s -d memory_limit=%s %s backup:run --only-db --disable-notifications > /dev/null 2>&1 &',
+                $this->quoteShellArgument($php),
+                $memoryLimit,
+                $this->quoteShellArgument($artisan)
+            );
+            $cmd = sprintf(
+                'export TEMP=%s TMP=%s TMPDIR=%s; %s',
+                $this->quoteShellArgument($tempDir),
+                $this->quoteShellArgument($tempDir),
+                $this->quoteShellArgument($tempDir),
+                $cmd
+            );
+        }
 
         try {
             pclose(popen($cmd, 'r'));
@@ -461,6 +477,7 @@ class BackupService
     protected function prepareWritableTempDirectory(): string
     {
         $candidates = [
+            rtrim(sys_get_temp_dir(), DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR.'hotel-piloto-sam-backup',
             storage_path('app/backup-temp/system-tmp'),
             storage_path('app/backup-temp'),
             storage_path('framework/cache'),
@@ -549,6 +566,7 @@ class BackupService
     {
         $paths = array_merge(
             [
+                rtrim(sys_get_temp_dir(), DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR.'hotel-piloto-sam-backup',
                 storage_path('app/backup-temp/temp'),
                 storage_path('app/backup-temp/process-output'),
                 storage_path('app/temp_restore'),
