@@ -802,7 +802,11 @@ class BackupService
             return 'No se pudo subir el backup a S3 / Drive porque PHP agotó la memoria disponible durante el proceso. Aumenta `BACKUP_MEMORY_LIMIT` (por ejemplo `512M` o `1024M`) y vuelve a intentarlo.';
         }
 
-        return 'El proceso de backup terminó con errores. Revisa `storage/logs/laravel.log` para más detalle.';
+        $cleanOutput = strip_tags($output);
+        $cleanOutput = preg_replace('/\s+/', ' ', $cleanOutput);
+        $snippet = Str::limit($cleanOutput, 250);
+
+        return 'El proceso de backup terminó con errores: ' . $snippet . ' (Revisa `storage/logs/laravel.log` para más detalle).';
     }
 
     private function formatFailureMessage(\Throwable $exception, string $prefix): string
