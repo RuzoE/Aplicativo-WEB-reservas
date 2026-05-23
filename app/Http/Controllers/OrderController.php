@@ -3,9 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Order;
-use App\Models\RoomType;
 use App\Rules\AllowedEmailDomain;
 use App\Services\ReservationAvailabilityService;
+use App\Services\ReservationEmailService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -27,7 +27,7 @@ class OrderController extends Controller
         return view('pages.list-orders', ['orders' => $orders]);
     }
 
-    public function store(Request $request)
+    public function store(Request $request, ReservationEmailService $reservationEmailService)
     {
         $request->validate([
             'email' => ['required', 'email', new AllowedEmailDomain()],
@@ -38,7 +38,6 @@ class OrderController extends Controller
 
         $email = $request->input('email');
 
-        // 1. Determine user: Auth primary, else by Email
         if (Auth::check()) {
             $user = Auth::user();
         } else {
@@ -53,44 +52,36 @@ class OrderController extends Controller
         }
 
         $room = \App\Models\Room::findOrFail($request->input('room_id'));
-        $checkIn = \Carbon\Carbon::parse($request->input('check_in'));
-        $checkOut = \Carbon\Carbon::parse($request->input('check_out'));
+        $checkIn = Carbon::parse($request->input('check_in'));
+        $checkOut = Carbon::parse($request->input('check_out'));
         $stayDays = $checkIn->diffInDays($checkOut);
         $totalAmount = $room->price * $stayDays;
         $downPayment = $totalAmount * 0.30;
 
-        $order = new \App\Models\Order([
+        $order = Order::create([
             'check_in' => $checkIn,
             'check_out' => $checkOut,
-            'room_id' => null, // Ya no se pre-asigna una habitación específica
-            'room_type_id' => $room->room_type_id, // Se guarda solo el tipo de habitación deseado
-            'status' => 'pendiente',
+            'room_id' => null,
+            'room_type_id' => $room->room_type_id,
+            'user_id' => $user->id,
+            'status' => Order::STATUS_PENDIENTE_PAGO,
             'down_payment_amount' => $downPayment,
             'is_paid' => false,
         ]);
-
-        $user->orders()->save($order);
 
         registrarAuditoria(
             'CREATE',
             'reservas',
             $order->id,
-            'Reserva creada para el usuario ID ' . $user->id . ' con check-in ' . $checkIn->format('Y-m-d') . ' y check-out ' . $checkOut->format('Y-m-d'),
+            'Reserva creada para el usuario ID ' . $user->id . ' con check-in ' . $checkIn->format('Y-m-d') . ' y check-out ' . $checkOut->format('Y-m-d') . ' y estado pendiente_pago',
             Auth::id() ?? $user->id
         );
 
-        // Send email (always to the address provided in form for this specific reservation)
-        $emailSent = false;
-        try {
-            \Illuminate\Support\Facades\Mail::to($email)->send(new \App\Mail\ReservationPendingMail($order));
-            $emailSent = true;
-        } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::error("Error sending reservation email: " . $e->getMessage());
-        }
+        $emailSent = $reservationEmailService->sendPendingPaymentInstructions($order, $email);
 
         $message = $emailSent
-            ? '¡Tu reserva ha sido recibida! Por favor revisa el correo (' . $email . ') para realizar el pago del anticipo y confirmar la reserva.'
-            : '¡Tu reserva ha sido recibida! No pudimos enviar el correo de confirmación en este momento, pero tu reserva está registrada. Contacta al hotel para más detalles.';
+            ? '¡Tu reserva ha sido recibida y quedó en estado pendiente_pago! Revisa el correo (' . $email . ') para realizar el pago del anticipo y confirmar tu reserva.'
+            : '¡Tu reserva ha sido recibida y quedó en estado pendiente_pago! No pudimos enviar el correo de confirmación en este momento, pero tu reserva está registrada. Contacta al hotel para más detalles.';
 
         return redirect()->route('orders.index')
             ->with($emailSent ? 'success' : 'warning', $message);
@@ -129,7 +120,7 @@ class OrderController extends Controller
         $estadoAnterior = $order->status;
         $order->update([
             'is_paid' => true,
-            'status' => 'confirmada'
+            'status' => Order::STATUS_RESERVA_PREVIA,
         ]);
 
         registrarAuditoria(
@@ -146,7 +137,7 @@ class OrderController extends Controller
         }
 
         return redirect()->route('orders.index')
-            ->with('success', '¡Pago de anticipo confirmado! Tu reserva ahora está CONFIRMADA.');
+            ->with('success', '¡Pago de anticipo confirmado! Tu reserva ahora está en estado reserva_previa.');
     }
 
     /**

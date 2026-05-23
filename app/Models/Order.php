@@ -14,6 +14,7 @@ class Order extends Model {
 
     const STATUS_PENDIENTE = 'pendiente';
     const STATUS_ANTICIPO_PAGADO = 'anticipo_pagado';
+    const STATUS_PENDIENTE_PAGO = 'pendiente_pago';
     const STATUS_RESERVA_PREVIA = 'reserva_previa';
     const STATUS_OCUPADA = 'ocupada';
     const STATUS_FINALIZADA = 'finalizada';
@@ -55,7 +56,7 @@ class Order extends Model {
     public function getTotalAmountAttribute()
     {
         $price = $this->room->price ?? 0;
-        
+
         // Fallback: if room is null but we have room_type_id, get the price from the room category
         if ($price == 0 && $this->room_type_id) {
             $price = Room::where('room_type_id', $this->room_type_id)->value('price') ?? 0;

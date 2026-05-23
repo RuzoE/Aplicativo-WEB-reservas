@@ -66,20 +66,20 @@ Route::match (['GET', 'POST'], '/search', [PageController::class , 'search'])->n
 
 
 
+// Rutas públicas relacionadas con reservas y pago de anticipo
+Route::post('/orders', [OrderController::class , 'store'])->name('orders.store');
+Route::get('/orders/payment/{token}', [OrderController::class, 'paymentPage'])->name('orders.payment');
+Route::post('/orders/payment/{token}/confirm', [OrderController::class, 'confirmPayment'])->name('orders.confirm_payment');
+
 /* |-------------------------------------------------------------------------- | Rutas protegidas (requieren sesión) |-------------------------------------------------------------------------- */
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [PageController::class , 'showProfile'])->name('profile');
     Route::put('/profile', [PageController::class , 'updateProfile'])->name('profile.update');
 
-    Route::post('/orders', [OrderController::class , 'store'])->name('orders.store');
     Route::get('/orders', [OrderController::class , 'index'])->name('orders.index');
 
     Route::get('/orders/{user_order}/edit', [OrderController::class, 'edit'])->name('orders.edit');
     Route::put('/orders/{user_order}', [OrderController::class, 'update'])->name('orders.update');
-
-    // Rutas de Pago (con token)
-    Route::get('/orders/payment/{token}', [OrderController::class, 'paymentPage'])->name('orders.payment');
-    Route::post('/orders/payment/{token}/confirm', [OrderController::class, 'confirmPayment'])->name('orders.confirm_payment');
 });
 
 /* |-------------------------------------------------------------------------- | Autenticación (simple) |-------------------------------------------------------------------------- */
