@@ -64,7 +64,7 @@ class OrderController extends Controller
             'room_id' => null,
             'room_type_id' => $room->room_type_id,
             'user_id' => $user->id,
-            'status' => Order::STATUS_PENDIENTE_PAGO,
+            'status' => 'pendiente_pago',
             'down_payment_amount' => $downPayment,
             'is_paid' => false,
         ]);
