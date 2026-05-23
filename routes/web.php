@@ -132,6 +132,41 @@ Route::prefix('admin')
         Route::post('backups/restore', [BackupController::class, 'restore'])->name('backups.restore');
         Route::post('backups/reset', [BackupController::class, 'resetStatus'])->name('backups.reset');
 
+        // ── Diagnóstico de correo (temporal) ──
+        Route::get('test-mail', function () {
+            $config = [
+                'mailer'     => config('mail.default'),
+                'host'       => config('mail.mailers.smtp.host'),
+                'port'       => config('mail.mailers.smtp.port'),
+                'encryption' => config('mail.mailers.smtp.encryption'),
+                'username'   => config('mail.mailers.smtp.username'),
+                'from'       => config('mail.from.address'),
+                'timeout'    => config('mail.mailers.smtp.timeout'),
+            ];
+
+            try {
+                \Illuminate\Support\Facades\Mail::raw(
+                    'Correo de prueba desde Railway - ' . now()->toDateTimeString(),
+                    function ($msg) {
+                        $msg->to(config('mail.mailers.smtp.username'))
+                            ->subject('Test Mail desde Railway');
+                    }
+                );
+                return response()->json([
+                    'status'  => 'OK',
+                    'message' => 'Correo enviado correctamente',
+                    'config'  => $config,
+                ]);
+            } catch (\Throwable $e) {
+                return response()->json([
+                    'status'  => 'ERROR',
+                    'error'   => $e->getMessage(),
+                    'class'   => get_class($e),
+                    'config'  => $config,
+                ], 500);
+            }
+        })->name('test-mail');
+
         // Aliases sin prefijo para compatibilidad legacy
         // Las rutas anteriores generan: admin.report.preview / admin.report.download
     });
