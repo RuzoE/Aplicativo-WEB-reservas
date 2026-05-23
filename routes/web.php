@@ -80,6 +80,7 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/orders/{user_order}/edit', [OrderController::class, 'edit'])->name('orders.edit');
     Route::put('/orders/{user_order}', [OrderController::class, 'update'])->name('orders.update');
+    Route::delete('/orders/{user_order}', [OrderController::class, 'destroy'])->name('orders.destroy');
 });
 
 /* |-------------------------------------------------------------------------- | Autenticación (simple) |-------------------------------------------------------------------------- */

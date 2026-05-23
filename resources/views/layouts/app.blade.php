@@ -26,7 +26,7 @@
 
     <!-- Template Stylesheet -->
     <link href="{{ asset('css/style.css') }}" rel="stylesheet">
-    
+
     <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <!-- Tu archivo app.css y JS -->
@@ -49,19 +49,37 @@
     } elseif(request()->routeIs('reception.*')) {
         $bodyClasses[] = 'panel-recepcion';
     }
+
+    $flashMessage = session('error') ?? session('warning') ?? session('success') ?? session('message') ?? session('status');
+    $flashType = session('error') ? 'error' : (session('warning') ? 'warning' : 'success');
+    $flashIcon = match ($flashType) {
+        'error' => 'fas fa-exclamation-circle',
+        'warning' => 'fas fa-exclamation-triangle',
+        default => 'fas fa-check-circle',
+    };
+    $flashGradient = match ($flashType) {
+        'error' => 'linear-gradient(135deg, #dc3545 0%, #b02a37 100%)',
+        'warning' => 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+        default => 'linear-gradient(135deg, #28a745 0%, #218838 100%)',
+    };
+    $flashShadow = match ($flashType) {
+        'error' => 'rgba(220, 53, 69, 0.3)',
+        'warning' => 'rgba(245, 158, 11, 0.3)',
+        default => 'rgba(40, 167, 69, 0.3)',
+    };
 @endphp
 <body class="{{ implode(' ', $bodyClasses) }}">
         {{-- ✅ Notificación Global Única --}}
-        @if (session('success') || session('message') || session('status'))
+        @if ($flashMessage)
             <div id="global-notification" class="animated fadeInDown" style="
                 position: fixed;
                 top: 20px;
                 right: 20px;
-                background: linear-gradient(135deg, #28a745 0%, #218838 100%);
+                background: {{ $flashGradient }};
                 color: white;
                 padding: 16px 24px;
                 border-radius: 12px;
-                box-shadow: 0 10px 30px rgba(40, 167, 69, 0.3);
+                box-shadow: 0 10px 30px {{ $flashShadow }};
                 z-index: 9999;
                 display: flex;
                 align-items: center;
@@ -71,8 +89,8 @@
                 backdrop-filter: blur(8px);
                 transition: all 0.5s ease;
             ">
-                <i class="fas fa-check-circle fs-4"></i>
-                <span>{{ session('success') ?? session('message') ?? session('status') }}</span>
+                <i class="{{ $flashIcon }} fs-4"></i>
+                <span>{{ $flashMessage }}</span>
                 <button type="button" class="btn-close btn-close-white ms-2" data-dismiss-parent="#global-notification" style="font-size: 0.8rem;"></button>
             </div>
             <script src="{{ asset('js/notificaciones.js') }}"></script>

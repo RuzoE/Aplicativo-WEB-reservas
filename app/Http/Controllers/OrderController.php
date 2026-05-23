@@ -205,4 +205,28 @@ class OrderController extends Controller
         return redirect()->route('orders.index')
             ->with('success', 'La fecha de tu reserva ha sido actualizada correctamente.');
     }
+
+    /**
+     * Remove the specified order from storage.
+     */
+    public function destroy(Order $user_order)
+    {
+        if (Auth::id() !== $user_order->user_id) {
+            abort(403, 'No tienes permiso para eliminar esta reserva.');
+        }
+
+        $orderId = $user_order->id;
+        $user_order->delete();
+
+        registrarAuditoria(
+            'DELETE',
+            'reservas',
+            $orderId,
+            'Reserva eliminada por el usuario autenticado. ID ' . $orderId,
+            Auth::id()
+        );
+
+        return redirect()->route('orders.index')
+            ->with('success', 'La reserva ha sido eliminada correctamente.');
+    }
 }

@@ -57,9 +57,25 @@
                         </td>
                         <td>
                             @if(!in_array($order->status, ['finalizada', 'cancelada']))
-                                <a href="{{ route('orders.edit', ['user_order' => $order->id]) }}" class="btn btn-sm btn-outline-primary rounded-pill">
-                                    <i class="fas fa-edit me-1"></i> Modificar
-                                </a>
+                                <div class="d-flex flex-column flex-sm-row gap-2 align-items-stretch align-items-sm-center">
+                                    <a href="{{ route('orders.edit', ['user_order' => $order->id]) }}"
+                                       class="btn btn-sm btn-outline-primary rounded-pill px-3 shadow-sm d-inline-flex align-items-center justify-content-center gap-2">
+                                        <i class="fas fa-edit"></i>
+                                        <span>Modificar</span>
+                                    </a>
+
+                                    <form action="{{ route('orders.destroy', ['user_order' => $order->id]) }}"
+                                          method="POST"
+                                          class="delete-order-form m-0">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit"
+                                                class="btn btn-sm btn-outline-danger rounded-pill px-3 shadow-sm d-inline-flex align-items-center justify-content-center gap-2 w-100">
+                                            <i class="fas fa-trash-alt"></i>
+                                            <span>Eliminar</span>
+                                        </button>
+                                    </form>
+                                </div>
                             @else
                                 <span class="text-muted small">Sin acciones</span>
                             @endif
@@ -75,6 +91,39 @@
     <!-- Newsletter -->
     @include('components.sections.newsletter')
 @endsection
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('.delete-order-form').forEach(function (form) {
+            form.addEventListener('submit', function (event) {
+                event.preventDefault();
+
+                Swal.fire({
+                    title: '¿Estás seguro de que deseas eliminar esta reserva?',
+                    text: 'Esta acción no se puede deshacer.',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#dc3545',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Sí, eliminar',
+                    cancelButtonText: 'Cancelar',
+                    reverseButtons: true,
+                    customClass: {
+                        confirmButton: 'btn btn-danger me-2',
+                        cancelButton: 'btn btn-outline-secondary'
+                    },
+                    buttonsStyling: false
+                }).then(function (result) {
+                    if (result.isConfirmed) {
+                        form.submit();
+                    }
+                });
+            });
+        });
+    });
+</script>
+@endpush
 
 @section('footer')
     @include('layouts.footer')

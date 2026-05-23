@@ -76,4 +76,46 @@ class OrderStoreTest extends TestCase
         $this->assertTrue((bool) $order->is_paid);
         $this->assertSame(Order::STATUS_RESERVA_PREVIA, $order->status);
     }
+
+    public function test_it_deletes_only_the_authenticated_users_reservation_and_flashes_success()
+    {
+        $user = \App\Models\User::factory()->create();
+        $roomType = RoomType::create(['name' => 'Doble']);
+        $order = Order::create([
+            'check_in' => now()->addDay(),
+            'check_out' => now()->addDays(3),
+            'room_type_id' => $roomType->id,
+            'user_id' => $user->id,
+            'status' => 'pendiente_pago',
+            'down_payment_amount' => 50000,
+            'is_paid' => false,
+        ]);
+
+        $response = $this->actingAs($user)->delete(route('orders.destroy', $order));
+
+        $response->assertRedirect(route('orders.index'));
+        $response->assertSessionHas('success', 'La reserva ha sido eliminada correctamente.');
+        $this->assertDatabaseMissing('orders', ['id' => $order->id]);
+    }
+
+    public function test_it_rejects_deleting_a_reservation_that_belongs_to_another_user()
+    {
+        $owner = \App\Models\User::factory()->create();
+        $attacker = \App\Models\User::factory()->create();
+        $roomType = RoomType::create(['name' => 'Doble']);
+        $order = Order::create([
+            'check_in' => now()->addDay(),
+            'check_out' => now()->addDays(3),
+            'room_type_id' => $roomType->id,
+            'user_id' => $owner->id,
+            'status' => 'pendiente_pago',
+            'down_payment_amount' => 50000,
+            'is_paid' => false,
+        ]);
+
+        $response = $this->actingAs($attacker)->delete(route('orders.destroy', $order));
+
+        $response->assertForbidden();
+        $this->assertDatabaseHas('orders', ['id' => $order->id]);
+    }
 }
