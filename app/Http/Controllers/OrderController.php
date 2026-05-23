@@ -80,14 +80,20 @@ class OrderController extends Controller
         );
 
         // Send email (always to the address provided in form for this specific reservation)
+        $emailSent = false;
         try {
             \Illuminate\Support\Facades\Mail::to($email)->send(new \App\Mail\ReservationPendingMail($order));
-        } catch (\Exception $e) {
+            $emailSent = true;
+        } catch (\Throwable $e) {
             \Illuminate\Support\Facades\Log::error("Error sending reservation email: " . $e->getMessage());
         }
 
+        $message = $emailSent
+            ? '¡Tu reserva ha sido recibida! Por favor revisa el correo (' . $email . ') para realizar el pago del anticipo y confirmar la reserva.'
+            : '¡Tu reserva ha sido recibida! No pudimos enviar el correo de confirmación en este momento, pero tu reserva está registrada. Contacta al hotel para más detalles.';
+
         return redirect()->route('orders.index')
-            ->with('success', '¡Tu reserva ha sido recibida! Por favor revisa el correo (' . $email . ') para realizar el pago del anticipo y confirmar la reserva.');
+            ->with($emailSent ? 'success' : 'warning', $message);
     }
 
     public function paymentPage($token)
