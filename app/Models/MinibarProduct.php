@@ -2,9 +2,9 @@
 
 namespace App\Models;
 
+use App\Traits\HasS3Image;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\Traits\HasS3Image;
 
 class MinibarProduct extends Model
 {
@@ -31,7 +31,6 @@ class MinibarProduct extends Model
         'stock'  => 'integer',
     ];
 
-    // Configuración para el trait HasS3Image
     protected $imageField = 'imagen';
 
     public function type()

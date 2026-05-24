@@ -24,7 +24,7 @@
           <table class="summary-table">
             <thead>
               <tr>
-                <th>Bebida</th>
+                <th>Producto</th>
                 <th>Precio unitario</th>
                 <th>Cantidad</th>
                 <th>Subtotal</th>
@@ -33,7 +33,17 @@
             <tbody>
               @foreach($items as $item)
                 <tr>
-                  <td>{{ $item['product']->nombre }}</td>
+                  <td>
+                    <div style="display:flex;align-items:center;gap:0.85rem;">
+                      <img src="{{ $item['product']->image_url }}"
+                           alt="{{ $item['product']->nombre }}"
+                           style="width:56px;height:56px;object-fit:cover;border-radius:10px;border:1px solid #e5e7eb;">
+                      <div>
+                        <div style="font-weight:700;color:#1a1a2e;">{{ $item['product']->nombre }}</div>
+                        <div style="font-size:0.9rem;color:#6b7280;">{{ $item['product']->type->nombre ?? 'Bebida' }}</div>
+                      </div>
+                    </div>
+                  </td>
                   <td style="text-align: right;">${{ number_format($item['product']->precio, 2) }}</td>
                   <td style="text-align: center;">{{ $item['qty'] }}</td>
                   <td style="text-align: right;">${{ number_format($item['subtotal'], 2) }}</td>
