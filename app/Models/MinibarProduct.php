@@ -4,11 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Storage;
+use App\Traits\HasS3Image;
 
 class MinibarProduct extends Model
 {
-    use HasFactory;
+    use HasFactory, HasS3Image;
 
     /**
      * La tabla asociada al modelo.
@@ -31,19 +31,8 @@ class MinibarProduct extends Model
         'stock'  => 'integer',
     ];
 
-    /**
-     * Obtiene la URL firmada de la imagen desde S3 (válida 2 horas).
-     */
-    public function getImageUrlAttribute(): string
-    {
-        if ($this->imagen) {
-            return Storage::disk('s3')->temporaryUrl(
-                $this->imagen,
-                now()->addHours(2)
-            );
-        }
-        return asset('images/no-image.png');
-    }
+    // Configuración para el trait HasS3Image
+    protected $imageField = 'imagen';
 
     public function type()
     {
