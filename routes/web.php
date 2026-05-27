@@ -133,29 +133,26 @@ Route::prefix('admin')
         Route::post('backups/restore', [BackupController::class, 'restore'])->name('backups.restore');
         Route::post('backups/reset', [BackupController::class, 'resetStatus'])->name('backups.reset');
 
-        // ── Diagnóstico de correo (temporal) ──
+        // ── Diagnóstico de correo Brevo (temporal) ──
         Route::get('test-mail', function () {
             $config = [
-                'mailer'     => config('mail.default'),
-                'host'       => config('mail.mailers.smtp.host'),
-                'port'       => config('mail.mailers.smtp.port'),
-                'encryption' => config('mail.mailers.smtp.encryption'),
-                'username'   => config('mail.mailers.smtp.username'),
-                'from'       => config('mail.from.address'),
-                'timeout'    => config('mail.mailers.smtp.timeout'),
+                'mailer'       => config('mail.default'),
+                'from_address' => config('mail.from.address'),
+                'from_name'    => config('mail.from.name'),
+                'brevo_key_set' => !empty(env('BREVO_API_KEY')),
             ];
 
             try {
                 \Illuminate\Support\Facades\Mail::raw(
-                    'Correo de prueba desde Railway - ' . now()->toDateTimeString(),
+                    'Correo de prueba desde Hotel Oasis vía Brevo API - ' . now()->toDateTimeString(),
                     function ($msg) {
-                        $msg->to(config('mail.mailers.smtp.username'))
-                            ->subject('Test Mail desde Railway');
+                        $msg->to(config('mail.from.address'))  // envía al mismo FROM como prueba
+                            ->subject('✅ Test Brevo API - Hotel Oasis');
                     }
                 );
                 return response()->json([
                     'status'  => 'OK',
-                    'message' => 'Correo enviado correctamente',
+                    'message' => 'Correo enviado correctamente vía Brevo API',
                     'config'  => $config,
                 ]);
             } catch (\Throwable $e) {
