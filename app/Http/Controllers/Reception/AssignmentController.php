@@ -65,7 +65,7 @@ class AssignmentController extends Controller
         $reserva->update([
             'room_id' => $room->id,
             'room_number' => $roomNumber,
-            'status' => Order::STATUS_RESERVA_PREVIA
+            'status' => Order::STATUS_RESERVA_ASIGNADA
         ]);
 
         registrarAuditoria(
@@ -126,11 +126,12 @@ class AssignmentController extends Controller
             ->get();
 
         // 3. Pre-reservas: Órdenes con room_number asignado cuya check_in es EXACTAMENTE esa fecha
-        //    Incluye status pendiente, anticipo_pagado y reserva_previa
+        //    Incluye status pendiente, anticipo_pagado, reserva_previa y reserva_asignada
         $preReservas = Order::whereIn('status', [
                 Order::STATUS_PENDIENTE,
                 Order::STATUS_ANTICIPO_PAGADO,
                 Order::STATUS_RESERVA_PREVIA,
+                Order::STATUS_RESERVA_ASIGNADA,
             ])
             ->whereDate('check_in', $date)
             ->whereNotNull('room_number')

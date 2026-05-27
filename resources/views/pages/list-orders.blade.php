@@ -47,12 +47,16 @@
                         <td>@cop($order->room->price ?? ($order->roomType->rooms->first()->price ?? 0), $order->stayDays)</td>
                         <td>{{ $order->created_at->format('d/m/Y h:i A') }}</td>
                         <td>
-                            @if($order->status == 'pendiente')
+                            @if($order->status == 'pendiente_pago' || $order->status == 'pendiente')
                                 <span class="badge bg-warning text-dark">Pendiente Pago</span>
+                            @elseif($order->status == 'reserva_previa')
+                                <span class="badge bg-secondary text-white">Pago Realizado</span>
+                            @elseif($order->status == 'reserva_asignada')
+                                <span class="badge bg-success text-white">Reserva Asignada</span>
                             @elseif($order->status == 'confirmada')
                                 <span class="badge bg-success">Confirmada</span>
                             @else
-                                <span class="badge bg-secondary">{{ ucfirst($order->status) }}</span>
+                                <span class="badge bg-dark text-white">{{ ucfirst(str_replace('_', ' ', $order->status)) }}</span>
                             @endif
                         </td>
                         <td>

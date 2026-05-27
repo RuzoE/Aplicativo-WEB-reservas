@@ -16,6 +16,7 @@ class Order extends Model {
     const STATUS_ANTICIPO_PAGADO = 'anticipo_pagado';
     const STATUS_PENDIENTE_PAGO = 'pendiente_pago';
     const STATUS_RESERVA_PREVIA = 'reserva_previa';
+    const STATUS_RESERVA_ASIGNADA = 'reserva_asignada';
     const STATUS_OCUPADA = 'ocupada';
     const STATUS_FINALIZADA = 'finalizada';
 

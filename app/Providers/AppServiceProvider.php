@@ -37,7 +37,7 @@ class AppServiceProvider extends ServiceProvider
         });
 
         View::composer('admin.sidebar', function ($view) {
-            $anticiposCount = \App\Models\Order::whereIn('status', [\App\Models\Order::STATUS_ANTICIPO_PAGADO, 'confirmada'])
+            $anticiposCount = \App\Models\Order::whereIn('status', [\App\Models\Order::STATUS_RESERVA_PREVIA, \App\Models\Order::STATUS_ANTICIPO_PAGADO, 'confirmada'])
                 ->where('down_payment_amount', '>', 0)
                 ->where('is_paid', true)
                 ->count();
