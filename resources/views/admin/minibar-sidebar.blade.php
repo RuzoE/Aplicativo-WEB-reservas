@@ -39,6 +39,18 @@
       </li>
 
       <li>
+        <a href="{{ route('admin.minibar.notificaciones.index') }}" class="nav-link px-0 align-middle fs-5 pb-2">
+          <i class="fs-4 bi-bell"></i> <span class="ms-1">Notificaciones</span>
+          @php
+            $lowStockCount = \App\Models\MinibarProduct::where('stock', '<=', 5)->count();
+          @endphp
+          @if($lowStockCount > 0)
+            <span class="badge bg-danger ms-1">{{ $lowStockCount }}</span>
+          @endif
+        </a>
+      </li>
+
+      <li>
         <a href="{{ route('admin.minibar.bebida-types.index') }}" class="nav-link px-0 align-middle fs-5 pb-2">
           <i class="fs-4 bi-bookmark-fill"></i> <span class="ms-1">Tipos Bebida</span>
         </a>

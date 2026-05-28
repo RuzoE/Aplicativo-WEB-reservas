@@ -23,6 +23,25 @@
     </a>
   </div>
 
+  {{-- Alerta de bajo stock --}}
+  @php
+    $lowStockProducts = \App\Models\MinibarProduct::where('stock', '<=', 5)->get();
+  @endphp
+  @if($lowStockProducts->count() > 0)
+    <div class="alert alert-danger shadow-sm d-flex align-items-center gap-3 p-3 mb-4" style="border-radius: 12px; background: linear-gradient(135deg, #fff5f5 0%, #ffe3e3 100%); border: 1px solid #ffc9c9; color: #c92a2a;">
+      <i class="bi bi-exclamation-triangle-fill fs-3 text-danger me-2"></i>
+      <div>
+        <h5 class="alert-heading fw-bold mb-1" style="color: #c92a2a; font-size: 1.1rem;">¡Atención! Bebidas con bajo stock</h5>
+        <p class="mb-0 text-dark" style="font-size: 0.95rem;">
+          Las siguientes bebidas tienen poco stock y necesitan ser surtidas: 
+          @foreach($lowStockProducts as $lowProd)
+            <strong style="color: #c92a2a;">{{ $lowProd->nombre }}</strong> (Stock: {{ $lowProd->stock }}){{ !$loop->last ? ',' : '' }}
+          @endforeach
+        </p>
+      </div>
+    </div>
+  @endif
+
   {{-- Tabla de bebidas --}}
   <div class="bebidas-card">
     <div class="table-responsive">

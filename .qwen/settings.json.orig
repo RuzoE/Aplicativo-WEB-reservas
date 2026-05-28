@@ -1,7 +1,10 @@
 {
   "permissions": {
     "allow": [
-      "Bash(powershell *)"
+      "Bash(powershell *)",
+      "Bash(dir *)",
+      "Bash(php *)"
     ]
-  }
+  },
+  "$version": 3
 }

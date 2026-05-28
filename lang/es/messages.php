@@ -8,7 +8,7 @@ return [
     'employees' => 'Empleados',
     'main_panel' => 'Panel Principal',
     'home' => 'Inicio',
-    'dashboard_reservations' => 'Reservas',
+    'dashboard_reservations' => 'Habitaciones',
     'dashboard_minibar' => 'Minibar',
     'dashboard_reception' => 'Recepción',
     'checkin' => 'Check-in',

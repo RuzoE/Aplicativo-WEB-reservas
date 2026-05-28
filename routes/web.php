@@ -25,6 +25,7 @@ use App\Http\Controllers\Admin\Minibar\DashboardController as MinibarDashboardCo
 use App\Http\Controllers\Admin\Minibar\BebidaTypeController;
 use App\Http\Controllers\Admin\Minibar\MinibarProductController as MinibarProductAdminController;
 use App\Http\Controllers\Admin\Minibar\CompraController;
+use App\Http\Controllers\Admin\Minibar\NotificacionController;
 
 // Admin – Empleados
 use App\Http\Controllers\Admin\EmployeeController;
@@ -209,6 +210,8 @@ Route::prefix('admin/minibar')
         Route::get('ventas', [CompraController::class , 'index'])->name('ventas.index');
         Route::get('ventas/{compra}', [CompraController::class , 'show'])
             ->whereNumber('compra')->name('ventas.show');
+
+        Route::get('notificaciones', [NotificacionController::class, 'index'])->name('notificaciones.index');
     });
 
 /* |-------------------------------------------------------------------------- | DASHBOARDS OPERATIVOS (empleados con rol administrador) |-------------------------------------------------------------------------- */
