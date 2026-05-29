@@ -6,11 +6,8 @@
   <div class="mb-4 d-flex align-items-center justify-content-between flex-wrap gap-2">
     <div>
       <h2 class="mb-1"><i class="bi bi-shield-lock me-2"></i>Gestión de Usuarios</h2>
-      <p class="text-muted mb-0">Administra la seguridad, autenticación y control de acceso del sistema</p>
+      <p class="text-muted mb-0">Los usuarios se crean automáticamente al registrar empleados o clientes. Aquí puedes gestionar su acceso y seguridad.</p>
     </div>
-    <a href="{{ route('admin.usuarios.create') }}" class="btn btn-success btn-lg shadow-sm">
-      <i class="bi bi-person-plus"></i> <span class="d-none d-sm-inline">Nuevo usuario</span>
-    </a>
   </div>
 
   <!-- Filtros -->
@@ -78,9 +75,7 @@
                   <small class="text-muted">{{ $usuario->email }}</small>
                 </td>
                 <td>
-                  @foreach($usuario->roles as $role)
-                    <span class="badge role-badge-{{ $role->name }} text-capitalize">{{ $role->name }}</span>
-                  @endforeach
+                  <span class="badge role-badge-{{ strtolower($usuario->display_role) }} text-capitalize">{{ $usuario->display_role }}</span>
                 </td>
                 <td>
                   <span class="badge bg-{{ $usuario->status_color }}">{{ $usuario->status_label }}</span>

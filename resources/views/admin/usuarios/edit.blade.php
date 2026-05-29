@@ -137,6 +137,18 @@
             <dt class="col-sm-6 fw-semibold">ID:</dt>
             <dd class="col-sm-6">{{ $usuario->id }}</dd>
             
+            <dt class="col-sm-6 fw-semibold">Rol mostrado:</dt>
+            <dd class="col-sm-6">
+              <span class="badge role-badge-{{ strtolower($usuario->display_role) }}">{{ $usuario->display_role }}</span>
+            </dd>
+            
+            <dt class="col-sm-6 fw-semibold">Tipo:</dt>
+            <dd class="col-sm-6">
+              <span class="badge {{ $usuario->is_employee ? 'bg-info' : 'bg-secondary' }}">
+                {{ $usuario->is_employee ? 'Empleado' : 'Invitado' }}
+              </span>
+            </dd>
+            
             <dt class="col-sm-6 fw-semibold">Creado:</dt>
             <dd class="col-sm-6">{{ $usuario->created_at->format('d/m/Y H:i') }}</dd>
             

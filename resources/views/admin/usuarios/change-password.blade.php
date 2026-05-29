@@ -37,24 +37,6 @@
             @endif
 
             <div class="mb-4">
-              <label class="form-label fw-semibold">Contraseña actual *</label>
-              <div class="input-group input-group-lg">
-                <input type="password" name="current_password" id="currentPassword" 
-                       class="form-control @error('current_password') is-invalid @enderror" 
-                       placeholder="Ingresa tu contraseña actual" required>
-                <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('currentPassword')">
-                  <i class="bi bi-eye"></i>
-                </button>
-              </div>
-              @error('current_password')
-                <div class="text-danger small mt-1">{{ $message }}</div>
-              @enderror
-              <small class="text-muted d-block mt-2">Se requiere tu contraseña actual por seguridad</small>
-            </div>
-
-            <hr>
-
-            <div class="mb-4">
               <label class="form-label fw-semibold">Nueva contraseña *</label>
               <div class="input-group input-group-lg">
                 <input type="password" name="password" id="password" minlength="12"

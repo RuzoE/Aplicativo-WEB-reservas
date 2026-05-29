@@ -69,70 +69,23 @@ class UsuariosController extends Controller
     }
 
     /**
-     * Mostrar formulario de creación
+     * Mostrar formulario de creación (deshabilitado)
+     * Los usuarios se crean automáticamente desde Empleados
      */
     public function create()
     {
-        $this->authorize('create', User::class);
-        
-        // Asegurar que existan los roles operativos
-        foreach (['reservas', 'minibar', 'recepcion', 'mantenimiento'] as $role) {
-            Role::firstOrCreate(['name' => $role, 'guard_name' => 'web']);
-        }
-
-        $roles = Role::whereIn('name', ['reservas', 'minibar', 'recepcion', 'mantenimiento'])->get();
-        return view('admin.usuarios.create', compact('roles'));
+        return redirect()->route('admin.empleados.index')
+            ->with('info', 'Los usuarios se crean automáticamente al registrar empleados. Dirígete a la sección de Empleados.');
     }
 
     /**
-     * Guardar nuevo usuario
+     * Guardar nuevo usuario (deshabilitado)
+     * Los usuarios se crean automáticamente desde Empleados
      */
     public function store(Request $request)
     {
-        $this->authorize('create', User::class);
-
-        $data = $request->validate([
-            'name' => ['required', new AlphaSpace, 'max:100'],
-            'last_name' => ['required', new AlphaSpace, 'max:100'],
-            'email' => ['required', 'email', 'max:150', new AllowedEmailDomain(), 'unique:users,email'],
-            'phone' => ['required', new PhoneNumberByPrefix()],
-            'password' => ['required', 'confirmed', Password::min(12)->letters()->mixedCase()->numbers()->symbols()->uncompromised()],
-            'role_id' => ['required', 'exists:roles,id'],
-            'status' => ['nullable', 'string', 'in:active,inactive'],
-        ]);
-
-        $user = User::create([
-            'name' => $data['name'],
-            'last_name' => $data['last_name'],
-            'email' => $data['email'],
-            'phone' => $data['phone'],
-            'password' => $data['password'],
-            'status' => $data['status'] ?? 'active',
-        ]);
-
-        $role = Role::find($data['role_id']);
-        $user->assignRole($role->name);
-
-        // Registrar en auditoría
-        registrarAuditoria(
-            'CREATE',
-            'usuarios',
-            $user->id,
-            'Usuario creado: ' . $user->name . ' ' . $user->last_name . ' con rol ' . $role->name,
-            auth()->id(),
-            ['skip_duplicate' => false]
-        );
-
-        // Registrar actividad
-        $this->logActivity(
-            $user->id,
-            'account_created',
-            'Cuenta de usuario creada',
-            'success'
-        );
-
-        return redirect()->route('admin.usuarios.index')
-            ->with('success', 'Usuario "' . $user->name . '" creado correctamente.');
+        return redirect()->route('admin.empleados.index')
+            ->with('info', 'Los usuarios se crean automáticamente al registrar empleados. Dirígete a la sección de Empleados.');
     }
 
     /**
@@ -252,7 +205,6 @@ class UsuariosController extends Controller
         $this->authorize('changePassword', $usuario);
 
         $data = $request->validate([
-            'current_password' => ['required', 'current_password'],
             'password' => ['required', 'confirmed', Password::min(12)->letters()->mixedCase()->numbers()->symbols()->uncompromised()],
         ]);
 

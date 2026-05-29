@@ -27,6 +27,8 @@ class User extends Authenticatable
         'email',
         'phone',
         'password',
+        'is_employee',
+        'employee_department',
     ];
 
     /**
@@ -44,6 +46,7 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
         'password'          => 'hashed',
+        'is_employee'       => 'boolean',
     ];
 
     /**
@@ -76,6 +79,28 @@ class User extends Authenticatable
     public function activities(): HasMany
     {
         return $this->hasMany(UserActivity::class, 'user_id', 'id');
+    }
+
+    /**
+     * Obtener el rol principal del usuario
+     * Si es empleado, retorna el rol del empleado; si no, retorna "Invitado"
+     */
+    public function getDisplayRoleAttribute(): string
+    {
+        // Si el usuario tiene un rol explícito asignado
+        $role = $this->roles()->first();
+        
+        if ($role) {
+            return ucfirst($role->name);
+        }
+
+        // Si es empleado pero sin rol específico (fallback)
+        if ($this->is_employee && $this->employee_department) {
+            return ucfirst($this->employee_department);
+        }
+
+        // Por defecto: Invitado
+        return 'Invitado';
     }
 
     /**
@@ -129,6 +154,22 @@ class User extends Authenticatable
     }
 
     /**
+     * Verificar si el usuario es un empleado del hotel
+     */
+    public function isEmployee(): bool
+    {
+        return $this->is_employee || $this->hasRole(['reservas', 'minibar', 'recepcion', 'mantenimiento', 'administrador']);
+    }
+
+    /**
+     * Verificar si el usuario es un invitado (cliente)
+     */
+    public function isGuest(): bool
+    {
+        return !$this->isEmployee();
+    }
+
+    /**
      * Activar usuario
      */
     public function activate(): bool
@@ -150,6 +191,28 @@ class User extends Authenticatable
     public function block(): bool
     {
         return $this->update(['status' => 'blocked']);
+    }
+
+    /**
+     * Marcar como empleado
+     */
+    public function markAsEmployee(string $department = null): bool
+    {
+        return $this->update([
+            'is_employee' => true,
+            'employee_department' => $department,
+        ]);
+    }
+
+    /**
+     * Marcar como invitado/cliente
+     */
+    public function markAsGuest(): bool
+    {
+        return $this->update([
+            'is_employee' => false,
+            'employee_department' => null,
+        ]);
     }
 
     /**

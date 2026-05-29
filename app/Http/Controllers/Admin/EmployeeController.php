@@ -52,6 +52,8 @@ class EmployeeController extends Controller
             'role_id' => ['required', 'exists:roles,id'],
         ]);
 
+        $role = Role::find($data['role_id']);
+        
         // Si en User tienes cast 'password' => 'hashed', no necesitas Hash::make.
         $user = User::create([
             'name' => $data['name'],
@@ -59,16 +61,17 @@ class EmployeeController extends Controller
             'email' => $data['email'],
             'phone' => $data['phone'] ?? null,
             'password' => $data['password'],
+            'is_employee' => true,
+            'employee_department' => $role->name,
         ]);
 
-        $roleName = Role::find($data['role_id'])->name;
-        $user->assignRole($roleName);
+        $user->assignRole($role->name);
 
         registrarAuditoria(
             'CREATE',
             'usuarios',
             $user->id,
-            'Empleado creado: ' . $user->name . ' ' . ($user->last_name ?? '') . ' con rol ' . $roleName,
+            'Empleado creado: ' . $user->name . ' ' . ($user->last_name ?? '') . ' con rol ' . $role->name,
             auth()->id() ?? $user->id,
             ['skip_duplicate' => false]
         );
@@ -77,7 +80,7 @@ class EmployeeController extends Controller
             'ROLE_CHANGE',
             'usuarios',
             $user->id,
-            'Rol inicial asignado al usuario ID ' . $user->id . ': ' . $roleName,
+            'Rol inicial asignado al usuario ID ' . $user->id . ': ' . $role->name,
             auth()->id() ?? $user->id,
             ['skip_duplicate' => false]
         );
@@ -98,6 +101,7 @@ class EmployeeController extends Controller
         ]);
 
         $empleado->fill(collect($data)->except('password', 'role_id')->toArray());
+        
         if (!empty($data['password'])) {
             $empleado->password = $data['password'];
 
@@ -110,6 +114,7 @@ class EmployeeController extends Controller
                 ['skip_duplicate' => false]
             );
         }
+        
         $empleado->save();
 
         registrarAuditoria(
@@ -123,7 +128,8 @@ class EmployeeController extends Controller
 
         if (!empty($data['role_id'])) {
             $roleName = Role::find($data['role_id'])->name;
-            $empleado->syncRoles([$roleName]); // reemplaza rol actual por el nuevo
+            $empleado->syncRoles([$roleName]);
+            $empleado->update(['employee_department' => $roleName]);
 
             registrarAuditoria(
                 'ROLE_CHANGE',
