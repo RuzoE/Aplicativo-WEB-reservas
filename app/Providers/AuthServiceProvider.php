@@ -6,10 +6,12 @@ use App\Models\Room;
 use App\Models\RoomType;
 use App\Models\Stay;
 use App\Models\Folio;
+use App\Models\User;
 use App\Policies\RoomPolicy;
 use App\Policies\RoomTypePolicy;
 use App\Policies\StayPolicy;
 use App\Policies\FolioPolicy;
+use App\Policies\UserPolicy;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Contracts\Auth\Authenticatable;
@@ -26,6 +28,7 @@ class AuthServiceProvider extends ServiceProvider
         RoomType::class => RoomTypePolicy::class,
         Stay::class     => StayPolicy::class,
         Folio::class    => FolioPolicy::class,
+        User::class     => UserPolicy::class,
     ];
 
     /**
