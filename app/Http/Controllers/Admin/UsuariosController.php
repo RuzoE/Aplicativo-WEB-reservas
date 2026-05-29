@@ -58,6 +58,12 @@ class UsuariosController extends Controller
         // Obtener roles disponibles
         $roles = Role::all(['id', 'name']);
         
+        // Calcular estadísticas
+        $totalUsuarios = User::count();
+        $usuariosActivos = User::where('status', 'active')->count();
+        $usuariosInactivos = User::where('status', 'inactive')->count();
+        $usuariosConRol = User::has('roles')->count();
+        
         // Actividades recientes del sistema
         $recentActivities = UserActivity::with('user:id,name,email')
             ->recent(7)
@@ -65,7 +71,7 @@ class UsuariosController extends Controller
             ->limit(10)
             ->get();
 
-        return view('admin.usuarios.index', compact('usuarios', 'roles', 'recentActivities'));
+        return view('admin.usuarios.index', compact('usuarios', 'roles', 'recentActivities', 'totalUsuarios', 'usuariosActivos', 'usuariosInactivos', 'usuariosConRol'));
     }
 
     /**

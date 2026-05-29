@@ -29,6 +29,8 @@
 
     <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- Vite - App CSS y JS -->
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
     <!-- Tu archivo app.css y JS -->
     @stack('styles')
     @stack('head')
