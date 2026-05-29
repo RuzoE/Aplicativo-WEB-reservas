@@ -29,6 +29,7 @@ use App\Http\Controllers\Admin\Minibar\NotificacionController;
 
 // Admin – Empleados
 use App\Http\Controllers\Admin\EmployeeController;
+use App\Http\Controllers\Admin\UsuariosController;
 use App\Http\Controllers\Admin\RoleController;
 
 // Minibar – Front de usuario (catálogo/checkout)
@@ -101,6 +102,30 @@ Route::prefix('admin')
 
         // Dashboard global admin (nuevo dashboard con 3 botones)
         Route::get('/', [AdminDashboardController::class , 'index'])->name('index');
+
+        // ===== Usuarios (seguridad, autenticación, control de acceso) =====
+        Route::resource('usuarios', UsuariosController::class)
+            ->except(['show'])
+            ->names('usuarios');
+
+        // Cambio de contraseña
+        Route::get('usuarios/{usuario}/cambiar-contraseña', [UsuariosController::class, 'changePassword'])->name('usuarios.change-password');
+        Route::post('usuarios/{usuario}/cambiar-contraseña', [UsuariosController::class, 'updatePassword'])->name('usuarios.update-password');
+
+        // Resetear contraseña por admin
+        Route::post('usuarios/{usuario}/resetear-contraseña', [UsuariosController::class, 'resetPassword'])->name('usuarios.reset-password');
+
+        // Cambiar estado
+        Route::patch('usuarios/{usuario}/estado', [UsuariosController::class, 'toggleStatus'])->name('usuarios.toggle-status');
+
+        // Historial de actividad
+        Route::get('usuarios/{usuario}/actividad', [UsuariosController::class, 'activity'])->name('usuarios.activity');
+
+        // Sesiones activas
+        Route::get('usuarios/{usuario}/sesiones', [UsuariosController::class, 'sessions'])->name('usuarios.sessions');
+
+        // Cerrar sesión remota
+        Route::delete('usuarios/{usuario}/sesiones/{session}', [UsuariosController::class, 'logoutRemote'])->name('usuarios.logout-remote');
 
         // ===== Empleados (CRUD + roles) =====
         Route::resource('empleados', EmployeeController::class)

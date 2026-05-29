@@ -109,6 +109,15 @@
       @endif
       @endif
 
+      {{-- Gestión de Usuarios - seguridad y control de acceso (solo administradores) --}}
+      @if(auth()->user()->hasRole('administrador') && !request()->routeIs('reception.*'))
+      <li class="nav-item mb-2">
+        <a href="{{ route('admin.usuarios.index') }}" class="nav-link px-0 align-middle fs-5 pb-2 {{ request()->routeIs('admin.usuarios.*') ? 'active text-warning' : '' }}">
+          <i class="fs-4 bi-shield-lock"></i> <span class="ms-1">Usuarios</span>
+        </a>
+      </li>
+      @endif
+
       {{-- Gestión de empleados - solo para administradores --}}
       @if(auth()->user()->hasRole('administrador') && !request()->routeIs('reception.*'))
       <li>
