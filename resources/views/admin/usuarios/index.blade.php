@@ -21,26 +21,26 @@
         </div>
         
         <!-- Card de estadística destacada -->
-        <div class="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-orange-500 hover:shadow-xl transition-all duration-300 flex-shrink-0">
+        <div class="bg-white rounded-2xl shadow-lg p-4 border-l-4 border-orange-500 hover:shadow-xl transition-all duration-300 flex-shrink-0 h-full flex flex-col justify-between">
           <p class="text-slate-600 text-sm font-semibold uppercase tracking-wide">Total de Usuarios</p>
-          <div class="flex items-end gap-2 mt-3">
+          <div class="flex items-center gap-2 mt-3">
             <span class="text-4xl font-bold text-orange-600">{{ $totalUsuarios ?? $usuarios->total() }}</span>
-            <i class="fas fa-users text-orange-500 text-2xl mb-1"></i>
+            <i class="fas fa-users text-orange-500 text-2xl"></i>
           </div>
         </div>
       </div>
     </div>
 
     <!-- ========== CARDS DE ESTADÍSTICAS ========== -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6 auto-rows-fr">
       <!-- Total de usuarios -->
-      <div class="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden border-t-4 border-blue-500 p-6 group">
-        <div class="flex justify-between items-start mb-4">
+      <div class="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden border-t-4 border-blue-500 p-4 group h-full flex flex-col justify-between">
+        <div class="flex items-center justify-between mb-3">
           <div>
             <p class="text-slate-600 text-xs font-semibold uppercase tracking-wider">Total Usuarios</p>
             <p class="text-3xl font-bold text-slate-900 mt-2">{{ $totalUsuarios ?? $usuarios->total() }}</p>
           </div>
-          <div class="p-3 bg-blue-100 rounded-lg group-hover:scale-110 transition-transform duration-300">
+          <div class="w-12 h-12 flex items-center justify-center bg-blue-100 rounded-lg group-hover:scale-110 transition-transform duration-300">
             <i class="fas fa-users text-blue-600 text-xl"></i>
           </div>
         </div>
@@ -48,13 +48,13 @@
       </div>
 
       <!-- Usuarios activos -->
-      <div class="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden border-t-4 border-green-500 p-6 group">
-        <div class="flex justify-between items-start mb-4">
+      <div class="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden border-t-4 border-green-500 p-4 group h-full flex flex-col justify-between">
+        <div class="flex items-center justify-between mb-3">
           <div>
             <p class="text-slate-600 text-xs font-semibold uppercase tracking-wider">Usuarios Activos</p>
             <p class="text-3xl font-bold text-slate-900 mt-2">{{ $usuariosActivos ?? 0 }}</p>
           </div>
-          <div class="p-3 bg-green-100 rounded-lg group-hover:scale-110 transition-transform duration-300">
+          <div class="w-12 h-12 flex items-center justify-center bg-green-100 rounded-lg group-hover:scale-110 transition-transform duration-300">
             <i class="fas fa-check-circle text-green-600 text-xl"></i>
           </div>
         </div>
@@ -62,13 +62,13 @@
       </div>
 
       <!-- Usuarios inactivos -->
-      <div class="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden border-t-4 border-red-500 p-6 group">
-        <div class="flex justify-between items-start mb-4">
+      <div class="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden border-t-4 border-red-500 p-4 group h-full flex flex-col justify-between">
+        <div class="flex items-center justify-between mb-3">
           <div>
             <p class="text-slate-600 text-xs font-semibold uppercase tracking-wider">Usuarios Inactivos</p>
             <p class="text-3xl font-bold text-slate-900 mt-2">{{ $usuariosInactivos ?? 0 }}</p>
           </div>
-          <div class="p-3 bg-red-100 rounded-lg group-hover:scale-110 transition-transform duration-300">
+          <div class="w-12 h-12 flex items-center justify-center bg-red-100 rounded-lg group-hover:scale-110 transition-transform duration-300">
             <i class="fas fa-times-circle text-red-600 text-xl"></i>
           </div>
         </div>
@@ -76,13 +76,13 @@
       </div>
 
       <!-- Usuarios con rol -->
-      <div class="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden border-t-4 border-orange-500 p-6 group">
-        <div class="flex justify-between items-start mb-4">
+      <div class="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden border-t-4 border-orange-500 p-4 group h-full flex flex-col justify-between">
+        <div class="flex items-center justify-between mb-3">
           <div>
             <p class="text-slate-600 text-xs font-semibold uppercase tracking-wider">Con Rol Asignado</p>
             <p class="text-3xl font-bold text-slate-900 mt-2">{{ $usuariosConRol ?? 0 }}</p>
           </div>
-          <div class="p-3 bg-orange-100 rounded-lg group-hover:scale-110 transition-transform duration-300">
+          <div class="w-12 h-12 flex items-center justify-center bg-orange-100 rounded-lg group-hover:scale-110 transition-transform duration-300">
             <i class="fas fa-briefcase text-orange-600 text-xl"></i>
           </div>
         </div>
@@ -98,10 +98,10 @@
       </div>
       
       <form method="GET" action="{{ route('admin.usuarios.index') }}" class="space-y-4">
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
           <!-- Búsqueda -->
-          <div class="relative group lg:col-span-1">
-            <label class="block text-sm font-medium text-slate-700 mb-2">Buscar usuario</label>
+          <div class="relative group md:col-span-2 lg:col-span-2">
+            <label class="block text-sm font-medium text-slate-800 mb-2">Buscar usuario</label>
             <div class="relative">
               <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
               <input type="text" name="search" 
@@ -113,7 +113,7 @@
 
           <!-- Rol -->
           <div class="group">
-            <label class="block text-sm font-medium text-slate-700 mb-2">Rol</label>
+            <label class="block text-sm font-medium text-slate-800 mb-2">Rol</label>
             <div class="relative">
               <select name="role" class="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-orange-500 focus:outline-none focus:ring-0 transition-colors duration-200 bg-white appearance-none cursor-pointer">
                 <option value="">Todos los roles</option>
@@ -127,7 +127,7 @@
 
           <!-- Estado -->
           <div class="group">
-            <label class="block text-sm font-medium text-slate-700 mb-2">Estado</label>
+            <label class="block text-sm font-medium text-slate-800 mb-2">Estado</label>
             <div class="relative">
               <select name="status" class="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-orange-500 focus:outline-none focus:ring-0 transition-colors duration-200 bg-white appearance-none cursor-pointer">
                 <option value="">Todos los estados</option>
@@ -140,7 +140,7 @@
           </div>
 
           <!-- Botones de acción -->
-          <div class="flex items-end gap-3">
+          <div class="flex items-end gap-3 md:col-span-2 md:justify-start lg:justify-end">
             <button type="submit" class="flex-1 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-semibold py-3 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg flex items-center justify-center gap-2 group">
               <i class="fas fa-search group-hover:scale-110 transition-transform duration-300"></i>
               <span>Filtrar</span>
@@ -159,22 +159,22 @@
         <table class="w-full">
           <thead>
             <tr class="bg-gradient-to-r from-slate-50 to-slate-100 border-b-2 border-slate-200">
-              <th class="px-6 py-4 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">ID</th>
-              <th class="px-6 py-4 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">Usuario</th>
-              <th class="px-6 py-4 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">Email</th>
-              <th class="px-6 py-4 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">Rol</th>
-              <th class="px-6 py-4 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">Estado</th>
-              <th class="px-6 py-4 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">Último acceso</th>
-              <th class="px-6 py-4 text-center text-xs font-bold text-slate-700 uppercase tracking-wider">Acciones</th>
+              <th class="px-4 py-3 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">ID</th>
+              <th class="px-4 py-3 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">Usuario</th>
+              <th class="px-4 py-3 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">Email</th>
+              <th class="px-4 py-3 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">Rol</th>
+              <th class="px-4 py-3 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">Estado</th>
+              <th class="px-4 py-3 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">Último acceso</th>
+              <th class="px-4 py-3 text-center text-xs font-bold text-slate-700 uppercase tracking-wider">Acciones</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-200">
             @forelse($usuarios as $usuario)
               <tr class="hover:bg-orange-50 transition-colors duration-200 group">
-                <td class="px-6 py-4 text-sm text-slate-500 font-mono">
+                <td class="px-4 py-3 text-sm text-slate-500 font-mono">
                   <span class="bg-slate-100 px-3 py-1 rounded-lg">{{ $usuario->id }}</span>
                 </td>
-                <td class="px-6 py-4">
+                <td class="px-4 py-3">
                   <div class="flex items-center gap-3">
                     <div class="w-10 h-10 bg-gradient-to-br from-orange-400 to-orange-600 rounded-full flex items-center justify-center text-white font-semibold text-sm shadow-md">
                       {{ substr($usuario->name, 0, 1) }}{{ substr($usuario->last_name ?? '', 0, 1) }}
@@ -187,18 +187,18 @@
                     </div>
                   </div>
                 </td>
-                <td class="px-6 py-4 text-sm text-slate-600">{{ $usuario->email }}</td>
-                <td class="px-6 py-4">
+                <td class="px-4 py-3 text-sm text-slate-600">{{ $usuario->email }}</td>
+                <td class="px-4 py-3">
                   {!! $usuario->display_role ? match(strtolower($usuario->display_role)) {
-                    'administrador' => '<span class="inline-block px-4 py-2 bg-red-100 text-red-700 text-xs font-bold rounded-full border border-red-300"><i class="fas fa-user-shield mr-1"></i>' . ucfirst($usuario->display_role) . '</span>',
-                    'recepcion' => '<span class="inline-block px-4 py-2 bg-blue-100 text-blue-700 text-xs font-bold rounded-full border border-blue-300"><i class="fas fa-door-open mr-1"></i>' . ucfirst($usuario->display_role) . '</span>',
-                    'reservas' => '<span class="inline-block px-4 py-2 bg-amber-100 text-amber-700 text-xs font-bold rounded-full border border-amber-300"><i class="fas fa-calendar mr-1"></i>' . ucfirst($usuario->display_role) . '</span>',
-                    'mantenimiento' => '<span class="inline-block px-4 py-2 bg-purple-100 text-purple-700 text-xs font-bold rounded-full border border-purple-300"><i class="fas fa-wrench mr-1"></i>' . ucfirst($usuario->display_role) . '</span>',
-                    'minibar' => '<span class="inline-block px-4 py-2 bg-green-100 text-green-700 text-xs font-bold rounded-full border border-green-300"><i class="fas fa-bottle-water mr-1"></i>' . ucfirst($usuario->display_role) . '</span>',
-                    default => '<span class="inline-block px-4 py-2 bg-slate-100 text-slate-700 text-xs font-bold rounded-full border border-slate-300"><i class="fas fa-user mr-1"></i>' . ucfirst($usuario->display_role) . '</span>',
+                    'administrador' => '<span class="inline-block px-4 py-2 bg-red-100 text-red-700 text-xs font-bold rounded-full border border-red-300"><i class="fas fa-user-shield mr-2"></i>' . ucfirst($usuario->display_role) . '</span>',
+                    'recepcion' => '<span class="inline-block px-4 py-2 bg-blue-100 text-blue-700 text-xs font-bold rounded-full border border-blue-300"><i class="fas fa-door-open mr-2"></i>' . ucfirst($usuario->display_role) . '</span>',
+                    'reservas' => '<span class="inline-block px-4 py-2 bg-amber-100 text-amber-700 text-xs font-bold rounded-full border border-amber-300"><i class="fas fa-calendar mr-2"></i>' . ucfirst($usuario->display_role) . '</span>',
+                    'mantenimiento' => '<span class="inline-block px-4 py-2 bg-purple-100 text-purple-700 text-xs font-bold rounded-full border border-purple-300"><i class="fas fa-wrench mr-2"></i>' . ucfirst($usuario->display_role) . '</span>',
+                    'minibar' => '<span class="inline-block px-4 py-2 bg-green-100 text-green-700 text-xs font-bold rounded-full border border-green-300"><i class="fas fa-bottle-water mr-2"></i>' . ucfirst($usuario->display_role) . '</span>',
+                    default => '<span class="inline-block px-4 py-2 bg-slate-100 text-slate-700 text-xs font-bold rounded-full border border-slate-300"><i class="fas fa-user mr-2"></i>' . ucfirst($usuario->display_role) . '</span>',
                   } : '<span class="text-slate-400 text-sm">Sin rol</span>' !!}
                 </td>
-                <td class="px-6 py-4">
+                <td class="px-4 py-3">
                   @if($usuario->status === 'active')
                     <span class="inline-flex items-center gap-2 px-3 py-1.5 bg-green-100 text-green-700 text-xs font-bold rounded-full border border-green-300">
                       <span class="inline-block w-2 h-2 bg-green-600 rounded-full animate-pulse"></span>
@@ -216,14 +216,14 @@
                     </span>
                   @endif
                 </td>
-                <td class="px-6 py-4 text-sm text-slate-600">
-                  <div class="flex items-center gap-1.5">
-                    <i class="fas fa-clock text-slate-400"></i>
+                <td class="px-4 py-3 text-sm text-slate-600">
+                  <div class="flex items-center gap-2">
+                    <i class="fas fa-clock text-slate-400 mr-2"></i>
                     <span>{{ $usuario->last_login_at ? $usuario->last_login_formatted : 'Nunca' }}</span>
                   </div>
                 </td>
-                <td class="px-6 py-4">
-                  <div class="flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300">
+                <td class="px-4 py-3">
+                  <div class="flex items-center justify-center gap-3 opacity-0 group-hover:opacity-100 transition-all duration-300">
                     <a href="{{ route('admin.usuarios.edit', $usuario) }}" 
                       class="p-2.5 bg-orange-100 hover:bg-orange-500 text-orange-600 hover:text-white rounded-lg transition-all duration-300 shadow-md hover:shadow-lg hover:scale-110 transform"
                       title="Editar usuario">
@@ -276,7 +276,7 @@
     <!-- ========== ACTIVIDADES RECIENTES DEL SISTEMA ========== -->
     @if($recentActivities->count() > 0)
     <div class="bg-white rounded-2xl shadow-lg overflow-hidden border border-slate-100">
-      <div class="bg-gradient-to-r from-slate-50 to-slate-100 border-b-2 border-slate-200 px-6 py-4 flex items-center gap-3">
+      <div class="bg-gradient-to-r from-slate-50 to-slate-100 border-b-2 border-slate-200 px-4 py-3 flex items-center gap-3">
         <i class="fas fa-history text-orange-600 text-lg"></i>
         <h3 class="text-lg font-bold text-slate-900">Actividades Recientes del Sistema</h3>
       </div>
@@ -294,7 +294,7 @@
           <tbody class="divide-y divide-slate-200">
             @foreach($recentActivities as $activity)
               <tr class="hover:bg-orange-50 transition-colors duration-200">
-                <td class="px-6 py-4 text-sm font-medium text-slate-900">
+                <td class="px-4 py-3 text-sm font-medium text-slate-900">
                   <div class="flex items-center gap-2">
                     <div class="w-8 h-8 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center text-white text-xs font-bold">
                       {{ substr($activity->user->name ?? 'S', 0, 1) }}
@@ -302,12 +302,12 @@
                     <span>{{ $activity->user->name ?? 'Sistema' }}</span>
                   </div>
                 </td>
-                <td class="px-6 py-4 text-sm">
+                <td class="px-4 py-3 text-sm">
                   <span class="inline-block px-3 py-1 bg-purple-100 text-purple-700 text-xs font-bold rounded-full uppercase">{{ str_replace('_', ' ', $activity->action) }}</span>
                 </td>
-                <td class="px-6 py-4 text-sm text-slate-600">{{ $activity->description }}</td>
-                <td class="px-6 py-4 text-sm text-slate-500">
-                  <div class="flex items-center gap-1.5">
+                <td class="px-4 py-3 text-sm text-slate-600">{{ $activity->description }}</td>
+                <td class="px-4 py-3 text-sm text-slate-500">
+                  <div class="flex items-center gap-2">
                     <i class="fas fa-calendar-alt"></i>
                     <span>{{ $activity->created_at->diffForHumans() }}</span>
                   </div>
