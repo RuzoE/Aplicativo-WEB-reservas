@@ -39,7 +39,7 @@
             <div class="backup-generate-controls text-center">
                 <form method="POST" action="{{ route('admin.backups.generate') }}" id="backup-generate-form" class="backup-generate-form">
                     @csrf
-                    <button type="submit" class="backup-btn-primary {{ $summary['last_status'] === 'En proceso' ? 'disabled' : '' }}" 
+                    <button type="submit" class="backup-btn-primary {{ $summary['last_status'] === 'En proceso' ? 'disabled' : '' }}"
                             id="generate-backup-btn"
                             {{ $summary['last_status'] === 'En proceso' ? 'disabled' : '' }}>
                         <i class="bi {{ $summary['last_status'] === 'En proceso' ? 'bi-arrow-repeat' : 'bi-cloud-arrow-up' }}"></i>
@@ -223,8 +223,8 @@
                                             </button>
                                         </form>
 
-                                        <button type="button" 
-                                                class="backup-link-action restore-backup-btn" 
+                                        <button type="button"
+                                                class="backup-link-action restore-backup-btn"
                                                 style="background: #fff7ed; color: #9a3412;"
                                                 data-path="{{ base64_encode($backup['path']) }}"
                                                 data-name="{{ $backup['name'] }}"
@@ -250,6 +250,56 @@
                     </tbody>
                 </table>
             </div>
+
+                    {{-- Contenedor móvil: tarjetas para backups (se muestra en <768px) --}}
+                    <div class="backup-cards-mobile-container">
+                        @foreach($backups as $backup)
+                            <div class="backup-card-mobile">
+                                <div class="card-top">
+                                    <div class="backup-file-name-mobile">
+                                        <i class="bi bi-file-earmark-zip"></i>
+                                        <div>
+                                            <div class="file-name-mobile">{{ $backup['name'] }}</div>
+                                            <div class="file-meta-mobile"><small>{{ $backup['formatted_date'] }} · {{ $backup['human_diff'] }}</small></div>
+                                        </div>
+                                    </div>
+
+                                    <div class="backup-actions-mobile">
+                                        <a href="{{ route('admin.backups.download', ['path' => base64_encode($backup['path'])]) }}" class="backup-link-action" title="Descargar"><i class="bi bi-download"></i></a>
+
+                                        <form method="POST" action="{{ route('admin.backups.destroy') }}" class="delete-backup-form" data-backup-name="{{ $backup['name'] }}" style="display:inline">
+                                            @csrf
+                                            @method('DELETE')
+                                            <input type="hidden" name="path" value="{{ base64_encode($backup['path']) }}">
+                                            <button type="submit" class="backup-link-action backup-link-danger" title="Eliminar"><i class="bi bi-trash"></i></button>
+                                        </form>
+
+                                        <button type="button" class="backup-link-action restore-backup-btn" style="background: #fff7ed; color: #9a3412;" data-path="{{ base64_encode($backup['path']) }}" data-name="{{ $backup['name'] }}" data-date="{{ $backup['formatted_date'] }}" data-size="{{ $backup['size_human'] }}" title="Restaurar">
+                                            <i class="bi bi-arrow-counterclockwise"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="card-sep"></div>
+
+                                <div class="card-body-mobile">
+                                    <div class="card-data">
+                                        <div class="label">Fecha</div>
+                                        <div class="value">{{ $backup['formatted_date'] }} <div class="small text-muted">{{ $backup['human_diff'] }}</div></div>
+
+                                        <div class="label">Tamaño</div>
+                                        <div class="value">{{ $backup['size_human'] }}</div>
+
+                                        <div class="label">Ubicación</div>
+                                        <div class="value">{{ $backup['location'] }}</div>
+
+                                        <div class="label">Estado</div>
+                                        <div class="value"><span class="backup-status backup-status-{{ $backup['status_color'] }}">{{ $backup['status'] }}</span></div>
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
         </section>
     </div>
 </div>

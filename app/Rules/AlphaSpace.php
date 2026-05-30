@@ -16,7 +16,7 @@ class AlphaSpace implements ValidationRule
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
 
-        if (!preg_match('/^[A-Za-z_\s\-]+$/', $value)) {
+        if (!preg_match('/^[\p{L}\s\'\-]+$/u', $value)) {
             $fail("El campo :attribute debe contener sólo letras y espacios.");
         }
     }

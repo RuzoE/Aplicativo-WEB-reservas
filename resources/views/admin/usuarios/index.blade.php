@@ -99,25 +99,25 @@
         <h3 class="text-base font-semibold text-slate-900">Filtros Avanzados</h3>
       </div>
 
-      <form method="GET" action="{{ route('admin.usuarios.index') }}" class="grid grid-cols-1 gap-3 usuarios-filters-form">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+      <form method="GET" action="{{ route('admin.usuarios.index') }}" class="usuarios-filters-form">
+        <div class="filter-row">
           <!-- Búsqueda -->
-          <div class="md:col-span-2">
-            <label class="usuarios-filter-label">Buscar usuario</label>
+          <div class="filter-item filter-item--search">
+            <label class="usuarios-filter-label" for="search-input">Buscar usuario</label>
             <div class="relative">
-              <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-              <input type="text" name="search"
+              <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm pointer-events-none"></i>
+              <input id="search-input" type="text" name="search"
                 placeholder="Nombre, email..."
                 value="{{ request('search') }}"
-                class="usuarios-filter-input w-full pl-10 pr-4 border-slate-200 focus:border-orange-500 focus:outline-none focus:ring-0 transition-colors duration-200 bg-white">
+                class="usuarios-filter-input w-full border-slate-200 focus:border-orange-500 focus:outline-none focus:ring-0 transition-colors duration-200 bg-white">
             </div>
           </div>
 
           <!-- Rol -->
-          <div>
-            <label class="usuarios-filter-label">Rol</label>
+          <div class="filter-item">
+            <label class="usuarios-filter-label" for="role-select">Rol</label>
             <div class="relative">
-              <select name="role" class="usuarios-filter-select w-full px-4 border-slate-200 focus:border-orange-500 focus:outline-none focus:ring-0 transition-colors duration-200 bg-white appearance-none cursor-pointer">
+              <select id="role-select" name="role" class="usuarios-filter-select w-full border-slate-200 focus:border-orange-500 focus:outline-none focus:ring-0 transition-colors duration-200 bg-white">
                 <option value="">Todos los roles</option>
                 @foreach($roles as $role)
                   <option value="{{ $role->name }}" {{ request('role') === $role->name ? 'selected' : '' }}>{{ ucfirst($role->name) }}</option>
@@ -128,10 +128,10 @@
           </div>
 
           <!-- Estado -->
-          <div>
-            <label class="usuarios-filter-label">Estado</label>
+          <div class="filter-item">
+            <label class="usuarios-filter-label" for="status-select">Estado</label>
             <div class="relative">
-              <select name="status" class="usuarios-filter-select w-full px-4 border-slate-200 focus:border-orange-500 focus:outline-none focus:ring-0 transition-colors duration-200 bg-white appearance-none cursor-pointer">
+              <select id="status-select" name="status" class="usuarios-filter-select w-full border-slate-200 focus:border-orange-500 focus:outline-none focus:ring-0 transition-colors duration-200 bg-white">
                 <option value="">Todos los estados</option>
                 <option value="active" {{ request('status') === 'active' ? 'selected' : '' }}>Activo</option>
                 <option value="inactive" {{ request('status') === 'inactive' ? 'selected' : '' }}>Inactivo</option>
@@ -142,17 +142,15 @@
           </div>
 
           <!-- Botones de acción -->
-          <div class="md:col-span-2">
-            <div class="usuarios-filter-actions">
-              <button type="submit" class="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-semibold rounded-xl transition-all duration-300 shadow-md hover:shadow-lg gap-2 inline-flex items-center justify-center px-4">
-                <i class="fas fa-search"></i>
-                <span>Filtrar</span>
-              </button>
-              <a href="{{ route('admin.usuarios.index') }}" class="px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl transition-all duration-300 shadow-sm inline-flex items-center justify-center gap-2 text-sm" title="Limpiar filtros">
-                <i class="fas fa-redo"></i>
-                <span>Limpiar</span>
-              </a>
-            </div>
+          <div class="filter-buttons">
+            <button type="submit" class="usuarios-filter-actions-btn-filter" title="Aplicar filtros">
+              <i class="fas fa-search"></i>
+              <span>Filtrar</span>
+            </button>
+            <a href="{{ route('admin.usuarios.index') }}" class="usuarios-filter-actions-btn-clear" title="Limpiar filtros">
+              <i class="fas fa-redo"></i>
+              <span>Limpiar</span>
+            </a>
           </div>
         </div>
       </form>
@@ -253,6 +251,8 @@
                   </div>
                 </td>
               </tr>
+
+
             @empty
               <tr>
                 <td colspan="7" class="px-6 py-16 text-center">
@@ -267,6 +267,66 @@
           </tbody>
         </table>
       </div>
+    </div>
+
+    {{-- Contenedor móvil: tarjetas apiladas (se muestra solo en <768px) --}}
+    <div class="usuarios-cards-mobile-container">
+      @foreach($usuarios as $usuario)
+        <div class="usuarios-card-mobile">
+          <div class="card-top flex items-start justify-between">
+            <div class="card-header-left">
+              <p class="font-semibold text-slate-900 text-lg">{{ $usuario->name }} {{ $usuario->last_name }}</p>
+              <div class="mt-1">
+                {!! $usuario->display_role ? match(strtolower($usuario->display_role)) {
+                  'administrador' => '<span class="usuarios-badge bg-red-100 text-red-700 border border-red-300"><i class="fas fa-user-shield"></i>' . ucfirst($usuario->display_role) . '</span>',
+                  'recepcion' => '<span class="usuarios-badge bg-blue-100 text-blue-700 border border-blue-300"><i class="fas fa-door-open"></i>' . ucfirst($usuario->display_role) . '</span>',
+                  'reservas' => '<span class="usuarios-badge bg-amber-100 text-amber-700 border border-amber-300"><i class="fas fa-calendar"></i>' . ucfirst($usuario->display_role) . '</span>',
+                  'mantenimiento' => '<span class="usuarios-badge bg-purple-100 text-purple-700 border border-purple-300"><i class="fas fa-wrench"></i>' . ucfirst($usuario->display_role) . '</span>',
+                  'minibar' => '<span class="usuarios-badge bg-green-100 text-green-700 border border-green-300"><i class="fas fa-bottle-water"></i>' . ucfirst($usuario->display_role) . '</span>',
+                  default => '<span class="usuarios-badge bg-slate-100 text-slate-700 border border-slate-300"><i class="fas fa-user"></i>' . ucfirst($usuario->display_role) . '</span>',
+                } : '<span class="text-slate-400 text-sm">Sin rol</span>' !!}
+              </div>
+            </div>
+            <div class="card-actions-mobile">
+              <a href="{{ route('admin.usuarios.edit', $usuario) }}" class="usuarios-action-btn bg-orange-100 hover:bg-orange-500 text-orange-600 hover:text-white" title="Editar usuario">
+                <i class="fas fa-edit"></i>
+              </a>
+              <a href="{{ route('admin.usuarios.activity', $usuario) }}" class="usuarios-action-btn bg-blue-100 hover:bg-blue-500 text-blue-600 hover:text-white" title="Ver actividad">
+                <i class="fas fa-history"></i>
+              </a>
+              <a href="{{ route('admin.usuarios.sessions', $usuario) }}" class="usuarios-action-btn bg-amber-100 hover:bg-amber-500 text-amber-600 hover:text-white" title="Gestionar sesiones">
+                <i class="fas fa-wifi"></i>
+              </a>
+              <button type="button" class="delete-btn usuarios-action-btn bg-red-100 hover:bg-red-500 text-red-600 hover:text-white" data-id="{{ $usuario->id }}" title="Eliminar usuario">
+                <i class="fas fa-trash-alt"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="card-body card-body--with-separator mt-3">
+            <div class="card-data">
+              <div class="label"><i class="fas fa-envelope"></i> Email</div>
+              <div class="value">{{ $usuario->email }}</div>
+
+              <div class="label"><i class="fas fa-user-check"></i> Estado</div>
+              <div class="value">
+                @if($usuario->status === 'active')
+                  <span class="usuarios-state-badge bg-green-100 text-green-700 border border-green-300 rounded-full px-3 py-1.5">Activo</span>
+                @elseif($usuario->status === 'blocked')
+                  <span class="usuarios-state-badge bg-red-100 text-red-700 border border-red-300 rounded-full px-3 py-1.5">Bloqueado</span>
+                @else
+                  <span class="usuarios-state-badge bg-gray-100 text-gray-700 border border-gray-300 rounded-full px-3 py-1.5">Inactivo</span>
+                @endif
+              </div>
+
+              <div class="label"><i class="fas fa-clock"></i> Último acceso</div>
+              <div class="value">{{ $usuario->last_login_at ? $usuario->last_login_formatted : 'Nunca' }}</div>
+
+
+            </div>
+          </div>
+        </div>
+      @endforeach
     </div>
 
     <!-- ========== PAGINACIÓN MODERNA ========== -->

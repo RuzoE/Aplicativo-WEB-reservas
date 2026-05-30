@@ -496,6 +496,47 @@
         font-size: 13px;
     }
 
+    /* ---------- MOBILE CARDS FOR AUDITORIAS ---------- */
+    .audit-cards-mobile-container {
+        display: none;
+        margin: 0 -16px; /* full-bleed in mobile padding */
+        padding: 0 16px;
+    }
+
+    .audit-card-mobile {
+        background: #fff;
+        border-radius: 12px;
+        border: 1px solid #e6e9ee;
+        box-shadow: 0 4px 12px rgba(15,23,42,0.04);
+        padding: 12px;
+        margin-bottom: 10px;
+    }
+
+    .audit-card-mobile .card-top {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        align-items: flex-start;
+    }
+
+    .user-name-mobile { font-weight: 700; color: #0f172a; margin: 0; }
+    .user-id-mobile { font-size: 12px; color: #64748b; margin: 6px 0 0; }
+
+    .audit-badges-mobile { display: flex; gap: 8px; align-items: center; }
+
+    .card-sep { height: 1px; background: #eef2f6; margin: 12px 0; }
+
+    .card-body-mobile .card-data { display: grid; grid-template-columns: 120px 1fr; gap: 8px 12px; align-items: start; }
+    .card-data .label { font-size: 12px; color: #94a3b8; display:flex; gap:8px; align-items:center; }
+    .card-data .value { color: #0f172a; font-size: 14px; }
+    .registro-id-mobile, .fecha-ago-mobile { font-size: 12px; color: #94a3b8; margin-top:6px; }
+
+    /* Show cards and hide table on small screens */
+    @media (max-width: 768px) {
+        .audit-table-card .audit-table-scroll { display: none; }
+        .audit-cards-mobile-container { display: block; }
+    }
+
     .audit-table thead {
         position: sticky;
         top: 0;

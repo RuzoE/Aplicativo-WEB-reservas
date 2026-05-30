@@ -61,7 +61,7 @@
         <div class="row g-3 mb-4">
           <div class="col-md-4">
             <label class="form-label fw-semibold">Teléfono *</label>
-            <input type="text" name="phone" class="form-control form-control-lg" placeholder="+57 3xx xxx xxxx" inputmode="tel" minlength="10" maxlength="16" data-phone-sanitize="true" pattern="^(3\d{9}|(?:\+57|57)3\d{9}|\+\d{8,15}|\d{8,15})$" title="Si inicia en 3 debe tener 10 dígitos (Colombia). También se acepta formato internacional válido." required>
+            <input type="text" name="phone" class="form-control form-control-lg" placeholder="+57 3xx xxx xxxx" inputmode="tel" minlength="10" maxlength="16" data-phone-sanitize="true" pattern="^(3\d{9}|(?:\+57|57)3\d{9}|\+\d{8,15}|\d{8,15})$" title="Si inicia en 3 debe tener 10 dígitos (Colombia). También se acepta formato internacional válido." value="{{ old('phone') }}" required>
             <small class="text-muted d-block mt-1">Contacto del empleado</small>
           </div>
           <div class="col-md-4">
@@ -94,7 +94,7 @@
             @foreach($rolesCreate as $id => $rname)
               <div class="col-md-6">
                 <label class="role-card-custom p-3 border rounded-2 d-flex align-items-center gap-3 h-100" style="cursor:pointer;transition:all .2s">
-                  <input type="radio" name="role_id" value="{{ $id }}" class="form-check-input" style="width:20px;height:20px" required>
+                  <input type="radio" name="role_id" value="{{ $id }}" class="form-check-input" style="width:20px;height:20px" required @checked(old('role_id') == $id)>
                   <div>
                     <div class="fw-bold text-capitalize" style="font-size:1rem">
                       @if($rname === 'reservas')

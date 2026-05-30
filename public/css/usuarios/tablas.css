@@ -92,3 +92,92 @@
   border-radius: 0.85rem;
   text-decoration: none;
 }
+
+/* Ocultar markup de tarjetas por defecto (solo mostrar en mobile) */
+.usuarios-card-mobile,
+.usuarios-card-mobile-row {
+  display: none;
+}
+
+/* Mobile cards: hide table and show card layout under 768px */
+@media (max-width: 768px) {
+  .usuarios-table-wrapper {
+    overflow-x: hidden;
+  }
+  .usuarios-table {
+    display: none;
+  }
+  .usuarios-card-mobile-row {
+    display: none;
+  }
+  .usuarios-card-mobile {
+    display: block;
+    background: #ffffff;
+    border: 1px solid #e6e9ee;
+    border-radius: 0.75rem;
+    box-shadow: 0 4px 12px rgba(15,23,42,0.04);
+    padding: 12px;
+    margin: 0 0 10px 0;
+  }
+  .usuarios-card-mobile .card-top {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .usuarios-card-mobile .card-top .usuarios-badge {
+    margin-left: 8px;
+  }
+  .usuarios-card-mobile .card-body {
+    margin-top: 8px;
+  }
+  .card-body--with-separator {
+    border-top: 1px solid #eef2f6;
+    padding-top: 12px;
+  }
+  .card-data {
+    display: grid;
+    grid-template-columns: 110px 1fr;
+    row-gap: 8px;
+    column-gap: 12px;
+    align-items: center;
+  }
+  .card-data .label {
+    font-size: 12px;
+    color: #94a3b8;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .card-data .label i {
+    font-size: 12px;
+    color: #94a3b8;
+  }
+  .card-data .value {
+    color: #0f172a;
+    font-size: 14px;
+  }
+  .card-actions-inline {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-start;
+    align-items: center;
+  }
+  .usuarios-card-mobile .card-actions-mobile {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    justify-content: flex-end;
+  }
+  .usuarios-action-btn {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 0.6rem;
+  }
+}
+
+/* Ensure no horizontal scroll on small screens */
+@media (max-width: 480px) {
+  .usuarios-card-mobile {
+    padding: 10px;
+  }
+}

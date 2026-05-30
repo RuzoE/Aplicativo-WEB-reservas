@@ -315,6 +315,48 @@
                         </tbody>
                     </table>
                 </div>
+                </div>
+
+                {{-- Contenedor móvil: tarjetas para auditorias (se muestra en <768px) --}}
+                <div class="audit-cards-mobile-container">
+                    @foreach($auditorias as $item)
+                        @php
+                            $accion = strtoupper((string) $item->accion);
+                            $modulo = strtolower((string) $item->modulo);
+                            $badgeAccion = $badgeClassByAction[$accion] ?? 'badge-default';
+                            $badgeModulo = $badgeClassByModulo[$modulo] ?? 'badge-default';
+                            $nombreUsuario = trim((($item->usuario->name ?? '') . ' ' . ($item->usuario->last_name ?? '')));
+                            $nombreUsuario = $nombreUsuario !== '' ? $nombreUsuario : ($item->usuario->email ?? 'Sistema/Automatico');
+                            $accionTraducida = AuditoriaHelper::traducirAccion($accion);
+                            $descripcionHumana = AuditoriaHelper::humanizarDescripcion($item);
+                        @endphp
+
+                        <div class="audit-card-mobile">
+                            <div class="card-top">
+                                <div>
+                                    <p class="user-name-mobile">{{ $nombreUsuario }}</p>
+                                    <p class="user-id-mobile">ID {{ $item->usuario_id ?? 'N/A' }}</p>
+                                </div>
+                                <div class="audit-badges-mobile">
+                                    <span class="audit-badge {{ $badgeAccion }}">{{ $accionTraducida }}</span>
+                                    <span class="audit-badge {{ $badgeModulo }}">{{ ucfirst($modulo) }}</span>
+                                </div>
+                            </div>
+
+                            <div class="card-sep"></div>
+
+                            <div class="card-body-mobile">
+                                <div class="card-data">
+                                    <div class="label"><i class="fas fa-clipboard"></i> Descripción</div>
+                                    <div class="value">{{ $descripcionHumana }}@if(!is_null($item->registro_id)) <div class="registro-id-mobile">Registro ID: {{ $item->registro_id }}</div>@endif</div>
+
+                                    <div class="label"><i class="fas fa-calendar-alt"></i> Fecha</div>
+                                    <div class="value">{{ optional($item->created_at)->format('d M Y - h:i A') }} <div class="fecha-ago-mobile">{{ optional($item->created_at)->diffForHumans() }}</div></div>
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
 
                 <footer class="audit-table-footer">
                     {{ $auditorias->links() }}
