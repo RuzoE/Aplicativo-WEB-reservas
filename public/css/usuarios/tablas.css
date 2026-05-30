@@ -1,0 +1,94 @@
+/* Estilos de tabla de usuarios */
+.usuarios-table-wrapper {
+  overflow-x: auto;
+}
+
+.usuarios-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.usuarios-table th,
+.usuarios-table td {
+  padding: 0.95rem 1rem;
+}
+
+.usuarios-table th {
+  text-align: left;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #475569;
+  background: linear-gradient(90deg, #f8fafc 0%, #f1f5f9 100%);
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.usuarios-table tbody tr {
+  transition: background 0.2s ease;
+}
+
+.usuarios-table tbody tr:hover {
+  background: #fff7ed;
+}
+
+.usuarios-table td {
+  color: #475569;
+  font-size: 0.95rem;
+  vertical-align: middle;
+}
+
+.usuarios-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.8rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.usuarios-state-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.usuarios-actions-group {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.usuarios-action-btn {
+  width: 2.75rem;
+  height: 2.75rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.9rem;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.usuarios-action-btn:hover {
+  transform: translateY(-1px);
+}
+
+.usuarios-pagination {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  border-radius: 1rem;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+}
+
+.usuarios-pagination a,
+.usuarios-pagination span {
+  padding: 0.65rem 0.95rem;
+  border-radius: 0.85rem;
+  text-decoration: none;
+}

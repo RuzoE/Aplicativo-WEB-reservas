@@ -1,4 +1,14 @@
 <div class="container-fluid bg-dark px-0" style="position: sticky; top: 0; z-index: 1000;">
+    <!-- Debug styles: temporal - forzar visibilidad del navbar si está oculto por CSS/JS -->
+    <style>
+        .navbar-collapse{display:flex !important}
+        .navbar-dark .navbar-nav .nav-link{color:#fff !important; visibility: visible !important; display: block !important; opacity: 1 !important}
+        .d-flex.align-items-center.me-2.me-lg-3 {visibility: visible !important; display: flex !important; opacity: 1 !important}
+        .d-flex.align-items-center.me-2.me-lg-3 .nav-link{visibility: visible !important; display: block !important; opacity: 1 !important}
+        .dropdown-menu{visibility: visible !important; display: none !important}
+        .dropdown-menu.show{display: block !important; visibility: visible !important}
+        .dropdown-toggle::after{visibility: visible !important; opacity: 1 !important}
+    </style>
     <div class="row gx-0">
         <div class="col-lg-3 bg-dark d-none d-lg-block">
             <a href="{{ route('home') }}"
@@ -20,7 +30,7 @@
                 <div class="collapse navbar-collapse justify-content-between" id="navbarCollapse">
 
                     {{-- Menú principal --}}
-                    <div class="navbar-nav mr-auto py-0">
+                    <div class="navbar-nav me-auto py-0">
                         <a class="nav-item nav-link {{ request()->routeIs('home') ? 'active' : '' }}"
                            href="{{ route('home') }}">Inicio</a>
 

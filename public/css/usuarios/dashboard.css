@@ -1,0 +1,73 @@
+/* Dashboard del módulo de usuarios */
+.usuario-dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+@media (min-width: 640px) {
+  .usuario-dashboard-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .usuario-dashboard-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.usuario-stat-card {
+  border-top-width: 3px;
+  border-top-style: solid;
+  background: #ffffff;
+  border-radius: 1rem;
+  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.06);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  min-height: 8.5rem;
+}
+
+.usuario-stat-card .stat-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.usuario-stat-card .stat-title {
+  color: #94a3b8;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.usuario-stat-card .stat-value {
+  margin-top: 0.25rem;
+  color: #0f172a;
+  font-size: 1.75rem;
+  font-weight: 700;
+}
+
+.usuario-stat-card .stat-description {
+  color: #94a3b8;
+  font-size: 0.75rem;
+  margin-top: 0.4rem;
+}
+
+.usuario-stat-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.75rem;
+  flex-shrink: 0;
+}
+
+.usuario-stat-icon i {
+  font-size: 1rem;
+}
