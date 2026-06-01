@@ -21,7 +21,7 @@
   </div>
 
   <!-- Formulario inline oculto -->
-  <div id="empleadoFormWrapper" class="card shadow-sm border-0 mb-4 d-none empleado-form-card">
+  <div id="empleadoFormWrapper" class="card shadow-sm border-0 mb-4 {{ $errors->any() ? '' : 'd-none' }} empleado-form-card">
     <div class="card-header bg-gradient py-3 d-flex justify-content-between align-items-center">
       <div>
         <h5 class="mb-1"><i class="bi bi-person-plus me-2"></i>Nuevo empleado</h5>
@@ -39,19 +39,19 @@
         <div class="row g-3 mb-4">
           <div class="col-md-4">
             <label class="form-label fw-semibold">Nombre *</label>
-            <input type="text" name="name" class="form-control form-control-lg" placeholder="Ej: Carlos" required>
+            <input type="text" name="name" class="form-control form-control-lg" placeholder="Ej: Carlos" value="{{ old('name') }}" required>
             <small class="text-muted d-block mt-1">Nombre del empleado</small>
           </div>
           <div class="col-md-4">
             <label class="form-label fw-semibold">Apellido *</label>
-            <input type="text" name="last_name" class="form-control form-control-lg" placeholder="Ej: Pérez" required>
+            <input type="text" name="last_name" class="form-control form-control-lg" placeholder="Ej: Pérez" value="{{ old('last_name') }}" required>
             <small class="text-muted d-block mt-1">Apellido del empleado</small>
           </div>
           <div class="col-md-4">
             <label class="form-label fw-semibold">Email *</label>
             <div class="input-group input-group-lg">
               <span class="input-group-text">@</span>
-              <input type="email" name="email" class="form-control" placeholder="correo@example.com" pattern="^[^\s@]+@(gmail\.com|hotmail\.com)$" title="Solo se permiten correos @gmail.com o @hotmail.com" required>
+              <input type="email" name="email" class="form-control" placeholder="correo@example.com" pattern="^[^\s@]+@(gmail\.com|hotmail\.com)$" title="Solo se permiten correos @gmail.com o @hotmail.com" value="{{ old('email') }}" required>
             </div>
             <small class="text-muted d-block mt-1">Email corporativo único</small>
           </div>
@@ -138,7 +138,7 @@
     </div>
   </div>
 
-  <div id="empleadosTableWrapper" class="card shadow-sm border-0">
+  <div id="empleadosTableWrapper" class="card shadow-sm border-0 {{ $errors->any() ? 'd-none' : '' }}">
     <div class="card-body p-0">
       <div class="table-responsive">
         <table class="table table-hover align-middle mb-0 empleados-table">

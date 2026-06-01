@@ -1,29 +1,19 @@
 <div class="container-fluid bg-dark px-0" style="position: sticky; top: 0; z-index: 1000;">
-    <!-- Debug styles: temporal - forzar visibilidad del navbar si está oculto por CSS/JS -->
-    <style>
-        .navbar-collapse{display:flex !important}
-        .navbar-dark .navbar-nav .nav-link{color:#fff !important; visibility: visible !important; display: block !important; opacity: 1 !important}
-        .d-flex.align-items-center.me-2.me-lg-3 {visibility: visible !important; display: flex !important; opacity: 1 !important}
-        .d-flex.align-items-center.me-2.me-lg-3 .nav-link{visibility: visible !important; display: block !important; opacity: 1 !important}
-        .dropdown-menu{visibility: visible !important; display: none !important}
-        .dropdown-menu.show{display: block !important; visibility: visible !important}
-        .dropdown-toggle::after{visibility: visible !important; opacity: 1 !important}
-    </style>
     <div class="row gx-0">
         <div class="col-lg-3 bg-dark d-none d-lg-block">
             <a href="{{ route('home') }}"
                class="navbar-brand w-100 h-100 m-0 p-0 d-flex align-items-center justify-content-center">
-                <h1 class="m-0 text-primary text-uppercase site-brand-title">Hotel Oasis</h1>
+                <h1 class="m-0 text-primary text-uppercase site-brand-title fw-bold">Hotel Oasis</h1>
             </a>
         </div>
 
         <div class="col-lg-9">
             <nav class="navbar navbar-expand-lg bg-dark navbar-dark p-3 p-lg-0">
                 <a href="{{ route('home') }}" class="navbar-brand d-block d-lg-none site-brand-mobile">
-                    <h1 class="m-0 text-primary text-uppercase site-brand-title">Hotel Oasis</h1>
+                    <h1 class="m-0 text-primary text-uppercase site-brand-title fw-bold">Hotel Oasis</h1>
                 </a>
 
-                <button type="button" class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#navbarCollapse">
+                <button type="button" class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Alternar menú">
                     <span class="navbar-toggler-icon"></span>
                 </button>
 

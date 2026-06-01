@@ -3,11 +3,11 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\StoreEmployeeRequest;
 use App\Models\User;
 use App\Rules\AllowedEmailDomain;
 use App\Rules\AlphaSpace;
 use App\Rules\PhoneNumberByPrefix;
-use Illuminate\Http\Request;
 use Illuminate\Validation\Rules\Password;
 use Spatie\Permission\Models\Role;
 
@@ -41,16 +41,9 @@ class EmployeeController extends Controller
         return redirect()->route('admin.empleados.index');
     }
 
-    public function store(Request $request)
+    public function store(StoreEmployeeRequest $request)
     {
-        $data = $request->validate([
-            'name' => ['required', new AlphaSpace, 'max:100'],
-            'last_name' => ['required', new AlphaSpace, 'max:100'],
-            'email' => ['required', 'email', 'max:150', new AllowedEmailDomain(), 'unique:users,email'],
-            'phone' => ['required', new PhoneNumberByPrefix()],
-            'password' => ['required', 'confirmed', Password::min(12)->letters()->mixedCase()->numbers()->symbols()->uncompromised()],
-            'role_id' => ['required', 'exists:roles,id'],
-        ]);
+        $data = $request->validated();
 
         $role = Role::find($data['role_id']);
         

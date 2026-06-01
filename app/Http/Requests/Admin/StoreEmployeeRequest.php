@@ -38,8 +38,8 @@ class StoreEmployeeRequest extends FormRequest
                 Password::min(12)->letters()->mixedCase()->numbers()->symbols()->uncompromised(),
             ],
 
-            // Rol por nombre (ej: admin, recepcionista, minibar)
-            'role'                  => ['required','string','exists:roles,name'],
+            // Rol por id (ej: 1, 2, 3, 4)
+            'role_id'               => ['required','integer','exists:roles,id'],
         ];
     }
 
@@ -50,7 +50,7 @@ class StoreEmployeeRequest extends FormRequest
     {
         return [
             'password.confirmed' => 'La confirmación de la contraseña no coincide.',
-            'role.exists'        => 'El rol seleccionado no existe.',
+            'role_id.exists'      => 'El rol seleccionado no existe.',
         ];
     }
 
@@ -65,7 +65,7 @@ class StoreEmployeeRequest extends FormRequest
             'email'        => 'correo electrónico',
             'phone'        => 'teléfono',
             'password'     => 'contraseña',
-            'role'         => 'rol',
+            'role_id'      => 'rol',
         ];
     }
 }
