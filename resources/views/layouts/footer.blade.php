@@ -26,7 +26,7 @@
         </div>
         <div class="row text-center mt-2">
             <div class="col-md-12">
-                <small>&copy; 2025 HOTEL PROYECTO UNIVERSIDAD PILOTO SAM. Todos los derechos reservados.</small>
+                <small>&copy; 2026 HOTEL PROYECTO UNIVERSIDAD PILOTO SAM. Todos los derechos reservados.</small>
             </div>
         </div>
     </div>

@@ -1,3 +1,25 @@
+<style>
+    /* Custom Navbar Spacing and Size */
+    .navbar-nav .nav-link {
+        font-size: 1.2rem;
+        font-weight: 600;
+        padding-left: 1rem !important;
+        padding-right: 1rem !important;
+        letter-spacing: 0.5px;
+        transition: all 0.3s ease;
+    }
+    
+    @media (min-width: 992px) {
+        .navbar-nav .nav-link {
+            font-size: 1.4rem; /* Significantly larger on desktop */
+            margin-right: 1.5rem; /* Increased spacing */
+        }
+        .navbar-nav .nav-item:last-child .nav-link {
+            margin-right: 0;
+        }
+    }
+</style>
+
 <div class="container-fluid bg-dark px-0" style="position: sticky; top: 0; z-index: 1000;">
     <div class="row gx-0">
         <div class="col-lg-3 bg-dark d-none d-lg-block">
