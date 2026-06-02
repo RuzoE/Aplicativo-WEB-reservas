@@ -56,6 +56,47 @@
   max-width: 90%;
 }
 
+.role-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.35rem 0.85rem;
+  border-radius: 9999px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: capitalize;
+}
+
+.role-badge-administrador {
+  background: linear-gradient(135deg, #E0F2FF, #90CAF9);
+  color: #000 !important;
+}
+
+.role-badge-recepcion {
+  background: linear-gradient(135deg, #D1ECFF, #90E0EF);
+  color: #000 !important;
+}
+
+.role-badge-minibar {
+  background: linear-gradient(135deg, #C8E6C9, #81C784);
+  color: #000 !important;
+}
+
+.role-badge-mantenimiento {
+  background: linear-gradient(135deg, #FFE0B2, #FFB74D);
+  color: #000 !important;
+}
+
+.role-badge-invitado {
+  background: linear-gradient(135deg, #F3E5F5, #CE93D8);
+  color: #000 !important;
+}
+
+.role-badge-reservas {
+  background: linear-gradient(135deg, #EDE9FE, #C7D2FE);
+  color: #000 !important;
+}
+
 /* Badges/Pills */
 .usuario-pill {
   display: inline-flex;

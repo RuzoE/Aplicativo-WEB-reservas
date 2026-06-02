@@ -1,0 +1,664 @@
+/* ============================================================
+   edit.css — Página de edición de usuario (diseño premium)
+   Hotel Oasis • 2026
+   ============================================================ */
+
+/* ── Variables locales ── */
+.user-edit-page {
+  --orange: #f97316;
+  --orange-light: #fff7ed;
+  --orange-mid: #fed7aa;
+  --red: #ef4444;
+  --red-light: #fef2f2;
+  --green: #22c55e;
+  --green-light: #f0fdf4;
+  --teal: #14b8a6;
+  --teal-light: #f0fdfa;
+  --blue: #3b82f6;
+  --blue-light: #eff6ff;
+  --slate: #64748b;
+  --dark: #0f172a;
+  --border: #e2e8f0;
+  --card-bg: #ffffff;
+  --page-bg: #f1f5f9;
+  min-height: 100vh;
+  background: var(--page-bg);
+}
+
+/* ── Botón Volver ── */
+.btn-back-refined {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1.1rem;
+  border-radius: 9999px;
+  border: 1.5px solid var(--border);
+  background: var(--card-bg);
+  color: var(--slate);
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+.btn-back-refined:hover {
+  border-color: var(--orange);
+  color: var(--orange);
+  background: var(--orange-light);
+  transform: translateX(-2px);
+}
+
+/* ============================================================
+   TARJETA HERO DE PERFIL
+   ============================================================ */
+.profile-hero-card {
+  background: var(--card-bg);
+  border-radius: 1.25rem;
+  border: 1px solid var(--border);
+  box-shadow: 0 4px 20px rgba(15,23,42,0.06);
+  padding: 1.75rem 2rem;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+/* Avatar con iniciales */
+.profile-avatar {
+  width: 72px;
+  height: 72px;
+  border-radius: 1rem;
+  background: linear-gradient(135deg, #f97316 0%, #fb923c 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: #fff;
+  flex-shrink: 0;
+  box-shadow: 0 8px 20px rgba(249,115,22,0.3);
+  letter-spacing: -1px;
+}
+
+.profile-hero-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.profile-hero-name {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--dark);
+  margin: 0 0 0.2rem;
+  line-height: 1.2;
+}
+
+.profile-hero-email {
+  font-size: 0.875rem;
+  color: var(--slate);
+  margin: 0 0 0.6rem;
+}
+
+.profile-hero-badges {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.profile-back-btn {
+  margin-left: auto;
+}
+
+/* Badges de estado del hero */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.8rem;
+  border-radius: 9999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+.status-badge .dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  display: inline-block;
+}
+.status-badge.active   { background: #dcfce7; color: #15803d; }
+.status-badge.active .dot { background: #22c55e; }
+.status-badge.inactive { background: #f1f5f9; color: #475569; }
+.status-badge.inactive .dot { background: #94a3b8; }
+.status-badge.blocked  { background: #fee2e2; color: #b91c1c; }
+.status-badge.blocked .dot { background: #ef4444; }
+
+.role-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.3rem 0.8rem;
+  border-radius: 9999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+}
+
+/* ============================================================
+   TARJETAS STAT (fila de 4 debajo del hero)
+   ============================================================ */
+.stat-cards-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+}
+
+@media (max-width: 900px) {
+  .stat-cards-row { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 540px) {
+  .stat-cards-row { grid-template-columns: 1fr; }
+}
+
+.stat-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  padding: 1.1rem 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  box-shadow: 0 2px 8px rgba(15,23,42,0.04);
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+.stat-card:hover {
+  box-shadow: 0 6px 20px rgba(15,23,42,0.09);
+  transform: translateY(-2px);
+}
+
+.stat-card-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+.stat-card-icon.blue   { background: #eff6ff; color: var(--blue); }
+.stat-card-icon.green  { background: #f0fdf4; color: var(--green); }
+.stat-card-icon.orange { background: #fff7ed; color: var(--orange); }
+.stat-card-icon.red    { background: #fef2f2; color: var(--red); }
+.stat-card-icon.teal   { background: #f0fdfa; color: var(--teal); }
+.stat-card-icon.slate  { background: #f8fafc; color: #475569; }
+
+.stat-card-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--slate);
+  margin: 0 0 0.2rem;
+}
+.stat-card-value {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--dark);
+  margin: 0;
+  line-height: 1.2;
+}
+
+/* ============================================================
+   PANEL CARDS (formulario + sidebar)
+   ============================================================ */
+.edit-panel-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 1.25rem;
+  box-shadow: 0 2px 12px rgba(15,23,42,0.05);
+  padding: 1.75rem;
+  width: 100%; /* garantiza que ocupe todo el ancho del contenedor */
+}
+
+/* Columna del formulario: no se estira verticalmente al alto del sidebar */
+.col-form-panel {
+  align-self: flex-start;
+}
+
+.section-icon-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.9rem;
+  margin-bottom: 1.5rem;
+}
+.section-icon-box {
+  width: 46px;
+  height: 46px;
+  border-radius: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.15rem;
+  flex-shrink: 0;
+}
+.section-icon-box.orange { background: #fff7ed; color: var(--orange); }
+.section-icon-box.blue   { background: #eff6ff; color: var(--blue); }
+.section-icon-box.teal   { background: #f0fdfa; color: var(--teal); }
+.section-icon-box.slate  { background: #f8fafc; color: #475569; }
+
+.section-icon-title {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--dark);
+  margin: 0 0 0.2rem;
+}
+.section-icon-subtitle {
+  font-size: 0.82rem;
+  color: var(--slate);
+  margin: 0;
+}
+
+/* ============================================================
+   FLOATING LABEL INPUTS (mejorados)
+   ============================================================ */
+.form-floating-custom {
+  position: relative;
+  margin-bottom: 0;
+}
+.form-floating-custom label {
+  position: absolute;
+  top: 50%;
+  left: 0.9rem;
+  transform: translateY(-50%);
+  font-size: 0.88rem;
+  color: var(--slate);
+  pointer-events: none;
+  transition: all 0.18s ease;
+  background: transparent;
+  padding: 0 0.25rem;
+  z-index: 1;
+}
+.form-floating-custom input:not([type="checkbox"]),
+.form-floating-custom select,
+.form-floating-custom .form-select,
+.form-floating-custom .form-control {
+  width: 100%;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 0.75rem;
+  padding: 0.85rem 0.9rem;
+  font-size: 0.93rem;
+  color: var(--dark);
+  background: #ffffff;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  outline: none;
+  appearance: none;
+  -webkit-appearance: none;
+  min-height: 56px;
+}
+.form-floating-custom input:focus,
+.form-floating-custom select:focus,
+.form-floating-custom .form-select:focus,
+.form-floating-custom .form-control:focus {
+  border-color: var(--orange);
+  box-shadow: 0 0 0 3px rgba(249,115,22,0.12);
+}
+/* Float label on focus or filled */
+.form-floating-custom input:focus ~ label,
+.form-floating-custom input:not(:placeholder-shown) ~ label,
+.form-floating-custom select:focus ~ label,
+.form-floating-custom .form-select ~ label,
+.form-floating-custom .has-value ~ label {
+  top: 0;
+  left: 0.9rem !important; /* Alineación perfecta a la izquierda al flotar */
+  transform: translateY(-50%);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--orange);
+  letter-spacing: 0.03em;
+  background-color: var(--card-bg);
+  padding: 0 0.4rem;
+  margin-left: -0.4rem;
+}
+/* Prefix icon input — espacio entre ícono y texto cuando NO flota */
+.form-floating-custom.has-prefix label { left: 3rem; }
+.form-floating-custom.has-prefix input,
+.form-floating-custom.has-prefix .form-control,
+.form-floating-custom.has-prefix .form-select,
+.form-floating-custom.has-prefix select { padding-left: 3rem; }
+.input-prefix-icon {
+  position: absolute;
+  left: 0.85rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--orange);
+  font-size: 0.95rem;
+  z-index: 2;
+  pointer-events: none;
+}
+
+/* Phone field with country code */
+.phone-prefix-badge {
+  position: absolute;
+  left: 0.85rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--slate);
+  background: #f1f5f9;
+  padding: 0.2rem 0.5rem;
+  border-radius: 0.4rem;
+  z-index: 2;
+  pointer-events: none;
+  white-space: nowrap;
+  letter-spacing: 0.02em;
+}
+.form-floating-custom.has-phone-prefix input,
+.form-floating-custom.has-phone-prefix .form-control {
+  padding-left: 5.2rem;
+}
+.form-floating-custom.has-phone-prefix label { left: 5.2rem; }
+
+/* Select arrow */
+.form-floating-custom select,
+.form-floating-custom .form-select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2364748b' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.9rem center;
+  padding-right: 2.5rem;
+}
+
+/* ============================================================
+   ESTADO DEL USUARIO — pills mejorados
+   ============================================================ */
+.form-section-title {
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--slate);
+  margin-bottom: 0.75rem;
+}
+
+.status-pill-group {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.btn-check { display: none; }
+
+.btn-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.6rem 1.3rem;
+  border-radius: 9999px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 2px solid transparent;
+  user-select: none;
+}
+
+/* Activo */
+.btn-pill-success {
+  background: #f0fdf4;
+  color: #15803d;
+  border-color: #bbf7d0;
+}
+.btn-check:checked + .btn-pill-success {
+  background: #22c55e;
+  color: #fff;
+  border-color: #22c55e;
+  box-shadow: 0 4px 14px rgba(34,197,94,0.35);
+}
+.btn-pill-success:hover { background: #dcfce7; }
+
+/* Inactivo */
+.btn-pill-muted {
+  background: #f8fafc;
+  color: #475569;
+  border-color: #e2e8f0;
+}
+.btn-check:checked + .btn-pill-muted {
+  background: #1e293b;
+  color: #fff;
+  border-color: #1e293b;
+  box-shadow: 0 4px 14px rgba(15,23,42,0.3);
+}
+.btn-pill-muted:hover { background: #f1f5f9; }
+
+/* Bloqueado */
+.btn-pill-danger {
+  background: #fef2f2;
+  color: #b91c1c;
+  border-color: #fecaca;
+}
+.btn-check:checked + .btn-pill-danger {
+  background: #ef4444;
+  color: #fff;
+  border-color: #ef4444;
+  box-shadow: 0 4px 14px rgba(239,68,68,0.35);
+}
+.btn-pill-danger:hover { background: #fee2e2; }
+
+/* ============================================================
+   BOTONES GUARDAR / CANCELAR
+   ============================================================ */
+.btn-save {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.7rem 1.6rem;
+  border-radius: 9999px;
+  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+  color: #fff;
+  font-size: 0.875rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  border: none;
+  cursor: pointer;
+  text-transform: uppercase;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 14px rgba(249,115,22,0.35);
+  text-decoration: none;
+}
+.btn-save:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(249,115,22,0.45);
+  color: #fff;
+}
+
+.btn-cancel {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.7rem 1.4rem;
+  border-radius: 9999px;
+  background: #1e293b;
+  color: #fff;
+  font-size: 0.875rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  border: none;
+  cursor: pointer;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+.btn-cancel:hover {
+  background: #0f172a;
+  color: #fff;
+  transform: translateY(-2px);
+}
+
+/* ============================================================
+   SIDEBAR — Información de cuenta
+   ============================================================ */
+.account-info-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.account-info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid #f1f5f9;
+  font-size: 0.875rem;
+}
+.account-info-row:last-child { border-bottom: none; }
+.account-info-row .label-col { color: var(--slate); font-weight: 500; }
+.account-info-row .value-col { font-weight: 700; color: var(--dark); text-align: right; }
+.account-info-row .value-col.orange { color: var(--orange); }
+
+/* ============================================================
+   SIDEBAR — Seguridad y Actividad
+   ============================================================ */
+.sidebar-action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.65rem 1rem;
+  border-radius: 0.65rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  border: none;
+  margin-bottom: 0.5rem;
+}
+.sidebar-action-btn:last-child { margin-bottom: 0; }
+
+.sidebar-action-btn.orange {
+  background: transparent;
+  border: 1.5px solid var(--orange);
+  color: var(--orange);
+}
+.sidebar-action-btn.orange:hover {
+  background: var(--orange);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(249,115,22,0.3);
+}
+
+.sidebar-action-btn.red {
+  background: transparent;
+  border: 1.5px solid var(--red);
+  color: var(--red);
+}
+.sidebar-action-btn.red:hover {
+  background: var(--red);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(239,68,68,0.3);
+}
+
+.sidebar-action-btn.teal {
+  background: transparent;
+  border: 1.5px solid var(--teal);
+  color: var(--teal);
+}
+.sidebar-action-btn.teal:hover {
+  background: var(--teal);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(20,184,166,0.3);
+}
+
+.sidebar-action-btn.gold {
+  background: transparent;
+  border: 1.5px solid #d97706;
+  color: #d97706;
+}
+.sidebar-action-btn.gold:hover {
+  background: #d97706;
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(217,119,6,0.3);
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 992px) {
+  .profile-hero-card { flex-direction: column; align-items: flex-start; }
+  .profile-back-btn { margin-left: 0; }
+}
+@media (max-width: 768px) {
+  .edit-panel-card { padding: 1.25rem; }
+  .profile-hero-card { padding: 1.25rem; }
+  .profile-avatar { width: 58px; height: 58px; font-size: 1.3rem; }
+  .profile-hero-name { font-size: 1.2rem; }
+}
+
+/* ============================================================
+   ACTIVITY HERO CARD (Premium redesign for activity view)
+   ============================================================ */
+.activity-hero-card {
+  background: var(--card-bg);
+  border-radius: 1.25rem;
+  border: 1px solid var(--border);
+  box-shadow: 0 4px 20px rgba(15,23,42,0.04);
+  padding: 1.75rem 2rem;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.activity-hero-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 1rem;
+  background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6rem;
+  color: #fff;
+  flex-shrink: 0;
+  box-shadow: 0 8px 20px rgba(20,184,166,0.3);
+}
+
+.activity-hero-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.activity-hero-title {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--dark);
+  margin: 0 0 0.25rem;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+.activity-hero-description {
+  font-size: 0.95rem;
+  color: var(--slate);
+  margin: 0;
+}
+
+.activity-hero-actions {
+  margin-left: auto;
+}
+
+@media (max-width: 768px) {
+  .activity-hero-card {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 1.25rem;
+  }
+  .activity-hero-actions {
+    margin-left: 0;
+    margin-top: 1rem;
+  }
+}
+

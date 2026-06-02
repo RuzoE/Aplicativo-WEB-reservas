@@ -57,13 +57,13 @@ class UsuariosController extends Controller
 
         // Obtener roles disponibles
         $roles = Role::all(['id', 'name']);
-        
+
         // Calcular estadísticas
         $totalUsuarios = User::count();
         $usuariosActivos = User::where('status', 'active')->count();
         $usuariosInactivos = User::where('status', 'inactive')->count();
         $usuariosConRol = User::has('roles')->count();
-        
+
         // Actividades recientes del sistema
         $recentActivities = UserActivity::with('user:id,name,email')
             ->recent(7)
@@ -116,7 +116,7 @@ class UsuariosController extends Controller
             'name' => ['required', new AlphaSpace, 'max:100'],
             'last_name' => ['nullable', new AlphaSpace, 'max:100'],
             'email' => ['required', 'email', 'max:150', new AllowedEmailDomain(), 'unique:users,email,' . $usuario->id],
-            'phone' => ['nullable', new PhoneNumberByPrefix()],
+            'phone' => ['nullable', 'string', 'max:20'],
             'role_id' => ['nullable', 'exists:roles,id'],
             'status' => ['nullable', 'string', 'in:active,inactive,blocked'],
         ]);
@@ -211,7 +211,7 @@ class UsuariosController extends Controller
         $this->authorize('changePassword', $usuario);
 
         $data = $request->validate([
-            'password' => ['required', 'confirmed', Password::min(12)->letters()->mixedCase()->numbers()->symbols()->uncompromised()],
+            'password' => ['required', 'confirmed', 'min:8'],
         ]);
 
         $usuario->update(['password' => $data['password']]);
@@ -307,7 +307,19 @@ class UsuariosController extends Controller
             ->orderByDesc('created_at')
             ->paginate(50);
 
-        return view('admin.usuarios.activity', compact('usuario', 'activities'));
+        $loginCount = $usuario->activities()->logins()->count();
+        $passwordChangesCount = $usuario->activities()->passwordChanges()->count();
+        $recentActivityCount = $usuario->activities()->recent()->count();
+        $failedCount = $usuario->activities()->byStatus('failed')->count();
+
+        return view('admin.usuarios.activity', compact(
+            'usuario',
+            'activities',
+            'loginCount',
+            'passwordChangesCount',
+            'recentActivityCount',
+            'failedCount'
+        ));
     }
 
     /**
@@ -393,7 +405,7 @@ class UsuariosController extends Controller
     private function getDeviceName(): string
     {
         $ua = request()->userAgent();
-        
+
         if (str_contains($ua, 'Windows')) {
             return 'Windows';
         } elseif (str_contains($ua, 'Macintosh')) {
@@ -405,7 +417,7 @@ class UsuariosController extends Controller
         } elseif (str_contains($ua, 'Android')) {
             return 'Android';
         }
-        
+
         return 'Desconocido';
     }
 }

@@ -21,11 +21,13 @@ var UsuariosTabla = (function () {
       button.addEventListener('click', function (event) {
         event.preventDefault();
         deleteUserId = this.dataset.id;
+        modal.classList.add('flex');
         modal.classList.remove('hidden');
       });
     });
 
     cancelButton.addEventListener('click', function () {
+      modal.classList.remove('flex');
       modal.classList.add('hidden');
       deleteUserId = null;
     });
@@ -40,6 +42,7 @@ var UsuariosTabla = (function () {
 
     document.addEventListener('keydown', function (event) {
       if (event.key === 'Escape') {
+        modal.classList.remove('flex');
         modal.classList.add('hidden');
         deleteUserId = null;
       }
@@ -50,3 +53,7 @@ var UsuariosTabla = (function () {
     init,
   };
 })();
+
+document.addEventListener('DOMContentLoaded', function () {
+  UsuariosTabla.init();
+});

@@ -1,241 +1,355 @@
 @extends('layouts.app')
+@php $adminView = true; @endphp
+
+@push('styles')
+<link rel="stylesheet" href="{{ asset('css/usuarios/usuarios.css') }}">
+<link rel="stylesheet" href="{{ asset('css/usuarios/tablas.css') }}">
+<link rel="stylesheet" href="{{ asset('css/usuarios/edit.css') }}">
+@endpush
 
 @section('content')
-<div class="container-fluid">
-  <div class="row mb-4">
-    <div class="col">
-      <h2 class="mb-1"><i class="bi bi-pencil-square me-2"></i>Editar usuario</h2>
-      <p class="text-muted mb-0">{{ $usuario->name }} {{ $usuario->last_name }} ({{ $usuario->email }})</p>
-    </div>
-    <div class="col-auto">
-      <a href="{{ route('admin.usuarios.index') }}" class="btn btn-outline-secondary btn-lg">
-        <i class="bi bi-arrow-left"></i> Volver
-      </a>
-    </div>
-  </div>
+@php
+  $status     = old('status', $usuario->status);
+  $initials   = strtoupper(substr($usuario->name ?? '', 0, 1) . substr($usuario->last_name ?? '', 0, 1));
+  $statusMap  = ['active' => 'active', 'inactive' => 'inactive', 'blocked' => 'blocked'];
+  $statusLabels = ['active' => 'Activo', 'inactive' => 'Inactivo', 'blocked' => 'Bloqueado'];
+  $statusClass = $statusMap[$usuario->status] ?? 'inactive';
+@endphp
 
-  <div class="row">
-    <!-- Formulario de edición -->
-    <div class="col-lg-8">
-      <div class="card shadow-sm border-0 mb-4">
-        <div class="card-header bg-light">
-          <h6 class="mb-0"><i class="bi bi-info-circle me-2"></i>Información del usuario</h6>
+<div class="user-edit-page">
+  <div class="container-fluid px-4 py-4">
+
+    {{-- ═══ HERO: Avatar + nombre + badges + volver ═══ --}}
+    <div class="profile-hero-card mb-4">
+      <div class="profile-avatar">{{ $initials ?: 'U' }}</div>
+
+      <div class="profile-hero-info">
+        <h1 class="profile-hero-name">{{ $usuario->name }} {{ $usuario->last_name }}</h1>
+        <p class="profile-hero-email">{{ $usuario->email }}</p>
+        <div class="profile-hero-badges">
+          {{-- Badge de estado actual --}}
+          <span class="status-badge {{ $statusClass }}">
+            <span class="dot"></span>
+            {{ $statusLabels[$usuario->status] ?? ucfirst($usuario->status) }}
+          </span>
+          {{-- Chip de rol --}}
+          <span class="role-chip">{{ $usuario->display_role }}</span>
         </div>
-        <div class="card-body p-4">
+      </div>
+
+      <div class="profile-back-btn">
+        <a href="{{ route('admin.usuarios.index') }}" class="btn-back-refined">
+          <i class="fas fa-arrow-left"></i> VOLVER
+        </a>
+      </div>
+    </div>
+
+    {{-- ═══ STAT CARDS (Creado / Estado / Rol / Último acceso) ═══ --}}
+    <div class="stat-cards-row mb-4">
+
+      <div class="stat-card">
+        <div class="stat-card-icon blue">
+          <i class="fas fa-calendar-alt"></i>
+        </div>
+        <div>
+          <p class="stat-card-label">Creado</p>
+          <p class="stat-card-value">{{ $usuario->created_at->format('d/m/Y') }}</p>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-card-icon {{ $statusClass === 'active' ? 'green' : ($statusClass === 'blocked' ? 'red' : 'slate') }}">
+          <i class="fas fa-{{ $statusClass === 'active' ? 'check-circle' : ($statusClass === 'blocked' ? 'ban' : 'user-slash') }}"></i>
+        </div>
+        <div>
+          <p class="stat-card-label">Estado</p>
+          <p class="stat-card-value">{{ $statusLabels[$usuario->status] ?? ucfirst($usuario->status) }}</p>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-card-icon orange">
+          <i class="fas fa-id-badge"></i>
+        </div>
+        <div>
+          <p class="stat-card-label">Rol asignado</p>
+          <p class="stat-card-value">{{ $usuario->display_role }}</p>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-card-icon teal">
+          <i class="fas fa-clock"></i>
+        </div>
+        <div>
+          <p class="stat-card-label">Último acceso</p>
+          <p class="stat-card-value">{{ $usuario->last_login_at ? $usuario->last_login_at->format('d/m/Y H:i') : 'Nunca' }}</p>
+        </div>
+      </div>
+
+    </div>
+
+    {{-- ═══ FILA PRINCIPAL: Formulario + Sidebar ═══ --}}
+    <div class="row g-4">
+
+      {{-- ── Información personal (formulario) ── --}}
+      <div class="col-lg-7 col-form-panel">
+        <div class="edit-panel-card">
+
+          <div class="section-icon-header">
+            <div class="section-icon-box orange">
+              <i class="fas fa-user-circle"></i>
+            </div>
+            <div>
+              <h2 class="section-icon-title">Información personal</h2>
+              <p class="section-icon-subtitle">Actualiza los datos de usuario con un diseño premium y fluido.</p>
+            </div>
+          </div>
+
           <form action="{{ route('admin.usuarios.update', $usuario) }}" method="POST">
             @csrf
             @method('PUT')
 
-            <!-- Fila 1: Nombre, Apellido, Email -->
+            {{-- Nombre / Apellido --}}
             <div class="row g-3 mb-4">
-              <div class="col-md-4">
-                <label class="form-label fw-semibold">Nombre *</label>
-                <input type="text" name="name" class="form-control form-control-lg @error('name') is-invalid @enderror" 
-                       value="{{ old('name', $usuario->name) }}" required>
-                @error('name')
-                  <div class="invalid-feedback d-block">{{ $message }}</div>
-                @enderror
-              </div>
-              <div class="col-md-4">
-                <label class="form-label fw-semibold">Apellido</label>
-                <input type="text" name="last_name" class="form-control form-control-lg @error('last_name') is-invalid @enderror" 
-                       value="{{ old('last_name', $usuario->last_name) }}">
-                @error('last_name')
-                  <div class="invalid-feedback d-block">{{ $message }}</div>
-                @enderror
-              </div>
-              <div class="col-md-4">
-                <label class="form-label fw-semibold">Email *</label>
-                <div class="input-group input-group-lg">
-                  <span class="input-group-text">@</span>
-                  <input type="email" name="email" class="form-control @error('email') is-invalid @enderror" 
-                         value="{{ old('email', $usuario->email) }}" required>
+              <div class="col-md-6">
+                <div class="form-floating-custom">
+                  <input id="name" type="text" name="name"
+                    class="form-control @error('name') is-invalid @enderror"
+                    placeholder=" "
+                    value="{{ old('name', $usuario->name) }}" required>
+                  <label for="name">Nombre *</label>
                 </div>
-                @error('email')
-                  <div class="invalid-feedback d-block">{{ $message }}</div>
+                @error('name')
+                  <div class="invalid-feedback d-block mt-1">{{ $message }}</div>
+                @enderror
+              </div>
+
+              <div class="col-md-6">
+                <div class="form-floating-custom">
+                  <input id="last_name" type="text" name="last_name"
+                    class="form-control @error('last_name') is-invalid @enderror"
+                    placeholder=" "
+                    value="{{ old('last_name', $usuario->last_name) }}">
+                  <label for="last_name">Apellido</label>
+                </div>
+                @error('last_name')
+                  <div class="invalid-feedback d-block mt-1">{{ $message }}</div>
                 @enderror
               </div>
             </div>
 
-            <!-- Fila 2: Teléfono y Rol -->
+            {{-- Email / Teléfono --}}
             <div class="row g-3 mb-4">
               <div class="col-md-6">
-                <label class="form-label fw-semibold">Teléfono</label>
-                <input type="text" name="phone" class="form-control form-control-lg @error('phone') is-invalid @enderror" 
-                       value="{{ old('phone', $usuario->phone) }}" inputmode="tel">
-                @error('phone')
-                  <div class="invalid-feedback d-block">{{ $message }}</div>
+                <div class="form-floating-custom has-prefix">
+                  <i class="fas fa-envelope input-prefix-icon"></i>
+                  <input id="email" type="email" name="email"
+                    class="form-control @error('email') is-invalid @enderror"
+                    placeholder=" "
+                    value="{{ old('email', $usuario->email) }}" required>
+                  <label for="email">Email *</label>
+                </div>
+                @error('email')
+                  <div class="invalid-feedback d-block mt-1">{{ $message }}</div>
                 @enderror
               </div>
+
               <div class="col-md-6">
-                <label class="form-label fw-semibold">Rol de acceso</label>
-                <select name="role_id" class="form-select form-select-lg @error('role_id') is-invalid @enderror">
+                <div class="form-floating-custom has-phone-prefix">
+                  <span class="phone-prefix-badge">COL +57</span>
+                  @php
+                    $phoneRaw = old('phone', $usuario->phone ?? '');
+                    $phoneDisplay = preg_replace('/^\+?57/', '', $phoneRaw);
+                  @endphp
+                  <input id="phone" type="text" name="phone"
+                    class="form-control @error('phone') is-invalid @enderror"
+                    placeholder=" "
+                    value="{{ $phoneDisplay }}">
+                  <label for="phone">Teléfono</label>
+                </div>
+                @error('phone')
+                  <div class="invalid-feedback d-block mt-1">{{ $message }}</div>
+                @enderror
+              </div>
+            </div>
+
+            {{-- Rol de acceso --}}
+            <div class="mb-4">
+              <div class="form-floating-custom has-prefix">
+                <i class="fas fa-user-tag input-prefix-icon"></i>
+                <select id="role_id" name="role_id"
+                  class="form-select @error('role_id') is-invalid @enderror">
                   <option value="">Mantener rol actual</option>
                   @foreach($roles as $role)
-                    <option value="{{ $role->id }}" {{ old('role_id', $currentRole?->id) == $role->id ? 'selected' : '' }}>
+                    <option value="{{ $role->id }}"
+                      {{ old('role_id', $currentRole?->id) == $role->id ? 'selected' : '' }}>
                       {{ ucfirst($role->name) }}
                     </option>
                   @endforeach
                 </select>
-                @error('role_id')
-                  <div class="invalid-feedback d-block">{{ $message }}</div>
-                @enderror
+                <label for="role_id">Rol de acceso</label>
               </div>
+              @error('role_id')
+                <div class="invalid-feedback d-block mt-1">{{ $message }}</div>
+              @enderror
             </div>
 
-            <!-- Estado -->
+            {{-- Estado del usuario --}}
             <div class="mb-4">
-              <label class="form-label fw-semibold mb-3">Estado</label>
-              <div>
-                <div class="form-check mb-2">
-                  <input class="form-check-input" type="radio" name="status" id="statusActive" 
-                         value="active" {{ old('status', $usuario->status) === 'active' ? 'checked' : '' }}>
-                  <label class="form-check-label" for="statusActive">
-                    <span class="badge bg-success">Activo</span> - Acceso completo al sistema
+              <div class="form-section-title">Estado del usuario</div>
+              <div class="status-pill-group">
+                <div>
+                  <input type="radio" class="btn-check" name="status" id="statusActive"
+                    value="active" autocomplete="off" {{ $status === 'active' ? 'checked' : '' }}>
+                  <label class="btn-pill btn-pill-success" for="statusActive">
+                    <i class="fas fa-check-circle"></i> Activo
                   </label>
                 </div>
-                <div class="form-check mb-2">
-                  <input class="form-check-input" type="radio" name="status" id="statusInactive" 
-                         value="inactive" {{ old('status', $usuario->status) === 'inactive' ? 'checked' : '' }}>
-                  <label class="form-check-label" for="statusInactive">
-                    <span class="badge bg-warning">Inactivo</span> - Sin acceso temporalmente
+                <div>
+                  <input type="radio" class="btn-check" name="status" id="statusInactive"
+                    value="inactive" autocomplete="off" {{ $status === 'inactive' ? 'checked' : '' }}>
+                  <label class="btn-pill btn-pill-muted" for="statusInactive">
+                    <i class="fas fa-user-slash"></i> Inactivo
                   </label>
                 </div>
-                <div class="form-check">
-                  <input class="form-check-input" type="radio" name="status" id="statusBlocked" 
-                         value="blocked" {{ old('status', $usuario->status) === 'blocked' ? 'checked' : '' }}>
-                  <label class="form-check-label" for="statusBlocked">
-                    <span class="badge bg-danger">Bloqueado</span> - Acceso denegado permanentemente
+                <div>
+                  <input type="radio" class="btn-check" name="status" id="statusBlocked"
+                    value="blocked" autocomplete="off" {{ $status === 'blocked' ? 'checked' : '' }}>
+                  <label class="btn-pill btn-pill-danger" for="statusBlocked">
+                    <i class="fas fa-ban"></i> Bloqueado
                   </label>
                 </div>
               </div>
             </div>
 
-            <!-- Botones -->
-            <div class="d-flex gap-2 pt-4 border-top">
-              <button type="submit" class="btn btn-primary btn-lg px-4">
-                <i class="bi bi-check-circle me-2"></i>Guardar cambios
+            {{-- Acciones --}}
+            <div class="d-flex gap-3 pt-3" style="border-top:1px solid #f1f5f9;">
+              <button type="submit" class="btn-save">
+                <i class="fas fa-save"></i> Guardar cambios
               </button>
-              <a href="{{ route('admin.usuarios.index') }}" class="btn btn-outline-secondary btn-lg px-4">
-                <i class="bi bi-x-circle me-2"></i>Cancelar
+              <a href="{{ route('admin.usuarios.index') }}" class="btn-cancel">
+                <i class="fas fa-times"></i> Cancelar
               </a>
             </div>
+
           </form>
         </div>
       </div>
-    </div>
 
-    <!-- Panel lateral - Acciones rápidas -->
-    <div class="col-lg-4">
-      <!-- Información del usuario -->
-      <div class="card shadow-sm border-0 mb-3">
-        <div class="card-header bg-light">
-          <h6 class="mb-0"><i class="bi bi-person me-2"></i>Información</h6>
-        </div>
-        <div class="card-body p-3">
-          <dl class="row small mb-0">
-            <dt class="col-sm-6 fw-semibold">ID:</dt>
-            <dd class="col-sm-6">{{ $usuario->id }}</dd>
-            
-            <dt class="col-sm-6 fw-semibold">Rol mostrado:</dt>
-            <dd class="col-sm-6">
-              <span class="badge role-badge-{{ strtolower($usuario->display_role) }}">{{ $usuario->display_role }}</span>
-            </dd>
-            
-            <dt class="col-sm-6 fw-semibold">Tipo:</dt>
-            <dd class="col-sm-6">
-              <span class="badge {{ $usuario->is_employee ? 'bg-info' : 'bg-secondary' }}">
-                {{ $usuario->is_employee ? 'Empleado' : 'Invitado' }}
-              </span>
-            </dd>
-            
-            <dt class="col-sm-6 fw-semibold">Creado:</dt>
-            <dd class="col-sm-6">{{ $usuario->created_at->format('d/m/Y H:i') }}</dd>
-            
-            <dt class="col-sm-6 fw-semibold">Último acceso:</dt>
-            <dd class="col-sm-6">{{ $usuario->last_login_at ? $usuario->last_login_at->format('d/m/Y H:i') : 'Nunca' }}</dd>
-            
-            <dt class="col-sm-6 fw-semibold">IP última:</dt>
-            <dd class="col-sm-6">{{ $usuario->last_login_ip ?? '-' }}</dd>
-          </dl>
-        </div>
-      </div>
+      {{-- ── Columna sidebar ── --}}
+      <div class="col-lg-5 d-flex flex-column gap-4">
 
-      <!-- Cambiar contraseña -->
-      <div class="card shadow-sm border-0 mb-3">
-        <div class="card-header bg-light">
-          <h6 class="mb-0"><i class="bi bi-key me-2"></i>Contraseña</h6>
+        {{-- Información de cuenta --}}
+        <div class="edit-panel-card">
+          <div class="section-icon-header">
+            <div class="section-icon-box orange">
+              <i class="fas fa-lock"></i>
+            </div>
+            <div>
+              <h2 class="section-icon-title">Información de cuenta</h2>
+              <p class="section-icon-subtitle">Detalles del perfil y su actividad.</p>
+            </div>
+          </div>
+
+          <div class="account-info-list">
+            <div class="account-info-row">
+              <span class="label-col">ID</span>
+              <span class="value-col">{{ $usuario->id }}</span>
+            </div>
+            <div class="account-info-row">
+              <span class="label-col">Rol</span>
+              <span class="value-col orange">{{ $usuario->display_role }}</span>
+            </div>
+            <div class="account-info-row">
+              <span class="label-col">Tipo</span>
+              <span class="value-col orange">{{ $usuario->is_employee ? 'Empleado' : 'Invitado' }}</span>
+            </div>
+            <div class="account-info-row">
+              <span class="label-col">Creado</span>
+              <span class="value-col">{{ $usuario->created_at->format('d/m/Y') }}</span>
+            </div>
+            <div class="account-info-row">
+              <span class="label-col">Último acceso</span>
+              <span class="value-col">{{ $usuario->last_login_at ? $usuario->last_login_at->format('d/m/Y H:i') : 'Nunca' }}</span>
+            </div>
+            <div class="account-info-row">
+              <span class="label-col">IP última</span>
+              <span class="value-col">{{ $usuario->last_login_ip ?? '-' }}</span>
+            </div>
+          </div>
         </div>
-        <div class="card-body p-3">
-          <p class="text-muted small mb-2">Gestionar contraseña del usuario</p>
-          <button type="button" class="btn btn-outline-warning btn-sm w-100 mb-2" data-bs-toggle="modal" data-bs-target="#changePasswordModal">
-            <i class="bi bi-pencil me-1"></i>Cambiar contraseña
+
+        {{-- Seguridad --}}
+        <div class="edit-panel-card">
+          <div class="section-icon-header">
+            <div class="section-icon-box blue">
+              <i class="fas fa-shield-alt"></i>
+            </div>
+            <div>
+              <h2 class="section-icon-title">Seguridad</h2>
+              <p class="section-icon-subtitle">Controla accesos y contraseñas.</p>
+            </div>
+          </div>
+
+          <button type="button" class="sidebar-action-btn orange"
+            data-bs-toggle="modal" data-bs-target="#changePasswordModal">
+            <i class="fas fa-key"></i> Cambiar contraseña
           </button>
-          <button type="button" class="btn btn-outline-danger btn-sm w-100" onclick="resetPassword({{ $usuario->id }})">
-            <i class="bi bi-arrow-clockwise me-1"></i>Generar temporal
+          <button type="button" class="sidebar-action-btn red"
+            onclick="generateTempPass({{ $usuario->id }})">
+            <i class="fas fa-sync-alt"></i> Generar temporal
           </button>
         </div>
-      </div>
 
-      <!-- Actividad -->
-      <div class="card shadow-sm border-0 mb-3">
-        <div class="card-header bg-light">
-          <h6 class="mb-0"><i class="bi bi-clock-history me-2"></i>Actividad</h6>
-        </div>
-        <div class="card-body p-3">
-          <p class="text-muted small mb-2">Ver historial y sesiones activas</p>
-          <a href="{{ route('admin.usuarios.activity', $usuario) }}" class="btn btn-outline-info btn-sm w-100 mb-2">
-            <i class="bi bi-list me-1"></i>Historial de actividad
+        {{-- Actividad --}}
+        <div class="edit-panel-card">
+          <div class="section-icon-header">
+            <div class="section-icon-box teal">
+              <i class="fas fa-history"></i>
+            </div>
+            <div>
+              <h2 class="section-icon-title">Actividad</h2>
+              <p class="section-icon-subtitle">Revisa historial y sesiones activas.</p>
+            </div>
+          </div>
+
+          <a href="{{ route('admin.usuarios.activity', $usuario) }}" class="sidebar-action-btn teal">
+            <i class="fas fa-list"></i> Ver historial
           </a>
-          <a href="{{ route('admin.usuarios.sessions', $usuario) }}" class="btn btn-outline-primary btn-sm w-100">
-            <i class="bi bi-wifi me-1"></i>Sesiones activas
+          <a href="{{ route('admin.usuarios.sessions', $usuario) }}" class="sidebar-action-btn gold">
+            <i class="fas fa-wifi"></i> Ver sesiones
           </a>
         </div>
-      </div>
 
-      <!-- Peligro -->
-      <div class="card shadow-sm border-0 border-danger">
-        <div class="card-header bg-light border-danger">
-          <h6 class="mb-0 text-danger"><i class="bi bi-exclamation-triangle me-2"></i>Zona de peligro</h6>
-        </div>
-        <div class="card-body p-3">
-          <p class="text-muted small mb-2">Acciones irreversibles</p>
-          <button type="button" class="btn btn-outline-danger btn-sm w-100" onclick="deleteUser({{ $usuario->id }})">
-            <i class="bi bi-trash me-1"></i>Eliminar usuario
-          </button>
-        </div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- Modal para cambiar contraseña -->
+{{-- Modal: Cambiar Contraseña --}}
 <div class="modal fade" id="changePasswordModal" tabindex="-1">
   <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title"><i class="bi bi-key me-2"></i>Cambiar contraseña</h5>
+    <div class="modal-content rounded-4 shadow-lg">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title"><i class="fas fa-key me-2 text-warning"></i> Cambiar contraseña</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <form action="{{ route('admin.usuarios.update-password', $usuario) }}" method="POST">
         @csrf
         <div class="modal-body">
           <div class="mb-3">
-            <label class="form-label">Contraseña actual *</label>
-            <input type="password" name="current_password" class="form-control" required>
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Nueva contraseña *</label>
+            <label class="form-label fw-semibold">Nueva contraseña *</label>
             <input type="password" name="password" class="form-control" required minlength="12">
             <small class="text-muted">Mín. 12 caracteres (mayúscula, minúscula, número, símbolo)</small>
           </div>
           <div class="mb-3">
-            <label class="form-label">Confirmar contraseña *</label>
+            <label class="form-label fw-semibold">Confirmar contraseña *</label>
             <input type="password" name="password_confirmation" class="form-control" required minlength="12">
           </div>
         </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <div class="modal-footer border-0 pt-0">
+          <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
           <button type="submit" class="btn btn-primary">Guardar</button>
         </div>
       </form>
@@ -244,36 +358,58 @@
 </div>
 
 <script>
-function deleteUser(userId) {
-  if (confirm('¿Estás seguro de que deseas eliminar este usuario? Esta acción es irreversible.')) {
-    if (confirm('Confirma: ¿Eliminar usuario definitivamente?')) {
-      fetch(`/admin/usuarios/${userId}`, {
-        method: 'DELETE',
-        headers: {
-          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-        }
-      }).then(() => window.location.href = '/admin/usuarios');
+function generateTempPass(userId) {
+  if (typeof Swal !== 'undefined') {
+    Swal.fire({
+      title: '¿Generar contraseña temporal?',
+      text: "Esto cambiará la contraseña del usuario inmediatamente.",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#ef4444',
+      cancelButtonColor: '#64748b',
+      confirmButtonText: 'Sí, generar',
+      cancelButtonText: 'Cancelar'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        executeReset(userId);
+      }
+    });
+  } else {
+    if (confirm('¿Generar una nueva contraseña temporal para este usuario?')) {
+      executeReset(userId);
     }
   }
 }
 
-function resetPassword(userId) {
-  if (confirm('¿Generar una nueva contraseña temporal para este usuario?')) {
-    fetch(`/admin/usuarios/${userId}/resetear-contraseña`, {
-      method: 'POST',
-      headers: {
-        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-        'Content-Type': 'application/json'
-      }
-    })
-    .then(r => r.json())
-    .then(data => {
-      if (data.success) {
+function executeReset(userId) {
+  fetch(`/admin/usuarios/${userId}/resetear-contraseña`, {
+    method: 'POST',
+    headers: {
+      'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+      'Content-Type': 'application/json'
+    }
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      if (typeof Swal !== 'undefined') {
+        Swal.fire({
+          title: '¡Contraseña generada!',
+          html: `La nueva contraseña temporal es:<br><br><b style="font-size: 1.5rem; color: #f97316;">${data.temporary_password}</b><br><br>Asegúrate de copiarla.`,
+          icon: 'success'
+        });
+      } else {
         alert(`Contraseña temporal: ${data.temporary_password}\n\nAsegúrate de copiar esta contraseña antes de cerrar el diálogo.`);
       }
-    })
-    .catch(e => alert('Error: ' + e));
-  }
+    } else {
+      if (typeof Swal !== 'undefined') Swal.fire('Error', data.message || 'No se pudo generar.', 'error');
+      else alert(data.message || 'No se pudo generar la contraseña temporal.');
+    }
+  })
+  .catch(() => {
+    if (typeof Swal !== 'undefined') Swal.fire('Error', 'Ocurrió un error en la conexión.', 'error');
+    else alert('Ocurrió un error al generar la contraseña temporal.');
+  });
 }
 </script>
 @endsection

@@ -1,4 +1,5 @@
 @extends('layouts.app')
+@php $adminView = true; @endphp
 
 @section('content')
 @push('styles')
@@ -157,41 +158,41 @@
     </div>
 
     <!-- ========== TABLA MODERNA Y ELEGANTE ========== -->
-    <div class="bg-white rounded-2xl shadow-lg overflow-hidden border border-slate-100">
+    <div class="bg-white rounded-2xl shadow-lg overflow-hidden border border-slate-100 mb-8">
       <div class="overflow-x-auto usuarios-table-wrapper">
         <table class="w-full usuarios-table">
           <thead>
             <tr class="bg-gradient-to-r from-slate-50 to-slate-100 border-b-2 border-slate-200">
-              <th class="px-4 py-3 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">ID</th>
-              <th class="px-4 py-3 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">Usuario</th>
-              <th class="px-4 py-3 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">Email</th>
-              <th class="px-4 py-3 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">Rol</th>
-              <th class="px-4 py-3 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">Estado</th>
-              <th class="px-4 py-3 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">Último acceso</th>
-              <th class="px-4 py-3 text-center text-xs font-bold text-slate-700 uppercase tracking-wider">Acciones</th>
+              <th class="px-4 py-2 text-left text-xs font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap">ID</th>
+              <th class="px-4 py-2 text-left text-xs font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap">Usuario</th>
+              <th class="px-4 py-2 text-left text-xs font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap">Email</th>
+              <th class="px-4 py-2 text-left text-xs font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap">Rol</th>
+              <th class="px-4 py-2 text-left text-xs font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap">Estado</th>
+              <th class="px-4 py-2 text-left text-xs font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap">Último acceso</th>
+              <th class="px-4 py-2 text-center text-xs font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap">Acciones</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-200">
             @forelse($usuarios as $usuario)
               <tr class="hover:bg-orange-50 transition-colors duration-200 group">
-                <td class="px-4 py-3 text-sm text-slate-500 font-mono">
-                  <span class="bg-slate-100 px-3 py-1 rounded-lg">{{ $usuario->id }}</span>
+                <td class="px-3 py-2 text-sm text-slate-500 font-mono whitespace-nowrap">
+                  <span class="bg-slate-100 px-2 py-1 rounded-lg">{{ $usuario->id }}</span>
                 </td>
-                <td class="px-4 py-3">
-                  <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 bg-gradient-to-br from-orange-400 to-orange-600 rounded-full flex items-center justify-center text-white font-semibold text-sm shadow-md">
+                <td class="px-3 py-2 whitespace-nowrap">
+                  <div class="flex items-center gap-2">
+                    <div style="width: 40px; height: 40px; font-size: 13px;" class="bg-gradient-to-br from-orange-400 to-orange-600 rounded-full flex items-center justify-center text-white font-bold shadow-md flex-shrink-0">
                       {{ substr($usuario->name, 0, 1) }}{{ substr($usuario->last_name ?? '', 0, 1) }}
                     </div>
                     <div>
                       <p class="font-semibold text-slate-900">{{ $usuario->name }} {{ $usuario->last_name }}</p>
                       @if($usuario->is_admin)
-                        <span class="inline-block mt-1 px-2 py-1 bg-red-100 text-red-700 text-xs font-bold rounded-full">Admin</span>
+                        <span class="inline-block px-2 py-0.5 mt-0.5 bg-red-100 text-red-700 text-[10px] font-bold rounded-full">Admin</span>
                       @endif
                     </div>
                   </div>
                 </td>
-                <td class="px-4 py-3 text-sm text-slate-600">{{ $usuario->email }}</td>
-                <td class="px-4 py-3">
+                <td class="px-3 py-2 text-sm text-slate-600 whitespace-nowrap">{{ $usuario->email }}</td>
+                <td class="px-3 py-2 whitespace-nowrap">
                   {!! $usuario->display_role ? match(strtolower($usuario->display_role)) {
                     'administrador' => '<span class="usuarios-badge bg-red-100 text-red-700 border border-red-300"><i class="fas fa-user-shield"></i>' . ucfirst($usuario->display_role) . '</span>',
                     'recepcion' => '<span class="usuarios-badge bg-blue-100 text-blue-700 border border-blue-300"><i class="fas fa-door-open"></i>' . ucfirst($usuario->display_role) . '</span>',
@@ -201,32 +202,29 @@
                     default => '<span class="usuarios-badge bg-slate-100 text-slate-700 border border-slate-300"><i class="fas fa-user"></i>' . ucfirst($usuario->display_role) . '</span>',
                   } : '<span class="text-slate-400 text-sm">Sin rol</span>' !!}
                 </td>
-                <td class="px-4 py-3">
+                <td class="px-3 py-2 whitespace-nowrap">
                   @if($usuario->status === 'active')
-                    <span class="usuarios-state-badge bg-green-100 text-green-700 border border-green-300 rounded-full px-3 py-1.5">
-                      <span class="inline-block w-2 h-2 bg-green-600 rounded-full animate-pulse"></span>
-                      Activo
+                    <span class="usuarios-state-badge bg-green-100 text-green-700 border border-green-300 rounded-full px-2 py-1 text-xs">
+                      <span class="inline-block w-1.5 h-1.5 bg-green-600 rounded-full animate-pulse"></span> Activo
                     </span>
                   @elseif($usuario->status === 'blocked')
-                    <span class="usuarios-state-badge bg-red-100 text-red-700 border border-red-300 rounded-full px-3 py-1.5">
-                      <span class="inline-block w-2 h-2 bg-red-600 rounded-full animate-pulse"></span>
-                      Bloqueado
+                    <span class="usuarios-state-badge bg-red-100 text-red-700 border border-red-300 rounded-full px-2 py-1 text-xs">
+                      <span class="inline-block w-1.5 h-1.5 bg-red-600 rounded-full animate-pulse"></span> Bloqueado
                     </span>
                   @else
-                    <span class="usuarios-state-badge bg-gray-100 text-gray-700 border border-gray-300 rounded-full px-3 py-1.5">
-                      <span class="inline-block w-2 h-2 bg-gray-600 rounded-full animate-pulse"></span>
-                      Inactivo
+                    <span class="usuarios-state-badge bg-gray-100 text-gray-700 border border-gray-300 rounded-full px-2 py-1 text-xs">
+                      <span class="inline-block w-1.5 h-1.5 bg-gray-600 rounded-full animate-pulse"></span> Inactivo
                     </span>
                   @endif
                 </td>
-                <td class="px-4 py-3 text-sm text-slate-600">
-                  <div class="inline-flex items-center gap-2 text-slate-600">
+                <td class="px-3 py-2 text-sm text-slate-600 whitespace-nowrap">
+                  <div style="display:inline-flex; align-items:center; gap:0.6rem;" class="text-slate-600">
                     <i class="fas fa-clock text-slate-400"></i>
                     <span>{{ $usuario->last_login_at ? $usuario->last_login_formatted : 'Nunca' }}</span>
                   </div>
                 </td>
-                <td class="px-4 py-3">
-                  <div class="usuarios-actions-group">
+                <td class="px-3 py-2 whitespace-nowrap text-center">
+                  <div style="display:flex; align-items:center; justify-content:center; gap:0.5rem;">
                     <a href="{{ route('admin.usuarios.edit', $usuario) }}"
                       class="usuarios-action-btn bg-orange-100 hover:bg-orange-500 text-orange-600 hover:text-white"
                       title="Editar usuario">
@@ -346,7 +344,8 @@
         <h3 class="text-lg font-bold text-slate-900">Actividades Recientes del Sistema</h3>
       </div>
 
-      <div class="overflow-x-auto">
+      <!-- Tabla de Actividades (Desktop) -->
+      <div class="activities-table-desktop overflow-x-auto">
         <table class="w-full">
           <thead>
             <tr class="bg-slate-50 border-b border-slate-200">
@@ -359,21 +358,21 @@
           <tbody class="divide-y divide-slate-200">
             @foreach($recentActivities as $activity)
               <tr class="hover:bg-orange-50 transition-colors duration-200">
-                <td class="px-4 py-3 text-sm font-medium text-slate-900">
+                <td class="px-4 py-3 text-sm font-medium text-slate-900 whitespace-nowrap">
                   <div class="flex items-center gap-2">
-                    <div class="w-8 h-8 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center text-white text-xs font-bold">
+                    <div class="w-8 h-8 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-sm">
                       {{ substr($activity->user->name ?? 'S', 0, 1) }}
                     </div>
                     <span>{{ $activity->user->name ?? 'Sistema' }}</span>
                   </div>
                 </td>
-                <td class="px-4 py-3 text-sm">
-                  <span class="inline-block px-3 py-1 bg-purple-100 text-purple-700 text-xs font-bold rounded-full uppercase">{{ str_replace('_', ' ', $activity->action) }}</span>
+                <td class="px-4 py-3 text-sm whitespace-nowrap">
+                  <span class="inline-block px-3 py-1 bg-purple-100 text-purple-700 text-[10px] font-bold rounded-full uppercase">{{ str_replace('_', ' ', $activity->action) }}</span>
                 </td>
                 <td class="px-4 py-3 text-sm text-slate-600">{{ $activity->description }}</td>
-                <td class="px-4 py-3 text-sm text-slate-500">
+                <td class="px-4 py-3 text-sm text-slate-500 whitespace-nowrap">
                   <div class="flex items-center gap-2">
-                    <i class="fas fa-calendar-alt"></i>
+                    <i class="fas fa-calendar-alt text-slate-400"></i>
                     <span>{{ $activity->created_at->diffForHumans() }}</span>
                   </div>
                 </td>
@@ -381,6 +380,33 @@
             @endforeach
           </tbody>
         </table>
+      </div>
+
+      <!-- Tarjetas de Actividades (Mobile) -->
+      <div class="activities-cards-mobile divide-y divide-slate-100">
+        @foreach($recentActivities as $activity)
+          <div class="p-4 bg-white hover:bg-slate-50 transition-colors">
+            <div class="flex items-start gap-3">
+              <div class="w-10 h-10 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center text-white font-bold shrink-0 shadow-sm mt-1">
+                 {{ substr($activity->user->name ?? 'S', 0, 1) }}
+              </div>
+              <div class="flex-1 min-w-0">
+                <div class="flex justify-between items-start mb-1.5 gap-2">
+                  <p class="font-bold text-slate-900 truncate text-sm">{{ $activity->user->name ?? 'Sistema' }}</p>
+                  <span class="text-xs text-slate-500 whitespace-nowrap flex items-center gap-1">
+                    <i class="fas fa-clock"></i> {{ $activity->created_at->diffForHumans() }}
+                  </span>
+                </div>
+                <div class="mb-2">
+                  <span class="inline-block px-2.5 py-1 bg-purple-100 text-purple-700 text-[10px] font-bold rounded-full uppercase tracking-wide">
+                    {{ str_replace('_', ' ', $activity->action) }}
+                  </span>
+                </div>
+                <p class="text-sm text-slate-600 leading-snug">{{ $activity->description }}</p>
+              </div>
+            </div>
+          </div>
+        @endforeach
       </div>
     </div>
   </div>
