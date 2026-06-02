@@ -38,10 +38,10 @@ class TrackUserLogout
     {
         if (!$ua) return 'Desconocido';
         if (str_contains($ua, 'Windows')) return 'Windows';
-        if (str_contains($ua, 'Macintosh') || str_contains($ua, 'Mac OS')) return 'macOS';
-        if (str_contains($ua, 'Linux')) return 'Linux';
-        if (str_contains($ua, 'iPhone') || str_contains($ua, 'iPad')) return 'iOS';
         if (str_contains($ua, 'Android')) return 'Android';
+        if (str_contains($ua, 'Macintosh') || str_contains($ua, 'Mac OS')) return 'macOS';
+        if (str_contains($ua, 'iPhone') || str_contains($ua, 'iPad')) return 'iOS';
+        if (str_contains($ua, 'Linux')) return 'Linux';
         return 'Desconocido';
     }
 }

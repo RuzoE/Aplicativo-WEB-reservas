@@ -408,14 +408,14 @@ class UsuariosController extends Controller
 
         if (str_contains($ua, 'Windows')) {
             return 'Windows';
-        } elseif (str_contains($ua, 'Macintosh')) {
-            return 'macOS';
-        } elseif (str_contains($ua, 'Linux')) {
-            return 'Linux';
-        } elseif (str_contains($ua, 'iPhone')) {
-            return 'iPhone';
         } elseif (str_contains($ua, 'Android')) {
             return 'Android';
+        } elseif (str_contains($ua, 'Macintosh')) {
+            return 'macOS';
+        } elseif (str_contains($ua, 'iPhone')) {
+            return 'iPhone';
+        } elseif (str_contains($ua, 'Linux')) {
+            return 'Linux';
         }
 
         return 'Desconocido';
