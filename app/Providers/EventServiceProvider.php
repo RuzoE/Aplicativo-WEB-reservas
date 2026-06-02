@@ -16,6 +16,10 @@ class EventServiceProvider extends ServiceProvider
     protected $listen = [
         Login::class => [
             \App\Listeners\RegistrarLoginAuditoria::class,
+            \App\Listeners\TrackUserLogin::class,
+        ],
+        \Illuminate\Auth\Events\Logout::class => [
+            \App\Listeners\TrackUserLogout::class,
         ],
         \Spatie\Backup\Events\BackupWasSuccessful::class => [
             \App\Listeners\UpdateBackupStatus::class,
