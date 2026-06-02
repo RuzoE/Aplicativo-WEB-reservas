@@ -21,6 +21,7 @@ document.addEventListener('DOMContentLoaded', function() {
             wrapper.classList.toggle('d-none');
             if(!wrapper.classList.contains('d-none')){
                 tableWrapper.classList.add('d-none');
+                btnNuevo.classList.add('d-none');
             }
             window.scrollTo({top:0,behavior:'smooth'});
         });
@@ -29,10 +30,27 @@ document.addEventListener('DOMContentLoaded', function() {
         btnCerrar.addEventListener('click',()=>{
             wrapper.classList.add('d-none');
             tableWrapper.classList.remove('d-none');
+            if(btnNuevo) btnNuevo.classList.remove('d-none');
         });
     }
     if(btnReset){btnReset.addEventListener('click',()=>document.getElementById('empleadoCreateForm').reset());}
-    if(passInput){passInput.addEventListener('input',()=>{passBar.style.width=strength(passInput.value)+'%';});}
+    if(passInput){
+        passInput.addEventListener('input',()=>{
+            const val = passInput.value;
+            const score = strength(val);
+            passBar.style.width = score + '%';
+            passBar.classList.remove('strength-weak', 'strength-medium', 'strength-strong');
+            if(val) {
+                if(score < 40) {
+                    passBar.classList.add('strength-weak');
+                } else if(score < 75) {
+                    passBar.classList.add('strength-medium');
+                } else {
+                    passBar.classList.add('strength-strong');
+                }
+            }
+        });
+    }
     if(btnToggle){btnToggle.addEventListener('click',()=>{passInput.type=passInput.type==='password'?'text':'password';});}
     if(btnGen){btnGen.addEventListener('click',()=>{passInput.value=genPass();passInput.dispatchEvent(new Event('input'));});}
 });

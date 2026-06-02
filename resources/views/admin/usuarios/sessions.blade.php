@@ -8,7 +8,9 @@
 @endpush
 
 @section('content')
-<div class="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 usuario-page">
+<div class="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 usuario-page"
+     id="sessions-wrapper"
+     data-user-id="{{ $usuario->id }}">
   <div class="px-4 sm:px-6 lg:px-8 py-6">
 
     {{-- NUEVO HERO PREMIUM --}}
@@ -157,23 +159,7 @@
   </div>
 </div>
 
-<script>
-function logoutSession(sessionId) {
-  if (confirm('¿Cerrar esta sesión?')) {
-    fetch(`/admin/usuarios/{{ $usuario->id }}/sesiones/${sessionId}`, {
-      method: 'DELETE',
-      headers: {
-        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-      }
-    })
-    .then(r => r.json())
-    .then(data => {
-      if (data.success) {
-        location.reload();
-      }
-    })
-    .catch(e => alert('Error: ' + e));
-  }
-}
-</script>
+@push('scripts')
+<script src="{{ asset('js/usuarios/sessions.js') }}"></script>
+@endpush
 @endsection

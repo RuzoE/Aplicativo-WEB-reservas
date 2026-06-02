@@ -362,48 +362,17 @@
     </p>
 </div>
 
+
+{{-- Puente de datos de sesión para flash-messages.js --}}
+<div id="backup-flash-data" class="d-none"
+     data-success="{{ session('success') ?? session('message') ?? session('status') ?? '' }}"
+     data-error="{{ session('error') ?? '' }}"
+     data-has-errors="{{ $errors->any() ? '1' : '0' }}"
+     data-first-error="{{ $errors->first() }}"
+></div>
+
 @push('scripts')
 <script src="{{ asset('js/blade/admin/backups/index--script1.js') }}"></script>
-@endpush
-@push('scripts')
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        @if(session('success') || session('message') || session('status'))
-            Swal.fire({
-                icon: 'success',
-                title: '¡Éxito!',
-                text: '{{ session('success') ?? session('message') ?? session('status') }}',
-                timer: 3500,
-                showConfirmButton: false,
-                toast: true,
-                position: 'top-end'
-            });
-        @endif
-
-        @if($errors->any())
-            Swal.fire({
-                icon: 'error',
-                title: 'Atención',
-                text: '{{ $errors->first() }}',
-                timer: 4500,
-                showConfirmButton: false,
-                toast: true,
-                position: 'top-end'
-            });
-        @endif
-
-        @if(session('error'))
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: '{{ session('error') }}',
-                timer: 5000,
-                showConfirmButton: false,
-                toast: true,
-                position: 'top-end'
-            });
-        @endif
-    });
-</script>
+<script src="{{ asset('js/blade/admin/backups/flash-messages.js') }}"></script>
 @endpush
 @endsection

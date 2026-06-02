@@ -315,7 +315,6 @@
                         </tbody>
                     </table>
                 </div>
-                </div>
 
                 {{-- Contenedor móvil: tarjetas para auditorias (se muestra en <768px) --}}
                 <div class="audit-cards-mobile-container">

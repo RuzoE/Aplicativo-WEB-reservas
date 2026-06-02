@@ -7,29 +7,44 @@
 <link rel="stylesheet" href="{{ asset('css/usuarios/dashboard.css') }}">
 <link rel="stylesheet" href="{{ asset('css/usuarios/filtros.css') }}">
 <link rel="stylesheet" href="{{ asset('css/usuarios/tablas.css') }}">
-<style>
-  /* Fix d-none because we removed some bootstrap wrapping */
-  .d-none { display: none !important; }
-  .empleado-form-card { transition: all 0.3s ease; }
-</style>
+<link rel="stylesheet" href="{{ asset('css/empleados/index.css') }}?v={{ time() }}">
 @endpush
 
 <div class="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 usuario-page">
   <div class="px-4 sm:px-6 lg:px-8 py-6">
 
-    <!-- ========== HEADER PRINCIPAL (Diseño Profile-Hero) ========== -->
-    <div id="empleadosHeaderWrapper" class="profile-hero-card mb-5 {{ $errors->any() ? 'd-none' : '' }}">
-      <div class="profile-avatar">
-        <i class="fas fa-users-cog"></i>
-      </div>
-      <div class="profile-hero-info">
-        <h1 class="profile-hero-name">Gestión de Empleados</h1>
-        <p class="profile-hero-email mb-0 text-slate-500">Administra los empleados, sus roles operativos y accesos al sistema.</p>
-      </div>
-      <div>
-        <button type="button" id="btnNuevoEmpleado" class="btn-back-refined shadow-sm hover:text-orange-500" style="padding: 0.6rem 1.2rem;">
-          <i class="bi bi-person-plus text-lg"></i> <span class="font-bold">Nuevo empleado</span>
-        </button>
+    <!-- ========== HEADER PRINCIPAL ========== -->
+    <div id="empleadosHeaderWrapper" class="relative overflow-hidden bg-white rounded-2xl border border-slate-100 shadow-sm p-6 md:p-8 mb-6 {{ $errors->any() ? 'd-none' : '' }}">
+      <!-- Subtle ambient glows -->
+      <div class="absolute top-0 right-0 w-64 h-64 bg-orange-50 rounded-full filter blur-3xl opacity-60 -mr-20 -mt-20 pointer-events-none"></div>
+      <div class="absolute bottom-0 left-1/3 w-48 h-48 bg-blue-50 rounded-full filter blur-3xl opacity-40 pointer-events-none"></div>
+      
+      <div class="relative flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <!-- Main Info -->
+        <div class="flex items-start gap-4">
+          <div class="flex-shrink-0 flex items-center justify-center animated-header-icon header-icon-container">
+            <i class="bi bi-people-fill text-2xl"></i>
+          </div>
+          <div>
+            <div class="flex items-center gap-2 flex-wrap mb-1">
+              <h1 class="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight">Gestión de Empleados</h1>
+              <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-orange-100 text-orange-700 border border-orange-200">
+                {{ $empleados instanceof \Illuminate\Contracts\Pagination\Paginator ? $empleados->total() : count($empleados) }} Activos
+              </span>
+            </div>
+            <p class="text-slate-500 text-sm md:text-base max-w-xl">
+              Administra los empleados del hotel, gestiona sus roles operativos y controla los permisos de acceso al sistema.
+            </p>
+          </div>
+        </div>
+        
+        <!-- Premium Action Button -->
+        <div class="flex-shrink-0 flex items-center">
+          <button type="button" id="btnNuevoEmpleado" class="btn-nuevo-empleado-premium">
+            <i class="bi bi-person-plus-fill"></i>
+            <span>Nuevo Empleado</span>
+          </button>
+        </div>
       </div>
     </div>
 
@@ -45,8 +60,9 @@
             <p class="text-xs text-slate-500 m-0">Completa la información requerida</p>
           </div>
         </div>
-        <button type="button" id="btnCerrarForm" class="w-8 h-8 flex items-center justify-center rounded-full text-slate-400 hover:bg-slate-200 hover:text-slate-700 transition-colors">
+        <button type="button" id="btnCerrarForm" class="btn-cancelar-form-premium">
           <i class="fas fa-times"></i>
+          <span>Cancelar</span>
         </button>
       </div>
       <div class="p-6">
@@ -121,9 +137,6 @@
             <button type="button" class="inline-flex items-center justify-center px-6 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium rounded-xl transition-colors" id="btnResetEmpleado">
               Limpiar
             </button>
-            <button type="button" class="inline-flex items-center justify-center px-6 py-2.5 bg-transparent hover:bg-slate-100 text-slate-500 hover:text-slate-700 font-medium rounded-xl transition-colors ml-auto" id="btnCancelarForm2">
-              Cancelar
-            </button>
           </div>
         </form>
       </div>
@@ -150,11 +163,11 @@
                 <span class="bg-slate-100 px-2 py-1 rounded-lg">{{ $u->id }}</span>
               </td>
               <td class="px-3 py-2 whitespace-nowrap">
-                <div class="flex items-center gap-2">
-                  <div style="width: 40px; height: 40px; font-size: 13px;" class="bg-gradient-to-br from-orange-400 to-orange-600 rounded-full flex items-center justify-center text-white font-bold shadow-md flex-shrink-0">
-                    {{ substr($u->name, 0, 1) }}{{ substr($u->last_name ?? '', 0, 1) }}
+                <div class="flex items-center gap-3">
+                  <div>
+                    <p class="font-semibold text-slate-900 m-0 leading-tight">{{ $u->name }} {{ $u->last_name }}</p>
+                    <p class="text-xs text-slate-400 m-0">#{{ $u->id }}</p>
                   </div>
-                  <p class="font-semibold text-slate-900 m-0">{{ $u->name }} {{ $u->last_name }}</p>
                 </div>
               </td>
               <td class="px-3 py-2 text-sm text-slate-600 whitespace-nowrap">{{ $u->email }}</td>
@@ -246,39 +259,8 @@
   </div>
 </div>
 
-<script src="{{ asset('js/admin-empleados-form.js') }}"></script>
-<script>
-  document.addEventListener('DOMContentLoaded', function() {
-    const btnCancel = document.getElementById('btnCancelarForm2');
-    const btnCerrar = document.getElementById('btnCerrarForm');
-    const btnNuevo = document.getElementById('btnNuevoEmpleado');
-    const wrapper = document.getElementById('empleadoFormWrapper');
-    const tableWrapper = document.getElementById('empleadosTableWrapper');
-    const headerWrapper = document.getElementById('empleadosHeaderWrapper');
-    
-    function showTable() {
-      wrapper.classList.add('d-none');
-      tableWrapper.classList.remove('d-none');
-      if(headerWrapper) headerWrapper.classList.remove('d-none');
-    }
-
-    if(btnCancel) {
-      btnCancel.addEventListener('click', showTable);
-    }
-    
-    if(btnCerrar) {
-      // Re-override to ensure header also shows up
-      btnCerrar.addEventListener('click', showTable);
-    }
-
-    if(btnNuevo) {
-      btnNuevo.addEventListener('click', () => {
-        wrapper.classList.remove('d-none');
-        tableWrapper.classList.add('d-none');
-        if(headerWrapper) headerWrapper.classList.add('d-none');
-        window.scrollTo({top:0, behavior:'smooth'});
-      });
-    }
-  });
-</script>
+@push('scripts')
+<script src="{{ asset('js/admin-empleados-form.js') }}?v={{ time() }}"></script>
+<script src="{{ asset('js/empleados/index.js') }}?v={{ time() }}"></script>
+@endpush
 @endsection

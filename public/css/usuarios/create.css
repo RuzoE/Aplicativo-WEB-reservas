@@ -1,0 +1,13 @@
+/* ============================================================
+   create.css — Página de creación de usuario
+   Hotel Oasis • 2026
+   ============================================================ */
+
+.role-card-custom:hover {
+  background-color: #f8f9fa !important;
+  border-color: #007bff !important;
+}
+
+.role-card-custom input[type="radio"]:checked + * {
+  color: #007bff;
+}

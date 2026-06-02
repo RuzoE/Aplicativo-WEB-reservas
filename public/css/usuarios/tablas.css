@@ -203,3 +203,137 @@
     flex-direction: column !important;
   }
 }
+
+/* ============================================================
+   EMPLOYEE AVATAR — Premium Animated
+   ============================================================ */
+
+/* Keyframes */
+@keyframes emp-spin-ring {
+  0%   { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+@keyframes emp-pulse-halo {
+  0%, 100% { opacity: 0.45; transform: scale(1); }
+  50%       { opacity: 0;    transform: scale(1.55); }
+}
+@keyframes emp-shine-sweep {
+  0%   { left: -60%; opacity: 0; }
+  30%  { opacity: 1; }
+  100% { left: 130%; opacity: 0; }
+}
+@keyframes emp-pop-in {
+  0%   { opacity: 0; transform: scale(0.6) translateY(6px); }
+  60%  { transform: scale(1.08) translateY(-2px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* Wrapper — defines stacking context */
+.emp-avatar-wrap {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+  animation: emp-pop-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  cursor: default;
+}
+
+/* Stagger per row */
+tr:nth-child(1) .emp-avatar-wrap { animation-delay: 0.05s; }
+tr:nth-child(2) .emp-avatar-wrap { animation-delay: 0.10s; }
+tr:nth-child(3) .emp-avatar-wrap { animation-delay: 0.15s; }
+tr:nth-child(4) .emp-avatar-wrap { animation-delay: 0.20s; }
+tr:nth-child(5) .emp-avatar-wrap { animation-delay: 0.25s; }
+tr:nth-child(6) .emp-avatar-wrap { animation-delay: 0.30s; }
+tr:nth-child(7) .emp-avatar-wrap { animation-delay: 0.35s; }
+tr:nth-child(8) .emp-avatar-wrap { animation-delay: 0.40s; }
+
+/* Halo pulsante de fondo */
+.emp-avatar-halo {
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  background: var(--halo-color, rgba(249,115,22,0.4));
+  animation: emp-pulse-halo 2.8s ease-in-out infinite;
+  z-index: 0;
+}
+
+/* Anillo giratorio con gradiente */
+.emp-avatar-ring {
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  background: conic-gradient(
+    from 0deg,
+    var(--c1, #f97316),
+    var(--c2, #ea580c),
+    transparent 65%,
+    var(--c1, #f97316)
+  );
+  animation: emp-spin-ring 3.5s linear infinite;
+  z-index: 1;
+}
+
+/* Parar anillo al hacer hover en la fila */
+tr:hover .emp-avatar-ring {
+  animation-play-state: paused;
+}
+
+/* Avatar principal */
+.emp-avatar {
+  position: absolute;
+  inset: 3px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--c1, #f97316) 0%, var(--c2, #ea580c) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+  overflow: hidden;
+  box-shadow:
+    0 4px 14px var(--shadow, rgba(249,115,22,0.45)),
+    inset 0 1px 1px rgba(255,255,255,0.25);
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
+              box-shadow 0.25s ease;
+}
+
+tr:hover .emp-avatar {
+  transform: scale(1.12) rotate(-3deg);
+  box-shadow:
+    0 8px 24px var(--shadow, rgba(249,115,22,0.55)),
+    inset 0 1px 2px rgba(255,255,255,0.3);
+}
+
+/* Iniciales */
+.emp-avatar-initials {
+  font-size: 0.8rem;
+  font-weight: 900;
+  color: #ffffff;
+  letter-spacing: 0.03em;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  position: relative;
+  z-index: 1;
+  user-select: none;
+  transition: transform 0.25s ease;
+}
+
+tr:hover .emp-avatar-initials {
+  transform: scale(1.15);
+}
+
+/* Destello / shine */
+.emp-avatar-shine {
+  position: absolute;
+  top: 0; bottom: 0;
+  width: 40%;
+  background: linear-gradient(
+    105deg,
+    transparent 0%,
+    rgba(255,255,255,0.45) 50%,
+    transparent 100%
+  );
+  animation: emp-shine-sweep 3.2s ease-in-out infinite;
+  z-index: 2;
+  border-radius: inherit;
+  pointer-events: none;
+}

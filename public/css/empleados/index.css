@@ -1,0 +1,280 @@
+/* ============================================================
+   index.css — Módulo de Empleados
+   Hotel Oasis • 2026
+   ============================================================ */
+
+/* Fix d-none because we removed some bootstrap wrapping */
+.d-none { display: none !important; }
+.empleado-form-card { transition: all 0.3s ease; }
+
+/* Micro-animations and premium styles for header */
+.animated-header-icon {
+  animation: floatIcon 4s ease-in-out infinite;
+}
+@keyframes floatIcon {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-5px) rotate(3deg); }
+}
+
+/* Premium Orange Button Style */
+.btn-nuevo-empleado-premium {
+  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%) !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  padding: 0.75rem 1.5rem !important;
+  border-radius: 0.75rem !important;
+  box-shadow: 0 4px 14px rgba(249, 115, 22, 0.3) !important;
+  border: none !important;
+  transition: all 0.25s ease !important;
+  display: inline-flex;
+  align-items: center !important;
+  gap: 0.5rem !important;
+  cursor: pointer !important;
+  text-decoration: none !important;
+}
+.btn-nuevo-empleado-premium:hover {
+  background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%) !important;
+  box-shadow: 0 6px 20px rgba(249, 115, 22, 0.5) !important;
+  transform: translateY(-2px) !important;
+  color: #ffffff !important;
+}
+.btn-nuevo-empleado-premium:active {
+  transform: translateY(0) !important;
+}
+.btn-nuevo-empleado-premium i {
+  font-size: 1.15rem !important;
+  transition: transform 0.2s ease;
+}
+.btn-nuevo-empleado-premium:hover i {
+  transform: scale(1.15);
+}
+
+/* Premium Icon Style */
+.header-icon-container {
+  background: linear-gradient(135deg, #f97316 0%, #fb923c 100%) !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 14px rgba(249, 115, 22, 0.25) !important;
+  border-radius: 1rem !important;
+  width: 3.25rem !important;
+  height: 3.25rem !important;
+}
+
+/* Premium Cancel Button Style */
+.btn-cancelar-form-premium {
+  background-color: #fef2f2 !important;
+  color: #ef4444 !important;
+  border: 1px solid #fee2e2 !important;
+  padding: 0.5rem 1.1rem !important;
+  border-radius: 0.75rem !important;
+  font-weight: 700 !important;
+  font-size: 0.875rem !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+}
+.btn-cancelar-form-premium:hover {
+  background-color: #fee2e2 !important;
+  color: #dc2626 !important;
+  border-color: #fecaca !important;
+  transform: translateY(-1px) !important;
+}
+.btn-cancelar-form-premium:active {
+  transform: translateY(0) !important;
+}
+
+/* Premium Form Inputs Style */
+.admin-input {
+  background-color: #f8fafc !important;
+  border-width: 1.5px !important;
+  border-style: solid !important;
+  border-color: #e2e8f0 !important;
+  color: #1e293b !important;
+  font-size: 0.9rem !important;
+  padding: 0.7rem 1rem !important;
+  border-radius: 0.75rem !important;
+  transition: all 0.2s ease-in-out !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+.admin-input::placeholder {
+  color: #94a3b8 !important;
+}
+.admin-input:focus {
+  background-color: #ffffff !important;
+  border-color: #f97316 !important;
+  box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.15) !important;
+}
+.admin-input.border-r-0 {
+  border-right-width: 0px !important;
+}
+
+/* Password utilities alignment and design */
+.flex > .admin-input {
+  border-top-right-radius: 0 !important;
+  border-bottom-right-radius: 0 !important;
+}
+#togglePassInline {
+  border-width: 1.5px 0 1.5px 1px !important;
+  border-style: solid !important;
+  border-color: #e2e8f0 !important;
+  color: #64748b !important;
+  background-color: #f8fafc !important;
+  transition: all 0.2s ease !important;
+  font-size: 1rem !important;
+}
+#togglePassInline:hover {
+  background-color: #f1f5f9 !important;
+  color: #334155 !important;
+}
+#genPassInline {
+  border-width: 1.5px 1.5px 1.5px 1px !important;
+  border-style: solid !important;
+  border-color: #e2e8f0 !important;
+  color: #ea580c !important;
+  background-color: #fff7ed !important;
+  border-top-right-radius: 0.75rem !important;
+  border-bottom-right-radius: 0.75rem !important;
+  font-weight: 700 !important;
+  transition: all 0.2s ease !important;
+  font-size: 0.85rem !important;
+}
+#genPassInline:hover {
+  background-color: #ffedd5 !important;
+  color: #c2410c !important;
+  border-color: #fed7aa !important;
+}
+
+/* Password strength bar color states */
+.strength-weak {
+  background-color: #ef4444 !important;
+}
+.strength-medium {
+  background-color: #f97316 !important;
+}
+.strength-strong {
+  background-color: #22c55e !important;
+}
+
+/* ============================================================
+   Responsive Table Cards (Mobile)
+   ============================================================ */
+@media (max-width: 768px) {
+  #empleadosTableWrapper .usuarios-table thead {
+    display: none;
+  }
+  
+  #empleadosTableWrapper .usuarios-table, 
+  #empleadosTableWrapper .usuarios-table tbody, 
+  #empleadosTableWrapper .usuarios-table tr, 
+  #empleadosTableWrapper .usuarios-table td {
+    display: block;
+    width: 100%;
+  }
+
+  #empleadosTableWrapper .usuarios-table tr {
+    margin-bottom: 1.25rem;
+    background: #ffffff;
+    border-radius: 1rem;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    border: 1px solid #f1f5f9;
+    padding: 0.5rem 1rem;
+    display: flex;
+    flex-direction: column;
+  }
+
+  #empleadosTableWrapper .usuarios-table td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.85rem 0;
+    border: none;
+    border-bottom: 1px dashed #e2e8f0;
+    text-align: right;
+    white-space: normal !important;
+  }
+  
+  #empleadosTableWrapper .usuarios-table td:last-child {
+    border-bottom: none;
+  }
+
+  #empleadosTableWrapper .usuarios-table td:not([colspan="6"])::before {
+    font-weight: 800;
+    font-size: 0.75rem;
+    color: #64748b;
+    text-transform: uppercase;
+    text-align: left;
+    margin-right: 1rem;
+    letter-spacing: 0.05em;
+  }
+
+  #empleadosTableWrapper .usuarios-table td:not([colspan="6"]):nth-child(1)::before { content: "ID"; }
+  #empleadosTableWrapper .usuarios-table td:not([colspan="6"]):nth-child(2)::before { content: "Nombre"; }
+  #empleadosTableWrapper .usuarios-table td:not([colspan="6"]):nth-child(3)::before { content: "Email"; }
+  #empleadosTableWrapper .usuarios-table td:not([colspan="6"]):nth-child(4)::before { content: "Rol actual"; }
+  #empleadosTableWrapper .usuarios-table td:not([colspan="6"]):nth-child(5)::before { content: "Reasignar"; }
+  #empleadosTableWrapper .usuarios-table td:not([colspan="6"]):nth-child(6)::before { content: "Acciones"; }
+
+  #empleadosTableWrapper .usuarios-table td[colspan="6"] {
+    justify-content: center;
+  }
+
+  #empleadosTableWrapper .usuarios-table td > * {
+    text-align: right;
+  }
+  
+  #empleadosTableWrapper .usuarios-table td .flex.items-center.gap-3 {
+    justify-content: flex-end;
+  }
+
+  /* Redesign "Reasignar" column for better space */
+  #empleadosTableWrapper .usuarios-table td:not([colspan="6"]):nth-child(5) {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+    background: #f8fafc;
+    border-radius: 0.75rem;
+    padding: 0.85rem;
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+    border: 1px solid #e2e8f0;
+  }
+
+  #empleadosTableWrapper .usuarios-table td:not([colspan="6"]):nth-child(5)::before {
+    margin-right: 0;
+    margin-bottom: 0.25rem;
+    font-size: 0.75rem;
+    color: #475569;
+  }
+
+  #empleadosTableWrapper .usuarios-table td:not([colspan="6"]):nth-child(5) form {
+    width: 100%;
+    justify-content: space-between;
+    gap: 0.5rem;
+    flex-wrap: nowrap;
+  }
+  
+  #empleadosTableWrapper .usuarios-table td:not([colspan="6"]):nth-child(5) form select {
+    flex: 1;
+    width: 100%;
+    min-width: 0;
+  }
+
+  /* Default for other forms (like Acciones) */
+  #empleadosTableWrapper .usuarios-table td:not(:nth-child(5)) form {
+    justify-content: flex-end;
+    width: auto;
+  }
+  
+  #empleadosTableWrapper .usuarios-table-wrapper {
+    overflow-x: hidden;
+  }
+  
+  #empleadosTableWrapper {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+  }
+}
+
